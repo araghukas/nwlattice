@@ -1,11 +1,11 @@
 import numpy as np
 
-from tslmaker.base import PointPlane
-from tslmaker.quaternion import qrotate
+from nwlattice.base import APointPlane
+from nwlattice.quaternion import qrotate
 from math import sqrt
 
 
-class HexPlane(PointPlane):
+class HexPlane(APointPlane):
 
     def __init__(self, p, scale, even=True, com_offset=None):
         super().__init__(scale)
@@ -172,7 +172,7 @@ class HexPlane(PointPlane):
         return pts
 
 
-class SquarePlane(PointPlane):
+class SquarePlane(APointPlane):
     def __init__(self, r, scale, even=True):
         super().__init__(scale)
         if r > 1:
@@ -270,7 +270,7 @@ class SquarePlane(PointPlane):
         return pts
 
 
-class TwinPlane(PointPlane):
+class TwinPlane(APointPlane):
     def __init__(self, p, q, scale):
         super().__init__(scale)
         if p > 1:

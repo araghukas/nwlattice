@@ -1,6 +1,8 @@
 import numpy as np
 from tslmaker.quaternion import Quaternion
 
+# TODO: clean this up
+
 ROOT3 = np.sqrt(3.)
 ROOT2 = np.sqrt(2.)
 ROOT6 = ROOT2 * ROOT3

@@ -1,15 +1,15 @@
 import numpy as np
 
-from nwlattice.base import PointPlane, StackLattice
+from nwlattice.base import APointPlane, AStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 from math import sqrt
 
 
-class CustomStack(StackLattice):
+class CustomStack(AStackLattice):
     def __init__(self, planes, dz, dxy):
         super().__init__()
         for plane in planes:
-            if isinstance(plane, PointPlane):
+            if isinstance(plane, APointPlane):
                 self._planes.append(plane)
             else:
                 raise TypeError("all items in planes list must be PointPlanes")
@@ -23,10 +23,10 @@ class CustomStack(StackLattice):
         scale = 1 / sqrt(2)
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale,
-                     com_offset=PointPlane.ohex_delta),
+                     com_offset=APointPlane.ohex_delta),
             HexPlane(p, even=True, scale=scale),
             HexPlane(p - 1, even=False, scale=scale,
-                     com_offset=PointPlane.ohex_delta)
+                     com_offset=APointPlane.ohex_delta)
         ]
         base_planes[-1].inverted = True
 
