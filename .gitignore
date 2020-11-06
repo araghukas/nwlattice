@@ -1,5 +1,5 @@
 .DS_STORE
 __pycache__/
 .idea/
-tests/
+_tests.py
 *.data
