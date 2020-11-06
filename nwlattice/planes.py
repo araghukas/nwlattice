@@ -16,6 +16,8 @@ class HexPlane(APointPlane):
 
         if com_offset is None:
             self._com_offset = np.zeros(3)
+        else:
+            self._com_offset = com_offset
 
         self._even = even
         self._delta = None

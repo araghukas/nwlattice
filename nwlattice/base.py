@@ -64,12 +64,8 @@ class AStackLattice(ABC):
 
     @property
     def L(self):
-        return self.L
-
-    @L.getter
-    def L(self):
         if self._L is None:
-            self._L = self.dz * (self.nz - 1)
+            self._L = np.max(self.dz)
         return self._L
 
     @property
@@ -101,10 +97,10 @@ class AStackLattice(ABC):
 
     def write_points(self, file_path, scale=1.0):
         """write LAMMPS/OVITO compatible data file of all atom points"""
-        N_atoms = 0.  # total number of atoms
+        N_atoms = 0  # total number of atoms
         points_dict = {}
         for b in self.basis:
-            points_dict[b] = scale * self.get_points(b)
+            points_dict[b] = self.get_points(b)
             N_atoms += self.N * len(self.basis[b])
 
         t1 = time()
@@ -122,7 +118,7 @@ class AStackLattice(ABC):
             # simulation box
             x = 2 * scale * self.D  # keep atoms' (x,y) in box
             y = x
-            z = self.L
+            z = scale * self.L
             file_.write("{} {} xlo xhi\n".format(-x / 2., x / 2.))
             file_.write("{} {} ylo yhi\n".format(-y / 2., y / 2.))
             file_.write("{} {} zlo zhi\n".format(0., z))
@@ -134,6 +130,7 @@ class AStackLattice(ABC):
             id_ = 1
             for typ, points in points_dict.items():
                 for pt in points:
+                    pt *= scale
                     file_.write("{} {} {} {} {} 0 0 0\n"
                                 .format(id_, typ, pt[0], pt[1], pt[2] % z))
                     id_ += 1
@@ -147,7 +144,7 @@ class APointPlane(ABC):
     ehex_vectors = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
     ehex_delta = .25 * np.array([1, -1. / np.sqrt(3), 0.])
     ohex_vectors = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
-    ohex_delta = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
+    ohex_delta = .5 * np.array([1., 1. / np.sqrt(3), 0.])
     sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
 
     def __init__(self, scale):
