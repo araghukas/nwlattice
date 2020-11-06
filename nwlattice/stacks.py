@@ -21,12 +21,11 @@ class CustomStack(AStackLattice):
     def fcc_111_pristine(cls, nz, p):
         # construct smallest list of unique planes
         scale = 1 / sqrt(2)
+        com_offset = APointPlane.ohex_delta
         base_planes = [
-            HexPlane(p - 1, even=False, scale=scale,
-                     com_offset=APointPlane.ohex_delta),
+            HexPlane(p - 1, even=False, scale=scale, com_offset=com_offset),
             HexPlane(p, even=True, scale=scale),
-            HexPlane(p - 1, even=False, scale=scale,
-                     com_offset=APointPlane.ohex_delta)
+            HexPlane(p - 1, even=False, scale=scale, com_offset=com_offset)
         ]
         base_planes[-1].inverted = True
 
