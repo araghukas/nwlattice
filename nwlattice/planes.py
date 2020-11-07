@@ -192,7 +192,7 @@ class SquarePlane(APointPlane):
     def N(self):
         if self._N is None:
             if self.even:
-                self._N = self.r**2 + (self.r + 1)**2
+                self._N = self.r**2 + (self.r - 1)**2
             else:
                 self._N = 2 * self.r * (self.r - 1)
         return self._N
