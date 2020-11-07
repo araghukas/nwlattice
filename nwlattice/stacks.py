@@ -16,31 +16,33 @@ class CustomStack(AStackLattice):
 
         self._dz = np.reshape(dz, (self.nz, 3))
         self._dxy = np.reshape(dxy, (self.nz, 3))
+        self._v_center_com = np.zeros(3)
 
     @classmethod
     def fcc_111_pristine(cls, nz, p):
         # construct smallest list of unique planes
         scale = 1 / sqrt(2)
-        com_offset = APointPlane.ohex_delta
+        unit_dxy = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
-            HexPlane(p - 1, even=False, scale=scale, com_offset=com_offset),
+            HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
-            HexPlane(p - 1, even=False, scale=scale, com_offset=com_offset)
+            HexPlane(p - 1, even=False, scale=scale)
         ]
-        base_planes[-1].inverted = True
+        base_planes[2].inverted = True
 
         # construct whole list of planes
         ROOT3 = np.sqrt(3)
-        ROOT6 = np.sqrt(6)
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
         for i in range(nz):
             planes.append(base_planes[i % 3])
             dz[i][2] = i / ROOT3
-            dxy[i][0] = (i % 3) / ROOT6
+            dxy[i] += (i % 3) * unit_dxy
 
-        return cls(planes, dz, dxy)
+        stk = cls(planes, dz, dxy)
+        stk._v_center_com = -unit_dxy
+        return stk
 
     @classmethod
     def fcc_100_pristine(cls, nz, r):
@@ -131,7 +133,7 @@ class CustomStack(AStackLattice):
                 nb += plane.N
                 n += plane.N
 
-        return atom_pts
+        return atom_pts + self._v_center_com
 
     def write_map(self, file_path):
         raise NotImplementedError

@@ -17,7 +17,7 @@ class HexPlane(APointPlane):
         if com_offset is None:
             self._com_offset = np.zeros(3)
         else:
-            self._com_offset = com_offset
+            self._com_offset = np.reshape(com_offset, (3,))
 
         self._even = even
         self._delta = None
@@ -35,7 +35,7 @@ class HexPlane(APointPlane):
     def N(self):
         if self._N is None:
             if self.even:
-                self._N = 1 + 3 * self.p * (self.p + 1)
+                self._N = 1 + 3 * self.p * (self.p - 1)
             else:
                 self._N = 3 * self.p**2
         return self._N
@@ -64,10 +64,7 @@ class HexPlane(APointPlane):
     @property
     def vectors(self):
         if self._vectors is None:
-            if self._even:
-                self._vectors = super().ehex_vectors
-            else:
-                self._vectors = super().ohex_vectors
+            self._vectors = super().hx_vectors
         return self._vectors
 
     @property
@@ -97,7 +94,7 @@ class HexPlane(APointPlane):
         else:
             raise TypeError("can't assign non boolean to `inverted` property")
 
-    def get_points(self, center=True, scale=1.0):
+    def get_points(self, center=True):
         if self.even:
             pts = self._get_points_even(center)
         else:
@@ -315,7 +312,7 @@ class TwinPlane(APointPlane):
 
     @property
     def vectors(self):
-        return super().ehex_vectors
+        return super().hx_vectors
 
     @property
     def delta(self):

@@ -65,7 +65,7 @@ class AStackLattice(ABC):
     @property
     def L(self):
         if self._L is None:
-            self._L = np.max(self.dz)
+            self._L = np.max(self.dz) + np.min(self.dz[self.dz != 0])
         return self._L
 
     @property
@@ -141,11 +141,11 @@ class AStackLattice(ABC):
 
 class APointPlane(ABC):
 
-    ehex_vectors = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
-    ehex_delta = .25 * np.array([1, -1. / np.sqrt(3), 0.])
-    ohex_vectors = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
-    ohex_delta = .5 * np.array([1., 1. / np.sqrt(3), 0.])
+    hx_vectors = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
     sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
+
+    ohex_delta = .5 * np.array([1., 1. / np.sqrt(3), 0.])
+    ehex_delta = .25 * np.array([1, -1. / np.sqrt(3), 0.])
 
     def __init__(self, scale):
         super().__init__()
