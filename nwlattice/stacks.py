@@ -65,15 +65,7 @@ class CustomStack(AStackLattice):
     @classmethod
     def fcc_111_twin(cls, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
-        q_cycle = [q0]
-        step = 1
-        count = 0
-        while count < nz - 1:
-            next_q = q_cycle[-1] + step
-            q_cycle.append(next_q)
-            if next_q == q_max or next_q == 0:
-                step *= -1
-            count += 1
+        q_cycle = CustomStack._get_twinstack_q_cycle(nz, q0, q_max)
 
         # construct whole list of planes
         scale = 1 / np.sqrt(2)
@@ -87,20 +79,83 @@ class CustomStack(AStackLattice):
         return cls(planes, dz, dxy)
 
     @classmethod
+    def fcc_111_smooth_twin(cls, nz, p, index):
+        index = set([int(j) for j in index])
+
+        # construct smallest list of unique planes
+        scale = 1 / sqrt(2)
+        unit_dxy = np.array([0.35355339, 0.20412415, 0.])
+        base_planes = [
+            HexPlane(p - 1, even=False, scale=scale),
+            HexPlane(p, even=True, scale=scale),
+            HexPlane(p - 1, even=False, scale=scale)
+        ]
+        base_planes[2].inverted = True
+
+        # construct whole list of planes
+        ROOT3 = np.sqrt(3)
+        planes = []
+        dz = np.zeros((nz, 3))
+        dxy = np.zeros((nz, 3))
+
+        j = 0
+        for i in range(nz):
+            if i in index:
+                j += 1
+            planes.append(base_planes[j % 3])
+            dxy[i] += (j % 3) * unit_dxy
+            dz[i][2] = i / ROOT3
+            j += 1
+
+        return cls(planes, dz, dxy)
+
+    @classmethod
     def hexagonal_111_pristine(cls, nz, p):
         return CustomStack.fcc_111_twin(nz, p, q0=0, q_max=1)
 
     @classmethod
     def mixed_phase_fcc_hexagonal(cls, nz, p, index):
-        # TODO: finish implementing this
-        # verify index looks like [[a1,b1], [a2,b2], ...]
-        index = np.asarray(index)
-        try:
-            index = np.reshape(index, (index.shape[0], 2))
-        except ValueError:
-            raise ValueError("could not unpack `index` into list of pairs")
+        index = set([int(j) for j in index])
 
-        raise NotImplementedError
+        # construct smallest list of unique planes
+        scale = 1 / sqrt(2)
+        unit_dxy = np.array([0.35355339, 0.20412415, 0.])
+        base_planes = [
+            HexPlane(p - 1, even=False, scale=scale),
+            HexPlane(p, even=True, scale=scale),
+            HexPlane(p - 1, even=False, scale=scale)
+        ]
+        base_planes[2].inverted = True
+
+        # construct whole list of planes
+        ROOT3 = np.sqrt(3)
+        planes = []
+        dz = np.zeros((nz, 3))
+        dxy = np.zeros((nz, 3))
+
+        j = 0
+        for i in range(nz):
+            if i in index:
+                j += -2 * (i % 2)
+            planes.append(base_planes[j % 3])
+            dxy[i] += (j % 3) * unit_dxy
+            dz[i][2] = i / ROOT3
+            j += 1
+
+        return cls(planes, dz, dxy)
+
+    @staticmethod
+    def _get_twinstack_q_cycle(nz, q0, q_max):
+        q_cycle = [q0]
+        step = 1
+        count = 0
+        while count < nz - 1:
+            next_q = q_cycle[-1] + step
+            q_cycle.append(next_q)
+            if next_q == q_max or next_q == 0:
+                step *= -1
+            count += 1
+        return q_cycle
 
     @property
     def dz(self):
