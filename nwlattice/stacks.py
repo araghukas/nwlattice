@@ -1,8 +1,8 @@
 import numpy as np
 
+from nwlattice import ROOT2, ROOT3
 from nwlattice.base import APointPlane, AStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
-from math import sqrt
 
 
 class CustomStack(AStackLattice):
@@ -21,7 +21,7 @@ class CustomStack(AStackLattice):
     @classmethod
     def fcc_111_pristine(cls, nz, p):
         # construct smallest list of unique planes
-        scale = 1 / sqrt(2)
+        scale = 1 / ROOT2
         unit_dxy = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
@@ -31,7 +31,6 @@ class CustomStack(AStackLattice):
         base_planes[2].inverted = True
 
         # construct whole list of planes
-        ROOT3 = np.sqrt(3)
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
@@ -63,13 +62,12 @@ class CustomStack(AStackLattice):
         return cls(planes, dz, dxy)
 
     @classmethod
-    def fcc_111_twin(cls, nz, p, q0, q_max):
+    def fcc_111_faceted_twin(cls, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = CustomStack._get_twinstack_q_cycle(nz, q0, q_max)
 
         # construct whole list of planes
-        scale = 1 / np.sqrt(2)
-        ROOT3 = np.sqrt(3)
+        scale = 1 / ROOT2
         planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
@@ -83,7 +81,7 @@ class CustomStack(AStackLattice):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
-        scale = 1 / sqrt(2)
+        scale = 1 / ROOT2
         unit_dxy = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
@@ -93,7 +91,6 @@ class CustomStack(AStackLattice):
         base_planes[2].inverted = True
 
         # construct whole list of planes
-        ROOT3 = np.sqrt(3)
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
@@ -111,14 +108,14 @@ class CustomStack(AStackLattice):
 
     @classmethod
     def hexagonal_111_pristine(cls, nz, p):
-        return CustomStack.fcc_111_twin(nz, p, q0=0, q_max=1)
+        return CustomStack.fcc_111_faceted_twin(nz, p, q0=0, q_max=1)
 
     @classmethod
     def mixed_phase_fcc_hexagonal(cls, nz, p, index):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
-        scale = 1 / sqrt(2)
+        scale = 1 / ROOT2
         unit_dxy = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
@@ -128,7 +125,6 @@ class CustomStack(AStackLattice):
         base_planes[2].inverted = True
 
         # construct whole list of planes
-        ROOT3 = np.sqrt(3)
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))

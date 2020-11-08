@@ -3,9 +3,12 @@ import numpy as np
 from time import time
 from os.path import expanduser
 
+from nwlattice import ROOT3
+
 
 class AStackLattice(ABC):
     """abstract base class for wire lattices made of stacked planes"""
+
     def __init__(self):
         super().__init__()
         self._planes = []  # list of PointPlane objects to be stacked
@@ -140,12 +143,11 @@ class AStackLattice(ABC):
 
 
 class APointPlane(ABC):
-
-    hx_vectors = np.array([[1., 0., 0.], [-.5, np.sqrt(3) / 2., 0.]])
+    hx_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])
     sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
 
-    ohex_delta = .5 * np.array([1., 1. / np.sqrt(3), 0.])
-    ehex_delta = .25 * np.array([1, -1. / np.sqrt(3), 0.])
+    ohex_delta = .5 * np.array([1., 1. / ROOT3, 0.])
+    ehex_delta = .25 * np.array([1, -1. / ROOT3, 0.])
 
     def __init__(self, scale):
         super().__init__()
@@ -160,6 +162,12 @@ class APointPlane(ABC):
     @abstractmethod
     def get_points(self, center=True):
         """return an array of all atom points"""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_index_for_diameter(scale, D):
+        """return plane index for given diameter"""
         raise NotImplementedError
 
     @property

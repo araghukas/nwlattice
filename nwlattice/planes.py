@@ -1,8 +1,8 @@
 import numpy as np
 
+from nwlattice import ROOT2, ROOT3
 from nwlattice.base import APointPlane
 from nwlattice.quaternion import qrotate
-from math import sqrt
 
 
 class HexPlane(APointPlane):
@@ -44,20 +44,20 @@ class HexPlane(APointPlane):
     def D(self):
         if self._D is None:
             if self.even:
-                self._D = 2 * (self.p - 1) * sqrt(3) / sqrt(2) / 2
+                self._D = 2 * (self.p - 1) * ROOT3 / ROOT2 / 2
             else:
-                self._D = (2 * self.p - 1) * sqrt(3) / sqrt(2) / 2
+                self._D = (2 * self.p - 1) * ROOT3 / ROOT2 / 2
         return self._D
 
     @property
     def area(self):
         if self._area is None:
             if self.even:
-                self._area = 0.5 * (3 * (self.p - 1)) * (self.p - 1) * sqrt(3)
+                self._area = 0.5 * (3 * (self.p - 1)) * (self.p - 1) * ROOT3
             else:
                 self._area = 0.25 * (
-                        ((self.p - 1) + (2 * self.p - 1)) * self.p * sqrt(3)
-                        + (self.p + (2 * self.p - 1)) * (self.p - 1) * sqrt(3)
+                        ((self.p - 1) + (2 * self.p - 1)) * self.p * ROOT3
+                        + (self.p + (2 * self.p - 1)) * (self.p - 1) * ROOT3
                 )
         return self._area
 
@@ -170,6 +170,11 @@ class HexPlane(APointPlane):
 
         return pts
 
+    @staticmethod
+    def get_index_for_diameter(scale, D):
+        p = round(1. + ROOT2 / ROOT3 * D / scale)
+        return p
+
 
 class SquarePlane(APointPlane):
     def __init__(self, r, scale, even=True):
@@ -268,6 +273,11 @@ class SquarePlane(APointPlane):
 
         return pts
 
+    @staticmethod
+    def get_index_for_diameter(scale, D):
+        r = 1 + round(D / scale)
+        return r
+
 
 class TwinPlane(APointPlane):
     def __init__(self, p, q, scale):
@@ -299,7 +309,7 @@ class TwinPlane(APointPlane):
     @property
     def D(self):
         if self._D is None:
-            self._D = 2 * (self.p - 1) * sqrt(3) / sqrt(2) / 2.
+            self._D = 2 * (self.p - 1) * ROOT3 / ROOT2 / 2.
         return self._D
 
     @property
@@ -307,7 +317,7 @@ class TwinPlane(APointPlane):
         if self._area is None:
             self._area = ((3 * (self.p - 1) + self.q) * (self.p - 1 - self.q)
                           + (3 * (self.p - 1) - self.q) * (self.p - 1 + self.q)
-                          ) * sqrt(3) / 4
+                          ) * ROOT3 / 4
         return self._area
 
     @property
@@ -357,3 +367,8 @@ class TwinPlane(APointPlane):
             pts = pts - self.com
 
         return self.scale * pts
+
+    @staticmethod
+    def get_index_for_diameter(scale, D):
+        p = round(1. + ROOT2 / ROOT3 * D / scale)
+        return p
