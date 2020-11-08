@@ -3,7 +3,7 @@ import numpy as np
 from time import time
 from os.path import expanduser
 
-from nwlattice import ROOT3
+from nwlattice.utilities import ROOT3
 
 
 class AStackLattice(ABC):

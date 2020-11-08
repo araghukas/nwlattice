@@ -1,6 +1,6 @@
 import numpy as np
 
-from nwlattice import ROOT2, ROOT3
+from nwlattice.utilities import ROOT2, ROOT3
 from nwlattice.base import APointPlane, AStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
@@ -211,3 +211,74 @@ class CustomStack(AStackLattice):
                 n += 1
             self._area = sum_area / n
         return self._area
+
+
+def get_wire(type_name, a0, diameter, length, **kwargs):
+    """Return a CustomStack object with specified measurements"""
+    # validate `type_name` parameter
+    if type(type_name) is not str:
+        raise ValueError("`type_name` must be a string")
+    VALID_NAMES = set()
+    for k, v in vars(CustomStack).items():
+        if type(v) is classmethod:
+            VALID_NAMES.add(k)
+    if type_name not in VALID_NAMES:
+        error_msg = "invalid `type_name` '%s'; available type names are: "
+        for name in VALID_NAMES:
+            error_msg += "\n%s" % name
+        raise ValueError(error_msg)
+
+    if type_name == "fcc_100_pristine":
+        nz = 1 + round(2. * length / a0)
+        r = SquarePlane.get_index_for_diameter(a0, diameter)
+        return CustomStack.fcc_100_pristine(nz, r)
+
+    elif type_name == "fcc_111_pristine":
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        return CustomStack.fcc_111_pristine(nz, p)
+
+    elif type_name == "fcc_hexagonal_mixed":
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        index = kwargs['index'] if 'index' in kwargs else []
+        return CustomStack.fcc_hexagonal_mixed(nz, p, index)
+
+    elif type_name == "hexagonal_111_pristine":
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        return CustomStack.hexagonal_111_pristine(nz, p)
+
+    elif type_name == "fcc_111_smooth_twin":
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        if 'index' in kwargs:
+            index = kwargs['index']
+        elif 'P' in kwargs:
+            index = []
+            period = round(ROOT3 * kwargs['P'] / 2 / a0)
+            include = True
+            for i in range(nz):
+                if i % period == 0:
+                    include = not include
+                if include:
+                    index.append(i)
+        else:
+            index = []
+        return CustomStack.fcc_111_smooth_twin(nz, p, index)
+
+    elif type_name == "fcc_111_faceted_twin":
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        q0 = kwargs['q0'] if 'q0' in kwargs else 0
+        if 'q_max' in kwargs:
+            q_max = kwargs['q_max']
+        elif 'P' in kwargs:
+            q_max = round(ROOT3 * kwargs['P'] / 2 / a0)
+        else:
+            q_max = p - 1
+        return CustomStack.fcc_111_faceted_twin(nz, p, q0, q_max)
+
+    else:
+        raise RuntimeError("`type_name` '%s' did not match any conditionals"
+                           % type_name)
