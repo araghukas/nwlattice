@@ -33,7 +33,9 @@ class FCCPristine111(AStackLattice):
     def from_dimensions(cls, a0, diameter, length):
         nz = round(ROOT3 * length / a0)
         p = HexPlane.get_index_for_diameter(a0, diameter)
-        return cls(nz, p)
+        stk = cls(nz, p)
+        stk._scale = a0
+        return stk
 
     def write_map(self, file_path):
         raise
@@ -60,7 +62,9 @@ class FCCPristine100(AStackLattice):
     def from_dimensions(cls, a0, diameter, length):
         nz = 1 + round(2. * length / a0)
         r = SquarePlane.get_index_for_diameter(a0, diameter)
-        return cls(nz, r)
+        stk = cls(nz, r)
+        stk._scale = a0
+        return stk
 
     def write_map(self, file_path):
         raise NotImplementedError
@@ -112,7 +116,9 @@ class FCCTwin(AStackLattice):
                     index.append(i)
         else:
             index = []
-        return cls(nz, p, index)
+        stk = cls(nz, p, index)
+        stk._scale = a0
+        return stk
 
     def write_map(self, file_path):
         raise NotImplementedError
@@ -137,7 +143,9 @@ class FCCTwinFaceted(AStackLattice):
         nz = round(ROOT3 * length / a0)
         p = HexPlane.get_index_for_diameter(a0, diameter)
         q_max = round(ROOT3 * period / 2 / a0)
-        return cls(nz, p, q0, q_max)
+        stk = cls(nz, p, q0, q_max)
+        stk._scale = a0
+        return stk
 
     def write_map(self, file_path):
         raise NotImplementedError
@@ -177,7 +185,9 @@ class Hexagonal111Pristine(AStackLattice):
     def from_dimensions(cls, a0, diameter, length):
         nz = round(ROOT3 * length / a0)
         p = HexPlane.get_index_for_diameter(a0, diameter)
-        return cls(nz, p)
+        stk = cls(nz, p)
+        stk._scale = a0
+        return stk
 
 
 class FCCHexagonalMixed(AStackLattice):
@@ -222,7 +232,9 @@ class FCCHexagonalMixed(AStackLattice):
                     index.append(i)
         else:
             index = []
-        return cls(nz, p, index)
+        stk = cls(nz, p, index)
+        stk._scale = a0
+        return stk
 
     def write_map(self, file_path):
         raise NotImplementedError

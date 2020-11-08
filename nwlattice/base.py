@@ -21,6 +21,7 @@ class AStackLattice(ABC):
         self._basis = dict()  # atom types attached to lattice
         self._area = None
         self._v_center_com = np.zeros(3)
+        self._scale = 1.0
 
         for plane in planes:
             if isinstance(plane, APointPlane):
@@ -147,8 +148,11 @@ class AStackLattice(ABC):
 
         return atom_pts + self._v_center_com
 
-    def write_points(self, file_path, scale=1.0):
+    def write_points(self, file_path, scale=None):
         """write LAMMPS/OVITO compatible data file of all atom points"""
+        if scale is None:
+            scale = self._scale
+
         # create dict of atom types and arrays of corresponding points
         N_atoms = 0  # total number of atoms
         points_dict = {}
