@@ -16,7 +16,6 @@ class CustomStack(AStackLattice):
 
         self._dz = np.reshape(dz, (self.nz, 3))
         self._dxy = np.reshape(dxy, (self.nz, 3))
-        self._v_center_com = np.zeros(3)
 
     @classmethod
     def fcc_111_pristine(cls, nz, p):
@@ -153,64 +152,8 @@ class CustomStack(AStackLattice):
             count += 1
         return q_cycle
 
-    @property
-    def dz(self):
-        return self._dz
-
-    @property
-    def dxy(self):
-        return self._dxy
-
-    def get_points(self, t):
-        # set up lattice points
-        pts = np.zeros((self.N, 3))
-        n = 0
-        for i, plane in enumerate(self.planes):
-            pts[n:(n + plane.N)] = (
-                    plane.get_points(center=True)
-                    + self.dxy[i]
-                    + self.dz[i]
-            )
-            n += plane.N
-
-        # populate lattice points with basis points of type `t`
-        atom_pts = np.zeros((self.N * len(self.basis[t]), 3))
-        n = 0
-        for bpt in self.basis[t]:
-            nb = 0
-            for i in range(self.nz):
-                plane = self.planes[i]
-                atom_pts[n:(n + plane.N)] = pts[nb:(nb + plane.N)] + bpt
-                nb += plane.N
-                n += plane.N
-
-        return atom_pts + self._v_center_com
-
     def write_map(self, file_path):
         raise NotImplementedError
-
-    @property
-    def D(self):
-        """returns largest plane diameter"""
-        if self._D is None:
-            D = self.planes[0].D
-            for plane in self.planes[1:]:
-                if plane.D > D:
-                    D = plane.D
-            self._D = D
-        return self._D
-
-    @property
-    def area(self):
-        """returns average plane area"""
-        if self._area is None:
-            sum_area = 0
-            n = 0
-            for plane in self.planes:
-                sum_area += plane.area
-                n += 1
-            self._area = sum_area / n
-        return self._area
 
 
 def get_wire(type_name, a0, diameter, length, **kwargs):

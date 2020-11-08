@@ -20,11 +20,7 @@ class AStackLattice(ABC):
         self._L = None  # length in in a0=1 units
         self._basis = dict()  # atom types attached to lattice
         self._area = None
-
-    @abstractmethod
-    def get_points(self, t):
-        """return an array of all atom points of type `t`"""
-        raise NotImplementedError
+        self._v_center_com = np.zeros(3)
 
     @abstractmethod
     def write_map(self, file_path):
@@ -32,15 +28,27 @@ class AStackLattice(ABC):
         raise NotImplementedError
 
     @property
-    @abstractmethod
     def D(self):
-        # implement diameter formula for each subclass
-        raise NotImplementedError
+        """returns largest plane diameter"""
+        if self._D is None:
+            D = self.planes[0].D
+            for plane in self.planes[1:]:
+                if plane.D > D:
+                    D = plane.D
+            self._D = D
+        return self._D
 
     @property
-    @abstractmethod
     def area(self):
-        return NotImplementedError
+        """returns average plane area"""
+        if self._area is None:
+            sum_area = 0
+            n = 0
+            for plane in self.planes:
+                sum_area += plane.area
+                n += 1
+            self._area = sum_area / n
+        return self._area
 
     # --------------------------------------------------------------------------
     # concrete properties
@@ -97,6 +105,32 @@ class AStackLattice(ABC):
             self._basis[t].append(pt)
         else:
             self._basis[t] = [pt]
+
+    def get_points(self, t):
+        """return an array of all atom points of type `t`"""
+        # set up lattice points
+        pts = np.zeros((self.N, 3))
+        n = 0
+        for i, plane in enumerate(self.planes):
+            pts[n:(n + plane.N)] = (
+                    plane.get_points(center=True)
+                    + self.dxy[i]
+                    + self.dz[i]
+            )
+            n += plane.N
+
+        # populate lattice points with basis points of type `t`
+        atom_pts = np.zeros((self.N * len(self.basis[t]), 3))
+        n = 0
+        for bpt in self.basis[t]:
+            nb = 0
+            for i in range(self.nz):
+                plane = self.planes[i]
+                atom_pts[n:(n + plane.N)] = pts[nb:(nb + plane.N)] + bpt
+                nb += plane.N
+                n += plane.N
+
+        return atom_pts + self._v_center_com
 
     def write_points(self, file_path, scale=1.0):
         """write LAMMPS/OVITO compatible data file of all atom points"""
