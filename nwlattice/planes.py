@@ -2,7 +2,7 @@ import numpy as np
 
 from nwlattice import ROOT2, ROOT3
 from nwlattice.base import APointPlane
-from nwlattice.quaternion import qrotate
+from nwlattice.utilities import Quaternion
 
 
 class HexPlane(APointPlane):
@@ -64,7 +64,7 @@ class HexPlane(APointPlane):
     @property
     def vectors(self):
         if self._vectors is None:
-            self._vectors = super().hx_vectors
+            self._vectors = super().hex_vectors
         return self._vectors
 
     @property
@@ -101,7 +101,7 @@ class HexPlane(APointPlane):
             pts = self._get_points_odd(center)
 
         if self.inverted:
-            pts = qrotate(pts, [0, 0, 1], np.pi)
+            pts = Quaternion.qrotate(pts, [0, 0, 1], np.pi)
         return self.scale * pts
 
     def _get_points_even(self, center=True):
@@ -322,7 +322,7 @@ class TwinPlane(APointPlane):
 
     @property
     def vectors(self):
-        return super().hx_vectors
+        return super().hex_vectors
 
     @property
     def delta(self):

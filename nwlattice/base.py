@@ -100,6 +100,7 @@ class AStackLattice(ABC):
 
     def write_points(self, file_path, scale=1.0):
         """write LAMMPS/OVITO compatible data file of all atom points"""
+        # create dict of atom types and arrays of corresponding points
         N_atoms = 0  # total number of atoms
         points_dict = {}
         for b in self.basis:
@@ -143,7 +144,7 @@ class AStackLattice(ABC):
 
 
 class APointPlane(ABC):
-    hx_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])
+    hex_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])
     sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
 
     ohex_delta = .5 * np.array([1., 1. / ROOT3, 0.])
