@@ -1,9 +1,48 @@
 import numpy as np
 
 
-def qrotate(points, axis, theta):
-    q = Quaternion.rotator(axis, theta)
-    return q.rotate(points)
+def get_tetrahedral_set(v, ortho=None):
+    """
+    treat input vector as first tetrahedral axis, return remaining 3
+
+    :param v: first 3-vector
+    :param ortho: (optional in lieu of default choice) axis for first rotation
+    :return: three vectors from tetrahedral rotations of v
+    """
+    v = np.reshape(v, (3,))
+    if ortho is None:
+        # default ortho options based on `v`
+        if v[0] != 0. and v[1] != 0.:
+            ortho_v1 = np.array([-v[1], v[0], 0.])
+        elif v[0] != 0. and v[2] != 0.:
+            ortho_v1 = np.array([-v[2], 0., v[0]])
+        elif v[1] != 0. and v[2] != 0.:
+            ortho_v1 = np.array([0., -v[2], v[1]])
+        elif v[0] != 0.:
+            ortho_v1 = np.array([0., v[0], 0.])
+        elif v[1] != 0.:
+            ortho_v1 = np.array([0., 0., v[1]])
+        elif v[2] != 0.:
+            ortho_v1 = np.array([v[2], 0., 0.])
+        else:
+            raise ValueError("can not rotate zero vector")
+    elif abs(np.dot(v, ortho)) <= np.finfo(np.float64).eps:
+        ortho_v1 = ortho
+    else:
+        angle = np.arccos(
+            np.dot(v, ortho) / np.linalg.norm(v) * np.linalg.norm(ortho)
+        ) * 180 / np.pi
+        raise ValueError("argument vectors are not orthogonal, "
+                         "angle = %f degrees" % angle)
+
+    # perform rotations
+    theta = 1.9106332362490184  # ~109.4˚ in rad
+    q1 = Quaternion.rotator(ortho_v1, theta)
+    q2 = Quaternion.rotator(v, np.pi / 3)
+    v2 = q1.rotate(v)[0]
+    v3 = q2.rotate(v2)[0]
+    v4 = q2.rotate(v2)[0]
+    return v2, v3, v4
 
 
 class Quaternion(object):
@@ -12,6 +51,7 @@ class Quaternion(object):
     def __init__(self, a, b, c, d):
         self._q = np.array([a, b, c, d], dtype=np.double)
         self._isZeroQuaternion = np.all(self._q == 0)
+        self._conj = None
 
     def __str__(self):
         return "Quaternion({})".format(self.q)
@@ -125,7 +165,9 @@ class Quaternion(object):
 
     @property
     def conj(self):
-        return Quaternion(*(np.array([1, -1, -1, -1] * self.q)))
+        if self._conj is None:
+            self._conj = Quaternion(*(np.array([1, -1, -1, -1] * self.q)))
+        return self._conj
 
     @property
     def mag(self):
@@ -143,12 +185,12 @@ class Quaternion(object):
     def rotate(self, points):
         # rotate point or array of points
         points = np.asarray(points)
-        squeezeOut = False
+        squeeze_out = False
         if points.ndim == 0:
             raise ValueError(
                 "quaternion rotations only defined for 3-coordinate points")
         if points.ndim == 1:
-            squeezeOut = True
+            squeeze_out = True
             points = np.expand_dims(points, 0)
 
         inv = self.inv
@@ -156,11 +198,15 @@ class Quaternion(object):
         v_qinv = inv.v
         output = np.empty((len(points), 3))
         for i, point in enumerate(points):  # can probably vectorize this...
-
             r_qp = -np.dot(self.v, point)
             v_qp = self.r * point + np.cross(self.v, point)
             output[i] = r_qp * v_qinv + r_qinv * v_qp + np.cross(v_qp, v_qinv)
 
-        if squeezeOut:
+        if squeeze_out:
             output.squeeze()
         return output
+
+    @staticmethod
+    def qrotate(points, axis, theta):
+        q = Quaternion.rotator(axis, theta)
+        return q.rotate(points)
