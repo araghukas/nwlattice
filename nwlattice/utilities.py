@@ -1,50 +1,9 @@
 import numpy as np
 
 
-def get_tetrahedral_set(v, ortho=None):
-    """
-    treat input vector as first tetrahedral axis, return remaining 3
-
-    :param v: first 3-vector
-    :param ortho: (optional in lieu of default choice) axis for first rotation
-    :return: three vectors from tetrahedral rotations of v
-    """
-    v = np.reshape(v, (3,))
-    if ortho is None:
-        # default ortho options based on `v`
-        if v[0] != 0. and v[1] != 0.:
-            ortho_v1 = np.array([-v[1], v[0], 0.])
-        elif v[0] != 0. and v[2] != 0.:
-            ortho_v1 = np.array([-v[2], 0., v[0]])
-        elif v[1] != 0. and v[2] != 0.:
-            ortho_v1 = np.array([0., -v[2], v[1]])
-        elif v[0] != 0.:
-            ortho_v1 = np.array([0., v[0], 0.])
-        elif v[1] != 0.:
-            ortho_v1 = np.array([0., 0., v[1]])
-        elif v[2] != 0.:
-            ortho_v1 = np.array([v[2], 0., 0.])
-        else:
-            raise ValueError("can not rotate zero vector")
-    elif abs(np.dot(v, ortho)) <= np.finfo(np.float64).eps:
-        ortho_v1 = ortho
-    else:
-        angle = np.arccos(
-            np.dot(v, ortho) / np.linalg.norm(v) * np.linalg.norm(ortho)
-        ) * 180 / np.pi
-        raise ValueError("argument vectors are not orthogonal, "
-                         "angle = %f degrees" % angle)
-
-    # perform rotations
-    theta = 1.9106332362490184  # ~109.4˚ in rad
-    q1 = Quaternion.rotator(ortho_v1, theta)
-    q2 = Quaternion.rotator(v, np.pi / 3)
-    v2 = q1.rotate(v)[0]
-    v3 = q2.rotate(v2)[0]
-    v4 = q2.rotate(v2)[0]
-    return v2, v3, v4
-
-
+# ------------------------------------------------------------------------------
+# rotation tools
+# ------------------------------------------------------------------------------
 class Quaternion(object):
     """ a basic quaternion object """
 
@@ -210,3 +169,47 @@ class Quaternion(object):
     def qrotate(points, axis, theta):
         q = Quaternion.rotator(axis, theta)
         return q.rotate(points)
+
+
+def get_tetrahedral_set(v, ortho=None):
+    """
+    treat input vector as first tetrahedral axis, return remaining 3
+
+    :param v: first 3-vector
+    :param ortho: (optional in lieu of default choice) axis for first rotation
+    :return: three vectors from tetrahedral rotations of v
+    """
+    v = np.reshape(v, (3,))
+    if ortho is None:
+        # default ortho options based on `v`
+        if v[0] != 0. and v[1] != 0.:
+            ortho_v1 = np.array([-v[1], v[0], 0.])
+        elif v[0] != 0. and v[2] != 0.:
+            ortho_v1 = np.array([-v[2], 0., v[0]])
+        elif v[1] != 0. and v[2] != 0.:
+            ortho_v1 = np.array([0., -v[2], v[1]])
+        elif v[0] != 0.:
+            ortho_v1 = np.array([0., v[0], 0.])
+        elif v[1] != 0.:
+            ortho_v1 = np.array([0., 0., v[1]])
+        elif v[2] != 0.:
+            ortho_v1 = np.array([v[2], 0., 0.])
+        else:
+            raise ValueError("can not rotate zero vector")
+    elif abs(np.dot(v, ortho)) <= np.finfo(np.float64).eps:
+        ortho_v1 = ortho
+    else:
+        angle = np.arccos(
+            np.dot(v, ortho) / np.linalg.norm(v) * np.linalg.norm(ortho)
+        ) * 180 / np.pi
+        raise ValueError("argument vectors are not orthogonal, "
+                         "angle = %f degrees" % angle)
+
+    # perform rotations
+    theta = 1.9106332362490184  # ~109.4˚ in rad
+    q1 = Quaternion.rotator(ortho_v1, theta)
+    q2 = Quaternion.rotator(v, np.pi / 3)
+    v2 = q1.rotate(v)[0]
+    v3 = q2.rotate(v2)[0]
+    v4 = q2.rotate(v2)[0]
+    return v2, v3, v4

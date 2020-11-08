@@ -111,7 +111,7 @@ class CustomStack(AStackLattice):
         return CustomStack.fcc_111_faceted_twin(nz, p, q0=0, q_max=1)
 
     @classmethod
-    def mixed_phase_fcc_hexagonal(cls, nz, p, index):
+    def fcc_hexagonal_mixed(cls, nz, p, index):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
