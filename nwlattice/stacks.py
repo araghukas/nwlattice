@@ -1,24 +1,12 @@
 import numpy as np
 
 from nwlattice.utilities import ROOT2, ROOT3
-from nwlattice.base import APointPlane, AStackLattice
+from nwlattice.base import AStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
 
-class CustomStack(AStackLattice):
-    def __init__(self, planes, dz, dxy):
-        super().__init__()
-        for plane in planes:
-            if isinstance(plane, APointPlane):
-                self._planes.append(plane)
-            else:
-                raise TypeError("all items in planes list must be PointPlanes")
-
-        self._dz = np.reshape(dz, (self.nz, 3))
-        self._dxy = np.reshape(dxy, (self.nz, 3))
-
-    @classmethod
-    def fcc_111_pristine(cls, nz, p):
+class FCCPristine111(AStackLattice):
+    def __init__(self, nz, p):
         # construct smallest list of unique planes
         scale = 1 / ROOT2
         unit_dxy = np.array([0.35355339, 0.20412415, 0.])
@@ -38,12 +26,21 @@ class CustomStack(AStackLattice):
             dz[i][2] = i / ROOT3
             dxy[i] += (i % 3) * unit_dxy
 
-        stk = cls(planes, dz, dxy)
-        stk._v_center_com = -unit_dxy
-        return stk
+        self._v_center_com = -unit_dxy
+        super().__init__(planes, dz, dxy)
 
     @classmethod
-    def fcc_100_pristine(cls, nz, r):
+    def from_dimensions(cls, a0, diameter, length):
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        return cls(nz, p)
+
+    def write_map(self, file_path):
+        raise
+
+
+class FCCPristine100(AStackLattice):
+    def __init__(self, nz, r):
         # construct smallest list of unique planes
         base_planes = [
             SquarePlane(r, even=True, scale=1.0),
@@ -57,26 +54,20 @@ class CustomStack(AStackLattice):
         for i in range(nz):
             planes.append(base_planes[i % 2])
             dz[i][2] = i * 0.5
-
-        return cls(planes, dz, dxy)
-
-    @classmethod
-    def fcc_111_faceted_twin(cls, nz, p, q0, q_max):
-        # obtain cycle of `q` indices for comprising TwinPlanes
-        q_cycle = CustomStack._get_twinstack_q_cycle(nz, q0, q_max)
-
-        # construct whole list of planes
-        scale = 1 / ROOT2
-        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
-        dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
-        for i in range(nz):
-            dz[i][2] = i / ROOT3
-
-        return cls(planes, dz, dxy)
+        super().__init__(planes, dz, dxy)
 
     @classmethod
-    def fcc_111_smooth_twin(cls, nz, p, index):
+    def from_dimensions(cls, a0, diameter, length):
+        nz = 1 + round(2. * length / a0)
+        r = SquarePlane.get_index_for_diameter(a0, diameter)
+        return cls(nz, r)
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+
+class FCCTwin(AStackLattice):
+    def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
@@ -102,15 +93,95 @@ class CustomStack(AStackLattice):
             dxy[i] += (j % 3) * unit_dxy
             dz[i][2] = i / ROOT3
             j += 1
-
-        return cls(planes, dz, dxy)
-
-    @classmethod
-    def hexagonal_111_pristine(cls, nz, p):
-        return CustomStack.fcc_111_faceted_twin(nz, p, q0=0, q_max=1)
+        super().__init__(planes, dz, dxy)
 
     @classmethod
-    def fcc_hexagonal_mixed(cls, nz, p, index):
+    def from_dimensions(cls, a0, diameter, length, period=None, index=None):
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        if index is not None:
+            index = index
+        elif period is not None:
+            index = []
+            i_period = round(ROOT3 * period / 2 / a0)
+            include = True
+            for i in range(nz):
+                if i % i_period == 0:
+                    include = not include
+                if include:
+                    index.append(i)
+        else:
+            index = []
+        return cls(nz, p, index)
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+
+class FCCTwinFaceted(AStackLattice):
+    def __init__(self, nz, p, q0, q_max):
+        # obtain cycle of `q` indices for comprising TwinPlanes
+        q_cycle = self.get_q_cycle(nz, q0, q_max)
+
+        # construct whole list of planes
+        scale = 1 / ROOT2
+        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
+        dz = np.zeros((nz, 3))
+        dxy = np.zeros((nz, 3))
+        for i in range(nz):
+            dz[i][2] = i / ROOT3
+        super().__init__(planes, dz, dxy)
+
+    @classmethod
+    def from_dimensions(cls, a0, diameter, length, period, q0=0):
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        q_max = round(ROOT3 * period / 2 / a0)
+        return cls(nz, p, q0, q_max)
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    @staticmethod
+    def get_q_cycle(nz, q0, q_max):
+        q_cycle = [q0]
+        step = 1
+        count = 0
+        while count < nz - 1:
+            next_q = q_cycle[-1] + step
+            q_cycle.append(next_q)
+            if next_q == q_max or next_q == 0:
+                step *= -1
+            count += 1
+        return q_cycle
+
+
+class Hexagonal111Pristine(AStackLattice):
+    def __init__(self, nz, p):
+        # obtain cycle of `q` indices for comprising TwinPlanes
+        q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
+
+        # construct whole list of planes
+        scale = 1 / ROOT2
+        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
+        dz = np.zeros((nz, 3))
+        dxy = np.zeros((nz, 3))
+        for i in range(nz):
+            dz[i][2] = i / ROOT3
+        super().__init__(planes, dz, dxy)
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    @classmethod
+    def from_dimensions(cls, a0, diameter, length):
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        return cls(nz, p)
+
+
+class FCCHexagonalMixed(AStackLattice):
+    def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
@@ -136,100 +207,22 @@ class CustomStack(AStackLattice):
             dxy[i] += (j % 3) * unit_dxy
             dz[i][2] = i / ROOT3
             j += 1
+        super().__init__(planes, dz, dxy)
 
-        return cls(planes, dz, dxy)
-
-    @staticmethod
-    def _get_twinstack_q_cycle(nz, q0, q_max):
-        q_cycle = [q0]
-        step = 1
-        count = 0
-        while count < nz - 1:
-            next_q = q_cycle[-1] + step
-            q_cycle.append(next_q)
-            if next_q == q_max or next_q == 0:
-                step *= -1
-            count += 1
-        return q_cycle
+    @classmethod
+    def from_dimensions(cls, a0, diameter, length, index=None, fraction=None):
+        nz = round(ROOT3 * length / a0)
+        p = HexPlane.get_index_for_diameter(a0, diameter)
+        if index is not None:
+            index = []
+        elif fraction is not None:
+            index = []
+            for i in range(nz):
+                if np.random.uniform(0, 1) < fraction:
+                    index.append(i)
+        else:
+            index = []
+        return cls(nz, p, index)
 
     def write_map(self, file_path):
         raise NotImplementedError
-
-
-def get_wire(type_name, a0, diameter, length, **kwargs):
-    """Return a CustomStack object with specified measurements"""
-    # validate `type_name` parameter
-    if type(type_name) is not str:
-        raise ValueError("`type_name` must be a string")
-    VALID_NAMES = set()
-    for k, v in vars(CustomStack).items():
-        if type(v) is classmethod:
-            VALID_NAMES.add(k)
-    if type_name not in VALID_NAMES:
-        error_msg = "invalid `type_name` '%s'; available type names are: "
-        for name in VALID_NAMES:
-            error_msg += "\n%s" % name
-        raise ValueError(error_msg)
-
-    if type_name == "fcc_100_pristine":
-        nz = 1 + round(2. * length / a0)
-        r = SquarePlane.get_index_for_diameter(a0, diameter)
-        return CustomStack.fcc_100_pristine(nz, r)
-
-    elif type_name == "fcc_111_pristine":
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
-        return CustomStack.fcc_111_pristine(nz, p)
-
-    elif type_name == "fcc_hexagonal_mixed":
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
-        if 'index' in kwargs:
-            index = kwargs['index']
-        elif 'fraction' in kwargs:
-            index = []
-            for i in range(nz):
-                if np.random.uniform(0, 1) < kwargs['fraction']:
-                    index.append(i)
-        else:
-            index = []
-        return CustomStack.fcc_hexagonal_mixed(nz, p, index)
-
-    elif type_name == "hexagonal_111_pristine":
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
-        return CustomStack.hexagonal_111_pristine(nz, p)
-
-    elif type_name == "fcc_111_smooth_twin":
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
-        if 'index' in kwargs:
-            index = kwargs['index']
-        elif 'P' in kwargs:
-            index = []
-            period = round(ROOT3 * kwargs['P'] / 2 / a0)
-            include = True
-            for i in range(nz):
-                if i % period == 0:
-                    include = not include
-                if include:
-                    index.append(i)
-        else:
-            index = []
-        return CustomStack.fcc_111_smooth_twin(nz, p, index)
-
-    elif type_name == "fcc_111_faceted_twin":
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
-        q0 = kwargs['q0'] if 'q0' in kwargs else 0
-        if 'q_max' in kwargs:
-            q_max = kwargs['q_max']
-        elif 'P' in kwargs:
-            q_max = round(ROOT3 * kwargs['P'] / 2 / a0)
-        else:
-            q_max = p - 1
-        return CustomStack.fcc_111_faceted_twin(nz, p, q0, q_max)
-
-    else:
-        raise RuntimeError("`type_name` '%s' did not match any conditionals"
-                           % type_name)

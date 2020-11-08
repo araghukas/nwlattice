@@ -9,7 +9,7 @@ from nwlattice.utilities import ROOT3
 class AStackLattice(ABC):
     """abstract base class for wire lattices made of stacked planes"""
 
-    def __init__(self):
+    def __init__(self, planes, dz, dxy):
         super().__init__()
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
@@ -21,6 +21,21 @@ class AStackLattice(ABC):
         self._basis = dict()  # atom types attached to lattice
         self._area = None
         self._v_center_com = np.zeros(3)
+
+        for plane in planes:
+            if isinstance(plane, APointPlane):
+                self._planes.append(plane)
+            else:
+                raise TypeError("all items in planes list must be PointPlanes")
+
+        self._dz = np.reshape(dz, (self.nz, 3))
+        self._dxy = np.reshape(dxy, (self.nz, 3))
+
+    @classmethod
+    @abstractmethod
+    def from_dimensions(cls, *args):
+        """create stack lattice from measurements instead of indices"""
+        raise NotImplementedError
 
     @abstractmethod
     def write_map(self, file_path):
