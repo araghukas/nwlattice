@@ -241,7 +241,15 @@ def get_wire(type_name, a0, diameter, length, **kwargs):
     elif type_name == "fcc_hexagonal_mixed":
         nz = round(ROOT3 * length / a0)
         p = HexPlane.get_index_for_diameter(a0, diameter)
-        index = kwargs['index'] if 'index' in kwargs else []
+        if 'index' in kwargs:
+            index = kwargs['index']
+        elif 'fraction' in kwargs:
+            index = []
+            for i in range(nz):
+                if np.random.uniform(0, 1) < kwargs['fraction']:
+                    index.append(i)
+        else:
+            index = []
         return CustomStack.fcc_hexagonal_mixed(nz, p, index)
 
     elif type_name == "hexagonal_111_pristine":
