@@ -18,7 +18,7 @@ class AStackLattice(ABC):
         self._dxy = None  # xy-plane offset between planes in a0=1 units
         self._D = None  # approximate diameter in a0=1 units
         self._L = None  # length in in a0=1 units
-        self._basis = dict()  # atom types attached to lattice
+        self._basis = {}  # atom types attached to lattice
         self._area = None
         self._v_center_com = np.zeros(3)
         self._scale = 1.0
