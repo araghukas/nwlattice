@@ -44,6 +44,12 @@ class AStackLattice(ABC):
         raise NotImplementedError
 
     @property
+    @abstractmethod
+    def type_name(self):
+        """string identifying each sub-class"""
+        raise NotImplementedError
+
+    @property
     def D(self):
         """returns largest plane diameter"""
         if self._D is None:

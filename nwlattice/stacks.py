@@ -29,6 +29,10 @@ class FCCPristine111(AStackLattice):
         self._v_center_com = -unit_dxy
         super().__init__(planes, dz, dxy)
 
+    @property
+    def type_name(self):
+        return "FCCPristine111"
+
     @classmethod
     def from_dimensions(cls, a0, diameter, length):
         nz = round(ROOT3 * length / a0)
@@ -57,6 +61,10 @@ class FCCPristine100(AStackLattice):
             planes.append(base_planes[i % 2])
             dz[i][2] = i * 0.5
         super().__init__(planes, dz, dxy)
+
+    @property
+    def type_name(self):
+        return "FCCPristine100"
 
     @classmethod
     def from_dimensions(cls, a0, diameter, length):
@@ -99,6 +107,10 @@ class FCCTwin(AStackLattice):
             j += 1
         super().__init__(planes, dz, dxy)
 
+    @property
+    def type_name(self):
+        return "FCCTwin"
+
     @classmethod
     def from_dimensions(cls, a0, diameter, length, period=None, index=None):
         nz = round(ROOT3 * length / a0)
@@ -137,6 +149,10 @@ class FCCTwinFaceted(AStackLattice):
         for i in range(nz):
             dz[i][2] = i / ROOT3
         super().__init__(planes, dz, dxy)
+
+    @property
+    def type_name(self):
+        return "FCCTwinFaceted"
 
     @classmethod
     def from_dimensions(cls, a0, diameter, length, period, q0=0):
@@ -178,8 +194,9 @@ class Hexagonal111Pristine(AStackLattice):
             dz[i][2] = i / ROOT3
         super().__init__(planes, dz, dxy)
 
-    def write_map(self, file_path):
-        raise NotImplementedError
+    @property
+    def type_name(self):
+        return "Hexagonal111Pristine"
 
     @classmethod
     def from_dimensions(cls, a0, diameter, length):
@@ -188,6 +205,9 @@ class Hexagonal111Pristine(AStackLattice):
         stk = cls(nz, p)
         stk._scale = a0
         return stk
+
+    def write_map(self, file_path):
+        raise NotImplementedError
 
 
 class FCCHexagonalMixed(AStackLattice):
@@ -218,6 +238,10 @@ class FCCHexagonalMixed(AStackLattice):
             dz[i][2] = i / ROOT3
             j += 1
         super().__init__(planes, dz, dxy)
+
+    @property
+    def type_name(self):
+        return "FCCHexagonalMixed"
 
     @classmethod
     def from_dimensions(cls, a0, diameter, length, index=None, fraction=None):
