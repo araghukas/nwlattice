@@ -95,14 +95,16 @@ class HexPlane(APointPlane):
             raise TypeError("can't assign non boolean to `inverted` property")
 
     def get_points(self, center=True):
-        if self.even:
-            pts = self._get_points_even(center)
-        else:
-            pts = self._get_points_odd(center)
+        if self._points is None:
+            if self.even:
+                pts = self._get_points_even(center)
+            else:
+                pts = self._get_points_odd(center)
 
-        if self.inverted:
-            pts = Quaternion.qrotate(pts, [0, 0, 1], np.pi)
-        return self.scale * pts
+            if self.inverted:
+                pts = Quaternion.qrotate(pts, [0, 0, 1], np.pi)
+            self._points = self.scale * pts
+        return self._points
 
     def _get_points_even(self, center=True):
         pts = np.zeros((self.N, 3))
@@ -225,15 +227,17 @@ class SquarePlane(APointPlane):
         return self._com
 
     def get_points(self, center=True):
-        if self.even:
-            pts = self._get_points_even()
-        else:
-            pts = self._get_points_odd()
+        if self._points is None:
+            if self.even:
+                pts = self._get_points_even()
+            else:
+                pts = self._get_points_odd()
 
-        if center:
-            pts = pts - self.com
+            if center:
+                pts = pts - self.com
 
-        return self.scale * pts
+            self._points = self.scale * pts
+        return self._points
 
     def _get_points_even(self):
         pts = np.zeros((self.N, 3))
@@ -336,37 +340,39 @@ class TwinPlane(APointPlane):
         return self._com
 
     def get_points(self, center=True):
-        pts = np.zeros((self.N, 3))
-        i = 0
+        if self._points is None:
+            pts = np.zeros((self.N, 3))
+            i = 0
 
-        # translation vectors
-        v1, v2 = self.vectors
+            # translation vectors
+            v1, v2 = self.vectors
 
-        n = 0
-        m = self.p + self.q - 1  # start with this many +1 points in 0th row
+            n = 0
+            m = self.p + self.q - 1  # start with this many +1 points in 0th row
 
-        # loop from 1st row to second-widest row
-        while n < (self.p - self.q):
-            m += 1
-            for r in range(0, m):
-                pts[i] = r * v1 + n * v2
-                i += 1
-            n += 1
+            # loop from 1st row to second-widest row
+            while n < (self.p - self.q):
+                m += 1
+                for r in range(0, m):
+                    pts[i] = r * v1 + n * v2
+                    i += 1
+                n += 1
 
-        # loop from widest row to last row
-        s = 1
-        while n < (2 * self.p - 1):
-            m -= 1
-            for r in range(0, m):
-                pts[i] = (r + s) * v1 + n * v2
-                i += 1
-            s += 1
-            n += 1
+            # loop from widest row to last row
+            s = 1
+            while n < (2 * self.p - 1):
+                m -= 1
+                for r in range(0, m):
+                    pts[i] = (r + s) * v1 + n * v2
+                    i += 1
+                s += 1
+                n += 1
 
-        if center:
-            pts = pts - self.com
+            if center:
+                pts = pts - self.com
 
-        return self.scale * pts
+            self._points = self.scale * pts
+        return self._points
 
     @staticmethod
     def get_index_for_diameter(scale, D):

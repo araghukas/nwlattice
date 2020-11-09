@@ -212,6 +212,7 @@ class APointPlane(ABC):
         self._area = None
         self._com = None
         self._scale = scale
+        self._points = None
 
     @abstractmethod
     def get_points(self, center=True):
