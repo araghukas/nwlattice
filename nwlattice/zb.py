@@ -1,5 +1,5 @@
 import numpy as np
-from tslmaker.quaternion import Quaternion
+from nwlattice.utilities import Quaternion
 
 # TODO: clean this up
 
