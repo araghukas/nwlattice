@@ -238,10 +238,15 @@ class FCCHexagonalMixed(AStackLattice):
             dz[i][2] = i / ROOT3
             j += 1
         super().__init__(planes, dz, dxy)
+        self._fraction = len(index) / nz
 
     @property
     def type_name(self):
         return "FCCHexagonalMixed"
+
+    @property
+    def fraction(self):
+        return self._fraction
 
     @classmethod
     def from_dimensions(cls, a0, diameter, length, index=None, fraction=None):
