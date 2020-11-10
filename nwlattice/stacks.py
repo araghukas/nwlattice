@@ -180,7 +180,7 @@ class FCCTwinFaceted(AStackLattice):
         return q_cycle
 
 
-class Hexagonal111Pristine(AStackLattice):
+class HexagonalPristine111(AStackLattice):
     def __init__(self, nz, p):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
@@ -196,7 +196,7 @@ class Hexagonal111Pristine(AStackLattice):
 
     @property
     def type_name(self):
-        return "Hexagonal111Pristine"
+        return "HexagonalPristine111"
 
     @classmethod
     def from_dimensions(cls, a0, diameter, length):
