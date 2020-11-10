@@ -119,6 +119,11 @@ class AStackLattice(ABC):
 
     def add_basis(self, t, pt):
         """add an atom of type `t` at point `pt`"""
+        t = int(t)
+        if t <= 0:
+            raise ValueError("only positive integers should be used for "
+                             "atom type identifiers")
+
         pt = np.asarray(pt)
         if len(pt) != 3:
             raise ValueError("basis point must be 3-dimensional")
