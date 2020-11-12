@@ -16,8 +16,9 @@ class AStackLattice(ABC):
         self._nz = None  # number of planes in wire lattice
         self._dz = None  # spacing between planes in a0=1 units
         self._dxy = None  # xy-plane offset between planes in a0=1 units
-        self._D = None  # approximate diameter in a0=1 units
-        self._L = None  # length in in a0=1 units
+        self._D = None  # actual diameter (scaled)
+        self._L = None  # actual length (scaled)
+        self._P = None  # actual period (scaled)
         self._basis = {}  # atom types attached to lattice
         self._area = None
         self._v_center_com = np.zeros(3)
@@ -61,8 +62,23 @@ class AStackLattice(ABC):
             for plane in self.planes[1:]:
                 if plane.D > D:
                     D = plane.D
-            self._D = D
+            self._D = D  # NOTE: scaled by planes scales
         return self._D
+
+    @property
+    def L(self):
+        """real length; returns scaled sum of z displacements"""
+        if self._L is None:
+            L = 0.
+            for d in self._dz:
+                L += d * self._scale
+            self._L = L
+        return self._L
+
+    @property
+    def P(self):
+        """real twinning period"""
+        return self._P if self._P is None else self._P * self._scale
 
     @property
     def area(self):
