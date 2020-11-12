@@ -50,6 +50,10 @@ class AStackLattice(ABC):
         raise NotImplementedError
 
     @property
+    def scale(self):
+        return self._scale
+
+    @property
     def D(self):
         """returns largest plane diameter"""
         if self._D is None:
