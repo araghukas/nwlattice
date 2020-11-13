@@ -155,6 +155,10 @@ class FCCTwinFaceted(AStackLattice):
     def type_name(self):
         return "FCCTwinFaceted"
 
+    @property
+    def q0(self):
+        return self.planes[0].q
+
     @classmethod
     def from_dimensions(cls, a0, diameter, length, period, q0=0):
         nz = round(ROOT3 * length / a0)

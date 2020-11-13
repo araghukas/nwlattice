@@ -50,6 +50,10 @@ class AStackLattice(ABC):
         """string identifying each sub-class"""
         raise NotImplementedError
 
+    # --------------------------------------------------------------------------
+    # concrete properties
+    # --------------------------------------------------------------------------
+
     @property
     def scale(self):
         return self._scale
@@ -70,7 +74,9 @@ class AStackLattice(ABC):
         """real length; returns scaled sum of z displacements"""
         if self._L is None:
             L = 0.
-            for d in self._dz:
+            ddz = np.diff(self._dz, axis=0)
+            ddz = np.linalg.norm(ddz, axis=1)
+            for d in ddz:
                 L += d * self._scale
             self._L = L
         return self._L
@@ -92,10 +98,6 @@ class AStackLattice(ABC):
             self._area = sum_area / n * self._scale
         return self._area
 
-    # --------------------------------------------------------------------------
-    # concrete properties
-    # --------------------------------------------------------------------------
-
     @property
     def planes(self):
         return self._planes
@@ -114,12 +116,6 @@ class AStackLattice(ABC):
         if self._nz is None:
             self._nz = len(self.planes)
         return self._nz
-
-    @property
-    def L(self):
-        if self._L is None:
-            self._L = np.max(self.dz) + np.min(self.dz[self.dz != 0])
-        return self._L
 
     @property
     def basis(self):
