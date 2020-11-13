@@ -34,9 +34,15 @@ class FCCPristine111(AStackLattice):
         return "FCCPristine111"
 
     @classmethod
-    def from_dimensions(cls, a0, diameter, length):
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
+    def from_dimensions(cls, a0=1.0, diameter=None, length=None,
+                        p=None, nz=None):
+        if diameter is None and p is None:
+            raise ValueError("must specify either `diameter` or `p`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+
+        nz = round(ROOT3 * length / a0) if nz is None else nz
+        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         stk = cls(nz, p)
         stk._scale = a0
         return stk
@@ -67,9 +73,15 @@ class FCCPristine100(AStackLattice):
         return "FCCPristine100"
 
     @classmethod
-    def from_dimensions(cls, a0, diameter, length):
-        nz = 1 + round(2. * length / a0)
-        r = SquarePlane.get_index_for_diameter(a0, diameter)
+    def from_dimensions(cls, a0=1.0, diameter=None, length=None,
+                        r=None, nz=None):
+        if diameter is None and r is None:
+            raise ValueError("must specify either `diameter` or `r`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+
+        nz = 1 + round(2. * length / a0) if nz is None else nz
+        r = SquarePlane.get_index_for_diameter(a0, diameter) if r is None else r
         stk = cls(nz, r)
         stk._scale = a0
         return stk
@@ -112,14 +124,24 @@ class FCCTwin(AStackLattice):
         return "FCCTwin"
 
     @classmethod
-    def from_dimensions(cls, a0, diameter, length, period=None, index=None):
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
+    def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
+                        index=None, p=None, nz=None, q_max=None):
+        if diameter is None and p is None:
+            raise ValueError("must specify either `diameter` or `p`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+        if period is None and q_max is None:
+            raise ValueError("must specify either `period` or `q_max`")
+
+        nz = round(ROOT3 * length / a0) if nz is None else nz
+        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
+        q_max = round(ROOT3 * period / 2. / a0) if q_max is None else q_max
+
         if index is not None:
             index = index
-        elif period is not None:
+        elif period or q_max:
             index = []
-            i_period = round(ROOT3 * period / 2 / a0)
+            i_period = q_max
             include = True
             for i in range(nz):
                 if i % i_period == 0:
@@ -130,7 +152,7 @@ class FCCTwin(AStackLattice):
             index = []
         stk = cls(nz, p, index)
         stk._scale = a0
-        stk._P = period
+        stk._P = 2 * a0 * q_max / ROOT3
         return stk
 
     def write_map(self, file_path):
@@ -160,10 +182,34 @@ class FCCTwinFaceted(AStackLattice):
         return self.planes[0].q
 
     @classmethod
-    def from_dimensions(cls, a0, diameter, length, period, q0=0):
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
-        q_max = round(ROOT3 * period / 2 / a0)
+    def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
+                        p=None, nz=None, q_max=None, q0=0, q_max_auto=True):
+
+        if diameter is None and p is None:
+            raise ValueError("must specify either `diameter` or `p`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+        if period is None and q_max is None:
+            raise ValueError("must specify either `period` or `q_max`")
+
+        nz = round(ROOT3 * length / a0) if nz is None else nz
+        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
+        q_max = round(ROOT3 * period / 2 / a0) if q_max is None else q_max
+
+        if q_max >= p:
+            q_max = p - 1
+            if q_max_auto:
+                old_period = period
+                period = 2. * a0 * q_max / ROOT3
+                print("Period is too large, corrected: %f --> %f "
+                      % (old_period, period))
+            else:
+                raise ValueError("period {:f} is too large for given "
+                                 "diameter {:f}\n Maximum period is {:f} "
+                                 "(or `q_max = {:d}`)"
+                                 .format(period, diameter,
+                                         2. * a0 * q_max / ROOT3, q_max))
+
         stk = cls(nz, p, q0, q_max)
         stk._scale = a0
         stk._P = 2 * a0 * q_max / ROOT3
@@ -205,9 +251,16 @@ class HexagonalPristine111(AStackLattice):
         return "HexagonalPristine111"
 
     @classmethod
-    def from_dimensions(cls, a0, diameter, length):
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
+    def from_dimensions(cls, a0=1.0, diameter=None, length=None,
+                        p=None, nz=None):
+
+        if diameter is None and p is None:
+            raise ValueError("must specify either `diameter` or `p`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+
+        nz = round(ROOT3 * length / a0) if nz is None else nz
+        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         stk = cls(nz, p)
         stk._scale = a0
         return stk
@@ -255,9 +308,15 @@ class FCCHexagonalMixed(AStackLattice):
         return self._fraction
 
     @classmethod
-    def from_dimensions(cls, a0, diameter, length, index=None, fraction=None):
-        nz = round(ROOT3 * length / a0)
-        p = HexPlane.get_index_for_diameter(a0, diameter)
+    def from_dimensions(cls, a0=1.0, diameter=None, length=None, index=None,
+                        fraction=None, p=None, nz=None):
+        if diameter is None and p is None:
+            raise ValueError("must specify either `diameter` or `p`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+
+        nz = round(ROOT3 * length / a0) if nz is None else nz
+        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         if index is not None:
             index = []
         elif fraction is not None:
