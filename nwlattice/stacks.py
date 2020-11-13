@@ -162,7 +162,7 @@ class FCCTwinFaceted(AStackLattice):
         q_max = round(ROOT3 * period / 2 / a0)
         stk = cls(nz, p, q0, q_max)
         stk._scale = a0
-        stk._P = 2 * q_max / ROOT3 * a0
+        stk._P = 2 * a0 * q_max / ROOT3
         return stk
 
     def write_map(self, file_path):

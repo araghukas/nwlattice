@@ -78,7 +78,7 @@ class AStackLattice(ABC):
     @property
     def P(self):
         """real twinning period"""
-        return self._P if self._P is None else self._P * self._scale
+        return self._P
 
     @property
     def area(self):
