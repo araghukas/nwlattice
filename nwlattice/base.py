@@ -89,7 +89,7 @@ class AStackLattice(ABC):
             for plane in self.planes:
                 sum_area += plane.area
                 n += 1
-            self._area = sum_area / n
+            self._area = sum_area / n * self._scale
         return self._area
 
     # --------------------------------------------------------------------------
