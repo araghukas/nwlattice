@@ -21,9 +21,10 @@ class FCCPristine111(AStackLattice):
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
+        self._dz_unit = 1 / ROOT3
         for i in range(nz):
             planes.append(base_planes[i % 3])
-            dz[i][2] = i / ROOT3
+            dz[i][2] = i * self._dz_unit
             dxy[i] += (i % 3) * unit_dxy
 
         self._v_center_com = -unit_dxy
@@ -32,6 +33,18 @@ class FCCPristine111(AStackLattice):
     @property
     def type_name(self):
         return "FCCPristine111"
+
+    @property
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._dz_unit * self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None:
+            self._L = self._scale * (self._nz - 1) * self._dz_unit
+        return self._L
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
@@ -68,14 +81,27 @@ class FCCPristine100(AStackLattice):
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
+        self._dz_unit = 0.5
         for i in range(nz):
             planes.append(base_planes[i % 2])
-            dz[i][2] = i * 0.5
+            dz[i][2] = i * self._dz_unit
         super().__init__(planes, dz, dxy)
 
     @property
     def type_name(self):
         return "FCCPristine100"
+
+    @property
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._dz_unit * self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None:
+            self._L = self._scale * (self._nz - 1) * self._dz_unit
+        return self._L
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
@@ -117,20 +143,32 @@ class FCCTwin(AStackLattice):
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
-
+        self._dz_unit = 1 / ROOT3
         j = 0
         for i in range(nz):
             if i in index:
                 j += 1
             planes.append(base_planes[j % 3])
             dxy[i] += (j % 3) * unit_dxy
-            dz[i][2] = i / ROOT3
+            dz[i][2] = i * self._dz_unit
             j += 1
         super().__init__(planes, dz, dxy)
 
     @property
     def type_name(self):
         return "FCCTwin"
+
+    @property
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._dz_unit * self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None:
+            self._L = self._scale * (self._nz - 1) * self._dz_unit
+        return self._L
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
@@ -203,13 +241,26 @@ class FCCTwinFaceted(AStackLattice):
         planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
+        self._dz_unit = 1 / ROOT3
         for i in range(nz):
-            dz[i][2] = i / ROOT3
+            dz[i][2] = i * self._dz_unit
         super().__init__(planes, dz, dxy)
 
     @property
     def type_name(self):
         return "FCCTwinFaceted"
+
+    @property
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._dz_unit * self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None:
+            self._L = self._scale * (self._nz - 1) * self._dz_unit
+        return self._L
 
     @property
     def q0(self):
@@ -298,13 +349,26 @@ class HexagonalPristine111(AStackLattice):
         planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
+        self._dz_unit = 1 / ROOT3
         for i in range(nz):
-            dz[i][2] = i / ROOT3
+            dz[i][2] = i * self._dz_unit
         super().__init__(planes, dz, dxy)
 
     @property
     def type_name(self):
         return "HexagonalPristine111"
+
+    @property
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._dz_unit * self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None:
+            self._L = self._scale * (self._nz - 1) * self._dz_unit
+        return self._L
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
@@ -350,6 +414,7 @@ class FCCHexagonalMixed(AStackLattice):
         planes = []
         dz = np.zeros((nz, 3))
         dxy = np.zeros((nz, 3))
+        self._dz_unit = 1 / ROOT3
 
         j = 0
         for i in range(nz):
@@ -357,7 +422,7 @@ class FCCHexagonalMixed(AStackLattice):
                 j += -2 * (i % 2)
             planes.append(base_planes[j % 3])
             dxy[i] += (j % 3) * unit_dxy
-            dz[i][2] = i / ROOT3
+            dz[i][2] = i * self._dz_unit
             j += 1
         super().__init__(planes, dz, dxy)
         self._fraction = len(index) / nz
@@ -365,6 +430,18 @@ class FCCHexagonalMixed(AStackLattice):
     @property
     def type_name(self):
         return "FCCHexagonalMixed"
+
+    @property
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._dz_unit * self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None:
+            self._L = self._scale * (self._nz - 1) * self._dz_unit
+        return self._L
 
     @property
     def fraction(self):

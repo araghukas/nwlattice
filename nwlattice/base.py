@@ -14,7 +14,7 @@ class AStackLattice(ABC):
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
         self._nz = None  # number of planes in wire lattice
-        self._dz = None  # spacing between planes in a0=1 units
+        self._dz = None  # array of offsets from 0. to plane z in a0=1 units
         self._dxy = None  # xy-plane offset between planes in a0=1 units
         self._D = None  # actual diameter (scaled)
         self._L = None  # actual length (scaled)
@@ -50,6 +50,18 @@ class AStackLattice(ABC):
         """string identifying each sub-class"""
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def dz_unit(self):
+        """unit offset between planes in scaled units"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def L(self):
+        """real length in scaled units"""
+        raise NotImplementedError
+
     # --------------------------------------------------------------------------
     # concrete properties
     # --------------------------------------------------------------------------
@@ -68,18 +80,6 @@ class AStackLattice(ABC):
                     D = plane.D
             self._D = D * self._scale  # NOTE: scaled by planes scales
         return self._D
-
-    @property
-    def L(self):
-        """real length; returns scaled sum of z displacements"""
-        if self._L is None:
-            L = 0.
-            ddz = np.diff(self._dz, axis=0)
-            ddz = np.linalg.norm(ddz, axis=1)
-            for d in ddz:
-                L += d * self._scale
-            self._L = L
-        return self._L
 
     @property
     def P(self):
@@ -175,7 +175,7 @@ class AStackLattice(ABC):
 
         return atom_pts + self._v_center_com
 
-    def write_points(self, file_path):
+    def write_points(self, file_path, wrap=True):
         """write LAMMPS/OVITO compatible data file of all atom points"""
         # create dict of atom types and arrays of corresponding points
         N_atoms = 0  # total number of atoms
@@ -199,7 +199,6 @@ class AStackLattice(ABC):
             # simulation box
             x = 2 * self.D  # keep atoms' (x,y) in box
             y = x
-            z = self.L
             basis_z_min = basis_z_max = 0.
             for b in self._basis:
                 for bpt in self._basis[b]:
@@ -208,10 +207,18 @@ class AStackLattice(ABC):
                     elif bpt[2] > basis_z_max:
                         basis_z_max = bpt[2] * self._scale
 
+            zlo = 0. if wrap else basis_z_min
+            zhi = self.L
+            if wrap:
+                if basis_z_max != 0 or basis_z_min != 0:
+                    # make room for basis points above/below planes
+                    zhi += self.dz_unit
+            else:
+                zhi += basis_z_max
+
             file_.write("{} {} xlo xhi\n".format(-x / 2., x / 2.))
             file_.write("{} {} ylo yhi\n".format(-y / 2., y / 2.))
-            file_.write("{} {} zlo zhi\n"
-                        .format(basis_z_min, z + basis_z_max))
+            file_.write("{} {} zlo zhi\n".format(zlo, zhi))
             file_.write("\n")
 
             # Atoms section
@@ -221,8 +228,9 @@ class AStackLattice(ABC):
             for typ, points in points_dict.items():
                 for pt in points:
                     pt *= self._scale
+                    ptz = pt[2] % zhi if wrap else pt[2]
                     file_.write("{} {} {} {} {} 0 0 0\n"
-                                .format(id_, typ, pt[0], pt[1], pt[2]))
+                                .format(id_, typ, pt[0], pt[1], ptz))
                     id_ += 1
             t2 = time()
             print("wrote %d atoms to data file '%s' in %f seconds"
