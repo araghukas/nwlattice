@@ -66,7 +66,7 @@ class AStackLattice(ABC):
             for plane in self.planes[1:]:
                 if plane.D > D:
                     D = plane.D
-            self._D = D  # NOTE: scaled by planes scales
+            self._D = D * self._scale # NOTE: scaled by planes scales
         return self._D
 
     @property
@@ -95,7 +95,7 @@ class AStackLattice(ABC):
             for plane in self.planes:
                 sum_area += plane.area
                 n += 1
-            self._area = sum_area / n * self._scale
+            self._area = sum_area / n * self._scale**2
         return self._area
 
     @property
@@ -175,11 +175,8 @@ class AStackLattice(ABC):
 
         return atom_pts + self._v_center_com
 
-    def write_points(self, file_path, scale=None):
+    def write_points(self, file_path):
         """write LAMMPS/OVITO compatible data file of all atom points"""
-        if scale is None:
-            scale = self._scale
-
         # create dict of atom types and arrays of corresponding points
         N_atoms = 0  # total number of atoms
         points_dict = {}
@@ -200,9 +197,9 @@ class AStackLattice(ABC):
             file_.write("\n")
 
             # simulation box
-            x = 2 * scale * self.D  # keep atoms' (x,y) in box
+            x = 2 * self.D  # keep atoms' (x,y) in box
             y = x
-            z = scale * self.L
+            z = self.L
             file_.write("{} {} xlo xhi\n".format(-x / 2., x / 2.))
             file_.write("{} {} ylo yhi\n".format(-y / 2., y / 2.))
             file_.write("{} {} zlo zhi\n".format(0., z))
@@ -214,7 +211,7 @@ class AStackLattice(ABC):
             id_ = 1
             for typ, points in points_dict.items():
                 for pt in points:
-                    pt *= scale
+                    pt *= self._scale
                     file_.write("{} {} {} {} {} 0 0 0\n"
                                 .format(id_, typ, pt[0], pt[1], pt[2] % z))
                     id_ += 1
