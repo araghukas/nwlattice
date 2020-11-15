@@ -372,7 +372,7 @@ class FCCHexagonalMixed(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, index=None,
-                        fraction=None, p=None, nz=None, z_periodic=True):
+                        fraction=None, p=None, nz=None):
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -380,12 +380,6 @@ class FCCHexagonalMixed(AStackLattice):
 
         nz = round(ROOT3 * length / a0) if nz is None else nz
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
-
-        if z_periodic:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
 
         if index is not None:
             index = []
