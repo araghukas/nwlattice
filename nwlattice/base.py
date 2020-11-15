@@ -222,6 +222,20 @@ class AStackLattice(ABC):
             print("wrote %d atoms to data file '%s' in %f seconds"
                   % (N_atoms, path_, t2 - t1))
 
+    @staticmethod
+    def get_cyclic_nz(*args):
+        nz = args[0]
+        k = 3
+        nlo = (nz // k) * k
+        nhi = ((nz + k) // k) * k
+
+        if nlo == 0:
+            return nhi
+        elif (nz - nlo) < (nhi - nz):
+            return nlo
+        else:
+            return nhi
+
 
 class APointPlane(ABC):
     hex_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])

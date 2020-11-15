@@ -35,13 +35,18 @@ class FCCPristine111(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
-                        p=None, nz=None):
+                        p=None, nz=None, z_periodic=True):
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
             raise ValueError("must specify either `length` or `nz`")
 
         nz = round(ROOT3 * length / a0) if nz is None else nz
+        if z_periodic:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         stk = cls(nz, p)
         stk._scale = a0
@@ -74,13 +79,18 @@ class FCCPristine100(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
-                        r=None, nz=None):
+                        r=None, nz=None, z_periodic=True):
         if diameter is None and r is None:
             raise ValueError("must specify either `diameter` or `r`")
         if length is None and nz is None:
             raise ValueError("must specify either `length` or `nz`")
 
         nz = 1 + round(2. * length / a0) if nz is None else nz
+        if z_periodic:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
         r = SquarePlane.get_index_for_diameter(a0, diameter) if r is None else r
         stk = cls(nz, r)
         stk._scale = a0
@@ -103,7 +113,6 @@ class FCCTwin(AStackLattice):
             HexPlane(p - 1, even=False, scale=scale)
         ]
         base_planes[2].inverted = True
-
         # construct whole list of planes
         planes = []
         dz = np.zeros((nz, 3))
@@ -125,20 +134,29 @@ class FCCTwin(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
-                        index=None, p=None, nz=None, q_max=None):
+                        index=None, p=None, nz=None, q_max=None,
+                        z_periodic=True):
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
             raise ValueError("must specify either `length` or `nz`")
-        if period is None and q_max is None:
-            raise ValueError("must specify either `period` or `q_max`")
+        if period is None and q_max is None and index is None:
+            raise ValueError(
+                "must specify either `period`, `q_max`, or `index`")
 
         nz = round(ROOT3 * length / a0) if nz is None else nz
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
-        q_max = round(ROOT3 * period / 2. / a0) if q_max is None else q_max
+        if q_max or period:
+            q_max = round(ROOT3 * period / 2. / a0) if q_max is None else q_max
+
+        if z_periodic and q_max:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz, q_max)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
 
         if index is not None:
-            index = index
+            pass
         elif period or q_max:
             index = []
             i_period = q_max
@@ -150,10 +168,26 @@ class FCCTwin(AStackLattice):
                     index.append(i)
         else:
             index = []
+
         stk = cls(nz, p, index)
         stk._scale = a0
-        stk._P = 2 * a0 * q_max / ROOT3
+        if q_max:
+            stk._P = 2 * a0 * q_max / ROOT3
         return stk
+
+    @staticmethod
+    def get_cyclic_nz(*args):
+        nz, q_max = args
+        k = 2 * q_max
+        nlo = (nz // k) * k
+        nhi = ((nz + k) // k) * k
+
+        if nlo == 0:
+            return nhi
+        elif (nz - nlo) < (nhi - nz):
+            return nlo
+        else:
+            return nhi
 
     def write_map(self, file_path):
         raise NotImplementedError
@@ -183,7 +217,8 @@ class FCCTwinFaceted(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
-                        p=None, nz=None, q_max=None, q0=0, q_max_auto=True):
+                        p=None, nz=None, q_max=None, q0=0, q_max_auto=True,
+                        z_periodic=True):
 
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
@@ -195,6 +230,12 @@ class FCCTwinFaceted(AStackLattice):
         nz = round(ROOT3 * length / a0) if nz is None else nz
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         q_max = round(ROOT3 * period / 2 / a0) if q_max is None else q_max
+
+        if z_periodic:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz, q_max)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
 
         if q_max >= p:
             q_max = p - 1
@@ -215,8 +256,20 @@ class FCCTwinFaceted(AStackLattice):
         stk._P = 2 * a0 * q_max / ROOT3
         return stk
 
-    def write_map(self, file_path):
-        raise NotImplementedError
+    @staticmethod
+    def get_cyclic_nz(*args):
+        """same as FCCTwin"""
+        nz, q_max = args
+        k = 2 * q_max
+        nlo = (nz // k) * k
+        nhi = ((nz + k) // k) * k
+
+        if nlo == 0:
+            return nhi
+        elif (nz - nlo) < (nhi - nz):
+            return nlo
+        else:
+            return nhi
 
     @staticmethod
     def get_q_cycle(nz, q0, q_max):
@@ -230,6 +283,9 @@ class FCCTwinFaceted(AStackLattice):
                 step *= -1
             count += 1
         return q_cycle
+
+    def write_map(self, file_path):
+        raise NotImplementedError
 
 
 class HexagonalPristine111(AStackLattice):
@@ -252,7 +308,7 @@ class HexagonalPristine111(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
-                        p=None, nz=None):
+                        p=None, nz=None, z_periodic=True):
 
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
@@ -261,6 +317,13 @@ class HexagonalPristine111(AStackLattice):
 
         nz = round(ROOT3 * length / a0) if nz is None else nz
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
+
+        if z_periodic:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
+
         stk = cls(nz, p)
         stk._scale = a0
         return stk
@@ -309,7 +372,7 @@ class FCCHexagonalMixed(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, index=None,
-                        fraction=None, p=None, nz=None):
+                        fraction=None, p=None, nz=None, z_periodic=True):
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -317,6 +380,13 @@ class FCCHexagonalMixed(AStackLattice):
 
         nz = round(ROOT3 * length / a0) if nz is None else nz
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
+
+        if z_periodic:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
+
         if index is not None:
             index = []
         elif fraction is not None:
