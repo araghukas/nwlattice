@@ -66,7 +66,7 @@ class AStackLattice(ABC):
             for plane in self.planes[1:]:
                 if plane.D > D:
                     D = plane.D
-            self._D = D * self._scale # NOTE: scaled by planes scales
+            self._D = D * self._scale  # NOTE: scaled by planes scales
         return self._D
 
     @property
@@ -200,9 +200,18 @@ class AStackLattice(ABC):
             x = 2 * self.D  # keep atoms' (x,y) in box
             y = x
             z = self.L
+            basis_z_min = basis_z_max = 0.
+            for b in self._basis:
+                for bpt in self._basis[b]:
+                    if bpt[2] < basis_z_min:
+                        basis_z_min = bpt[2] * self._scale
+                    elif bpt[2] > basis_z_max:
+                        basis_z_max = bpt[2] * self._scale
+
             file_.write("{} {} xlo xhi\n".format(-x / 2., x / 2.))
             file_.write("{} {} ylo yhi\n".format(-y / 2., y / 2.))
-            file_.write("{} {} zlo zhi\n".format(0., z))
+            file_.write("{} {} zlo zhi\n"
+                        .format(basis_z_min, z + basis_z_max))
             file_.write("\n")
 
             # Atoms section
@@ -213,7 +222,7 @@ class AStackLattice(ABC):
                 for pt in points:
                     pt *= self._scale
                     file_.write("{} {} {} {} {} 0 0 0\n"
-                                .format(id_, typ, pt[0], pt[1], pt[2] % z))
+                                .format(id_, typ, pt[0], pt[1], pt[2]))
                     id_ += 1
             t2 = time()
             print("wrote %d atoms to data file '%s' in %f seconds"
