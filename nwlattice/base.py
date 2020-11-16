@@ -7,7 +7,7 @@ from nwlattice.utilities import ROOT3
 
 
 class AStackLattice(ABC):
-    """abstract base class for wire lattices made of stacked planes"""
+    """Abstract base class for wire lattices made of stacked planes"""
 
     def __init__(self, planes, dz, dxy):
         super().__init__()
@@ -19,10 +19,10 @@ class AStackLattice(ABC):
         self._D = None  # actual diameter (scaled)
         self._L = None  # actual length (scaled)
         self._P = None  # actual period (scaled)
+        self._area = None  # cross sectional area (scaled)
         self._basis = {}  # atom types attached to lattice
-        self._area = None
-        self._v_center_com = np.zeros(3)
-        self._scale = 1.0
+        self._v_center_com = np.zeros(3)  # vector that centers lattice in box
+        self._scale = 1.0  # scaling factor; effectively lattice constant
 
         for plane in planes:
             if isinstance(plane, APointPlane):
@@ -30,8 +30,8 @@ class AStackLattice(ABC):
             else:
                 raise TypeError("all items in planes list must be PointPlanes")
 
-        self._dz = np.reshape(dz, (self.nz, 3))
-        self._dxy = np.reshape(dxy, (self.nz, 3))
+        self._dz = np.reshape(dz, (self.nz, 3))  # z offset for each plane
+        self._dxy = np.reshape(dxy, (self.nz, 3))  # xy offset for each plane
 
     @classmethod
     @abstractmethod
@@ -100,10 +100,12 @@ class AStackLattice(ABC):
 
     @property
     def planes(self):
+        """list of unique planes in the stack"""
         return self._planes
 
     @property
     def N(self):
+        """number of lattice points in the stack"""
         if self._N is None:
             N = 0
             for plane in self.planes:
@@ -113,20 +115,24 @@ class AStackLattice(ABC):
 
     @property
     def nz(self):
+        """number of vertically stacked planes"""
         if self._nz is None:
             self._nz = len(self.planes)
         return self._nz
 
     @property
     def basis(self):
+        """dictionary of atom points added to each lattice point"""
         return self._basis
 
     @property
     def dz(self):
+        """z offset for each plane"""
         return self._dz
 
     @property
     def dxy(self):
+        """xy offset for each plane"""
         return self._dxy
 
     # --------------------------------------------------------------------------
@@ -134,7 +140,13 @@ class AStackLattice(ABC):
     # --------------------------------------------------------------------------
 
     def add_basis(self, t, pt):
-        """add an atom of type `t` at point `pt`"""
+        """
+        Add a basis point of type `t` at 3-point `pt`
+
+        :param t: integer atom type ID
+        :param pt: 3-point indicating basis point relative to lattice point
+        :return: None
+        """
         t = int(t)
         if t <= 0:
             raise ValueError("only positive integers should be used for "
@@ -150,7 +162,12 @@ class AStackLattice(ABC):
             self._basis[t] = [pt]
 
     def get_points(self, t):
-        """return an array of all atom points of type `t`"""
+        """
+        Return an array of all atom points of type `t`
+
+        :param t: integer atom type ID
+        :return: array of 3-points indicating all locations of type `t` atoms
+        """
         # set up lattice points
         pts = np.zeros((self.N, 3))
         n = 0
@@ -176,7 +193,14 @@ class AStackLattice(ABC):
         return atom_pts + self._v_center_com
 
     def write_points(self, file_path, wrap=True):
-        """write LAMMPS/OVITO compatible data file of all atom points"""
+        """
+        Write LAMMPS/OVITO compatible data file of all atom points
+
+        :param file_path: string indicating target file (created/overwritten)
+        :param wrap: if True, z-periodicity of the structure is enforced; else
+        the z limits of the simulation box align with the highest/lowest atoms.
+        :return: None
+        """
         # create dict of atom types and arrays of corresponding points
         N_atoms = 0  # total number of atoms
         points_dict = {}
@@ -238,6 +262,15 @@ class AStackLattice(ABC):
 
     @staticmethod
     def get_cyclic_nz(*args):
+        """
+        Converts `nz` to the nearest multiple of 3 such that 3-plane super cell
+        structures maintain lattice periodicity given z-periodicity
+
+        NOTE: must override this method for twinning structures!
+
+        :param args: args[0] should be `nz`
+        :return: an int `nhi` or `nlo`, the multiple of 3 nearest to `nz`
+        """
         nz = args[0]
         k = 3
         nlo = (nz // k) * k
@@ -252,22 +285,24 @@ class AStackLattice(ABC):
 
 
 class APointPlane(ABC):
+    """Abstract base class for planes of points stacked by AStackLattice"""
+    # translation vectors for planar lattices
     hex_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])
     sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
 
+    # centering offset vectors for planar lattices
     ohex_delta = .5 * np.array([1., 1. / ROOT3, 0.])
     ehex_delta = .25 * np.array([1, -1. / ROOT3, 0.])
 
     def __init__(self, scale):
         super().__init__()
-        self._N = None
-        self._D = None
-        self._nz = None
-        self._vectors = None
-        self._area = None
-        self._com = None
-        self._scale = scale
-        self._points = None
+        self._N = None  # number of lattice points
+        self._D = None  # diameter
+        self._vectors = None  # translation vectors
+        self._area = None  # cross sectional area
+        self._com = None  # points centre of mass
+        self._scale = scale  # scaling factor
+        self._points = None  # array of points in this PointPlane
 
     @abstractmethod
     def get_points(self, center=True):
@@ -283,6 +318,7 @@ class APointPlane(ABC):
     @property
     @abstractmethod
     def N(self):
+        # implement N formula for each subclass
         return self._N
 
     @property
@@ -300,6 +336,7 @@ class APointPlane(ABC):
     @property
     @abstractmethod
     def vectors(self):
+        # set translation vectors for each subclass
         raise NotImplementedError
 
     @property

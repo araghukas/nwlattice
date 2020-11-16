@@ -6,6 +6,8 @@ from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
 
 class FCCPristine111(AStackLattice):
+    """A pristine FCC nanowire structure with axis along [111]"""
+
     def __init__(self, nz, p):
         # construct smallest list of unique planes
         scale = 1 / ROOT2
@@ -47,8 +49,20 @@ class FCCPristine111(AStackLattice):
         return self._L
 
     @classmethod
-    def from_dimensions(cls, a0=1.0, diameter=None, length=None,
-                        p=None, nz=None, z_periodic=True):
+    def from_dimensions(cls, a0: float = 1.0,
+                        diameter: float = None, length: float = None,
+                        p: int = None, nz: int = None, z_periodic: bool = True):
+        """
+        Instantiate an FCCPristine111 nanowire lattice from actual dimensions
+
+        :param a0: cubic cell lattice constant
+        :param diameter: diameter of wire with lattice constant `a0`
+        :param length: length of wire with lattice constant `a0`
+        :param p: index of largest HexPlane in the stack (in lieu of `diameter`)
+        :param nz: number of planes stacked (in lieu of `length`)
+        :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
+        :return: FCCPristine111 instance with given lattice dimensions
+        """
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -66,10 +80,12 @@ class FCCPristine111(AStackLattice):
         return stk
 
     def write_map(self, file_path):
-        raise
+        raise NotImplementedError
 
 
 class FCCPristine100(AStackLattice):
+    """A pristine FCC nanowire structure with axis along [100]"""
+
     def __init__(self, nz, r):
         # construct smallest list of unique planes
         base_planes = [
@@ -104,9 +120,20 @@ class FCCPristine100(AStackLattice):
         return self._L
 
     @classmethod
-    def from_dimensions(cls, a0=1.0, diameter=None, length=None,
+    def from_dimensions(cls, a0=1.0, side_length=None, length=None,
                         r=None, nz=None, z_periodic=True):
-        if diameter is None and r is None:
+        """
+        Instantiate an FCCPristine100 nanowire from actual dimensions
+
+        :param a0: cubic cell lattice constant
+        :param side_length: side length of wire with lattice constant `a0`
+        :param length: length of wire with lattice constant `a0`
+        :param r: index of SquarePlane in stack (in lieu of `side_length`)
+        :param nz: number of planes stacked (in lieu of `length`)
+        :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
+        :return: FCCPristine100 instance with given lattice dimensions
+        """
+        if side_length is None and r is None:
             raise ValueError("must specify either `diameter` or `r`")
         if length is None and nz is None:
             raise ValueError("must specify either `length` or `nz`")
@@ -117,7 +144,8 @@ class FCCPristine100(AStackLattice):
             nz = cls.get_cyclic_nz(nz)
             print("forced z periodicity, adjusted nz: %d --> %d"
                   % (old_nz, nz))
-        r = SquarePlane.get_index_for_diameter(a0, diameter) if r is None else r
+        r = (SquarePlane.get_index_for_diameter(a0, side_length)
+             if r is None else r)
         stk = cls(nz, r)
         stk._scale = a0
         return stk
@@ -127,6 +155,7 @@ class FCCPristine100(AStackLattice):
 
 
 class FCCTwin(AStackLattice):
+    """A twinning FCC nanowire structure with smooth sidewalls"""
     def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
@@ -174,6 +203,20 @@ class FCCTwin(AStackLattice):
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
                         index=None, p=None, nz=None, q_max=None,
                         z_periodic=True):
+        """
+        Instantiate an FCCTwin nanowire lattice from actual dimensions
+
+        :param a0: cubic cell lattice constant
+        :param diameter: diameter of wire with lattice constant `a0`
+        :param length: length of wire with lattice constant `a0`
+        :param period: period of twinning superlattice
+        :param index: integer indices of twinned planes (in lieu of `period`)
+        :param p: index of largest HexPlane in the stack (in lieu of `diameter`)
+        :param nz: number of planes stacked (in lieu of `length`)
+        :param q_max: number of planes in a half-period (in lieu of `period`)
+        :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
+        :return: FCCTwin instance with given lattice dimensions
+        """
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -215,6 +258,12 @@ class FCCTwin(AStackLattice):
 
     @staticmethod
     def get_cyclic_nz(*args):
+        """
+        Overridden base method: returns `nz` for for integer number of twins
+
+        :param args: first argument should be `nz`, and the second `q_max`
+        :return: an int `nhi` or `nlo`, the nearest `2 * q_max` multiple of `nz`
+        """
         nz, q_max = args
         k = 2 * q_max
         nlo = (nz // k) * k
@@ -232,6 +281,7 @@ class FCCTwin(AStackLattice):
 
 
 class FCCTwinFaceted(AStackLattice):
+    """A twinning FCC nanowire structure with faceted sidewalls"""
     def __init__(self, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = self.get_q_cycle(nz, q0, q_max)
@@ -270,6 +320,21 @@ class FCCTwinFaceted(AStackLattice):
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
                         p=None, nz=None, q_max=None, q0=0, q_max_auto=True,
                         z_periodic=True):
+        """
+        Instantiate an FCCTwinFaceted nanowire lattice from actual dimensions
+
+        :param a0: cubic cell lattice constant
+        :param diameter: diameter of wire with lattice constant `a0`
+        :param length: length of wire with lattice constant `a0`
+        :param period: period of twinning superlattice
+        :param p: index of largest HexPlane in the stack (in lieu of `diameter`)
+        :param nz: number of planes stacked (in lieu of `length`)
+        :param q_max: number of planes in a half-period (in lieu of `period`)
+        :param q0: second index of first TwinPlane in the stack
+        :param q_max_auto: auto-adjust `q_max` if resulting period too large
+        :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
+        :return: FCCTwinFaceted instance with given lattice dimensions
+        """
 
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
@@ -309,7 +374,12 @@ class FCCTwinFaceted(AStackLattice):
 
     @staticmethod
     def get_cyclic_nz(*args):
-        """same as FCCTwin"""
+        """
+        Overridden base method: returns `nz` for for integer number of twins
+
+        :param args: first argument should be `nz`, and the second `q_max`
+        :return: an int `nhi` or `nlo`, the nearest `2 * q_max` multiple of `nz`
+        """
         nz, q_max = args
         k = 2 * q_max
         nlo = (nz // k) * k
@@ -324,6 +394,14 @@ class FCCTwinFaceted(AStackLattice):
 
     @staticmethod
     def get_q_cycle(nz, q0, q_max):
+        """
+        List of second indices for TwinPlanes in an FCCTwinFaceted instance
+
+        :param nz: number of planes stacked
+        :param q0: second index of first TwinPlane in the stack
+        :param q_max: number of planes in a half-period
+        :return: list of int `q` values
+        """
         q_cycle = [q0]
         step = 1
         count = 0
@@ -339,7 +417,8 @@ class FCCTwinFaceted(AStackLattice):
         raise NotImplementedError
 
 
-class HexagonalPristine111(AStackLattice):
+class HexPristine0001(AStackLattice):
+    """A pristine hexagonal nanowire structure oriented along [0001]"""
     def __init__(self, nz, p):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
@@ -356,7 +435,7 @@ class HexagonalPristine111(AStackLattice):
 
     @property
     def type_name(self):
-        return "HexagonalPristine111"
+        return "HexPristine111"
 
     @property
     def dz_unit(self):
@@ -373,7 +452,18 @@ class HexagonalPristine111(AStackLattice):
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
                         p=None, nz=None, z_periodic=True):
+        """
+        Instantiate a HexPristine0001 nanowire lattice from actual dimensions
 
+        :param a0: cubic cell lattice constant
+        :param diameter: diameter of wire with lattice constant `a0`
+        :param length: length of wire with lattice constant `a0`
+        :param p: index of largest HexPlane in the stack (in lieu of `diameter`)
+        :param nz: number of planes stacked (in lieu of `length`)
+        :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
+        :return: HexPristine0001 instance with given lattice dimensions
+        """
+        
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -396,7 +486,8 @@ class HexagonalPristine111(AStackLattice):
         raise NotImplementedError
 
 
-class FCCHexagonalMixed(AStackLattice):
+class FCCHexMixed(AStackLattice):
+    """A mixed phase nanowire structure with FCC and hexagonal segments along"""
     def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
@@ -429,7 +520,7 @@ class FCCHexagonalMixed(AStackLattice):
 
     @property
     def type_name(self):
-        return "FCCHexagonalMixed"
+        return "FCCHexMixed"
 
     @property
     def dz_unit(self):
@@ -449,7 +540,19 @@ class FCCHexagonalMixed(AStackLattice):
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, index=None,
-                        fraction=None, p=None, nz=None):
+                        frac=None, p=None, nz=None):
+        """
+        Instantiate a HexPristine0001 nanowire lattice from actual dimensions
+
+        :param a0: cubic cell lattice constant
+        :param diameter: diameter of wire with lattice constant `a0`
+        :param length: length of wire with lattice constant `a0`
+        :param index: integer indices of Hexagonal planes
+        :param frac: randomly insert approx. this fraction of Hexagonal planes
+        :param p: index of largest HexPlane in the stack (in lieu of `diameter`)
+        :param nz: number of planes stacked (in lieu of `length`)
+        :return: FCCHexMixed instance with given lattice dimensions
+        """
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -460,10 +563,10 @@ class FCCHexagonalMixed(AStackLattice):
 
         if index is not None:
             index = []
-        elif fraction is not None:
+        elif frac is not None:
             index = []
             for i in range(nz):
-                if np.random.uniform(0, 1) < fraction:
+                if np.random.uniform(0, 1) < frac:
                     index.append(i)
         else:
             index = []
