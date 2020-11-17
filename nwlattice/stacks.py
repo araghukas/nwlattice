@@ -561,9 +561,9 @@ class FCCHexMixed(AStackLattice):
         nz = round(ROOT3 * length / a0) if nz is None else nz
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
 
-        if index is not None:
-            index = []
-        elif frac is not None:
+        if index:
+            pass
+        elif frac:
             index = []
             for i in range(nz):
                 if np.random.uniform(0, 1) < frac:
