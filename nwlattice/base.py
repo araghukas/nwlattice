@@ -9,13 +9,13 @@ from nwlattice.utilities import ROOT3
 class AStackLattice(ABC):
     """Abstract base class for wire lattices made of stacked planes"""
 
-    def __init__(self, planes, dz, dxy):
+    def __init__(self, planes, dz, dr):
         super().__init__()
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
         self._nz = None  # number of planes in wire lattice
         self._dz = None  # array of offsets from 0. to plane z in a0=1 units
-        self._dxy = None  # xy-plane offset between planes in a0=1 units
+        self._dr = None  # xy-plane offset between planes in a0=1 units
         self._D = None  # actual diameter (scaled)
         self._L = None  # actual length (scaled)
         self._P = None  # actual period (scaled)
@@ -31,7 +31,7 @@ class AStackLattice(ABC):
                 raise TypeError("all items in planes list must be PointPlanes")
 
         self._dz = np.reshape(dz, (self.nz, 3))  # z offset for each plane
-        self._dxy = np.reshape(dxy, (self.nz, 3))  # xy offset for each plane
+        self._dr = np.reshape(dr, (self.nz, 3))  # xy offset for each plane
 
     @classmethod
     @abstractmethod
@@ -130,9 +130,9 @@ class AStackLattice(ABC):
         return self._dz
 
     @property
-    def dxy(self):
+    def dr(self):
         """xy offset for each plane"""
-        return self._dxy
+        return self._dr
 
     # --------------------------------------------------------------------------
     # concrete methods
@@ -173,7 +173,7 @@ class AStackLattice(ABC):
         for i, plane in enumerate(self.planes):
             pts[n:(n + plane.N)] = (
                     plane.get_points(center=True)
-                    + self.dxy[i]
+                    + self.dr[i]
                     + self.dz[i]
             )
             n += plane.N
@@ -348,3 +348,21 @@ class APointPlane(ABC):
     def scale(self):
         # global scaling of all point in plane
         return self._scale
+
+
+class SuperCell(object):
+    def __init__(self, planes, vdz, vdr):
+        self.planes = []
+        for plane in planes:
+            if isinstance(plane, APointPlane):
+                self.planes.append(plane)
+
+        self._nz = len(self.planes)
+        self._vdz = np.asarray(vdz)
+        self._vdr = np.asarray(vdr)
+        if self._vdz.shape != (self._nz, 3):
+            raise ValueError("`vdz` has invalid shape {}"
+                             .format(self._vdz.shape))
+        if self._vdr.shape != (self._nz, 3):
+            raise ValueError("`vdr` has invalid shape {}"
+                             .format(self._vdr.shape))

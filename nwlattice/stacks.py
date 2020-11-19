@@ -11,7 +11,7 @@ class FCCPristine111(AStackLattice):
     def __init__(self, nz, p):
         # construct smallest list of unique planes
         scale = 1 / ROOT2
-        unit_dxy = np.array([0.35355339, 0.20412415, 0.])
+        unit_dr = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
@@ -22,15 +22,15 @@ class FCCPristine111(AStackLattice):
         # construct whole list of planes
         planes = []
         dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
+        dr = np.zeros((nz, 3))
         self._dz_unit = 1 / ROOT3
         for i in range(nz):
             planes.append(base_planes[i % 3])
             dz[i][2] = i * self._dz_unit
-            dxy[i] += (i % 3) * unit_dxy
+            dr[i] += (i % 3) * unit_dr
 
-        self._v_center_com = -unit_dxy
-        super().__init__(planes, dz, dxy)
+        self._v_center_com = -unit_dr
+        super().__init__(planes, dz, dr)
 
     @property
     def dz_unit(self):
@@ -92,12 +92,12 @@ class FCCPristine100(AStackLattice):
         # construct whole list of planes
         planes = []
         dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
+        dr = np.zeros((nz, 3))
         self._dz_unit = 0.5
         for i in range(nz):
             planes.append(base_planes[i % 2])
             dz[i][2] = i * self._dz_unit
-        super().__init__(planes, dz, dxy)
+        super().__init__(planes, dz, dr)
 
     @property
     def dz_unit(self):
@@ -154,7 +154,7 @@ class FCCTwin(AStackLattice):
 
         # construct smallest list of unique planes
         scale = 1 / ROOT2
-        unit_dxy = np.array([0.35355339, 0.20412415, 0.])
+        unit_dr = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
@@ -164,17 +164,17 @@ class FCCTwin(AStackLattice):
         # construct whole list of planes
         planes = []
         dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
+        dr = np.zeros((nz, 3))
         self._dz_unit = 1 / ROOT3
         j = 0
         for i in range(nz):
             if i in index:
                 j += 1
             planes.append(base_planes[j % 3])
-            dxy[i] += (j % 3) * unit_dxy
+            dr[i] += (j % 3) * unit_dr
             dz[i][2] = i * self._dz_unit
             j += 1
-        super().__init__(planes, dz, dxy)
+        super().__init__(planes, dz, dr)
 
     @property
     def dz_unit(self):
@@ -280,11 +280,11 @@ class FCCTwinFaceted(AStackLattice):
         scale = 1 / ROOT2
         planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
+        dr = np.zeros((nz, 3))
         self._dz_unit = 1 / ROOT3
         for i in range(nz):
             dz[i][2] = i * self._dz_unit
-        super().__init__(planes, dz, dxy)
+        super().__init__(planes, dz, dr)
 
     @property
     def dz_unit(self):
@@ -414,11 +414,11 @@ class HexPristine0001(AStackLattice):
         scale = 1 / ROOT2
         planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
+        dr = np.zeros((nz, 3))
         self._dz_unit = 1 / ROOT3
         for i in range(nz):
             dz[i][2] = i * self._dz_unit
-        super().__init__(planes, dz, dxy)
+        super().__init__(planes, dz, dr)
 
     @property
     def dz_unit(self):
@@ -477,7 +477,7 @@ class FCCHexMixed(AStackLattice):
 
         # construct smallest list of unique planes
         scale = 1 / ROOT2
-        unit_dxy = np.array([0.35355339, 0.20412415, 0.])
+        unit_dr = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
@@ -488,7 +488,7 @@ class FCCHexMixed(AStackLattice):
         # construct whole list of planes
         planes = []
         dz = np.zeros((nz, 3))
-        dxy = np.zeros((nz, 3))
+        dr = np.zeros((nz, 3))
         self._dz_unit = 1 / ROOT3
 
         j = 0
@@ -496,10 +496,10 @@ class FCCHexMixed(AStackLattice):
             if i in index:
                 j += -2 * (i % 2)
             planes.append(base_planes[j % 3])
-            dxy[i] += (j % 3) * unit_dxy
+            dr[i] += (j % 3) * unit_dr
             dz[i][2] = i * self._dz_unit
             j += 1
-        super().__init__(planes, dz, dxy)
+        super().__init__(planes, dz, dr)
         self._fraction = len(index) / nz
 
     @property
