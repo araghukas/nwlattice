@@ -22,6 +22,7 @@ ZINCBLENDE_BASIS2_TWIN = np.array([0., 0., ROOT3 / 4])
 # alternative second basis atom vector (units of lattice constant)
 # ZINCBLENDE_BASIS2_HEX = np.array([0.353553, -0.204124, -0.144338])
 ZINCBLENDE_BASIS2_HEX = np.array([0., -0.40824829, -0.14433757])
+ZINCBLENDE_BASIS2_HEX2 = np.array([0.353553, -0.204124, -0.144338])
 
 # inter-planar spacing between Ga-planes (or As-planes)
 PLANE_DZ = np.array([0., 0., 1 / ROOT3])
