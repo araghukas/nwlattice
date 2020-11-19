@@ -176,7 +176,7 @@ class Quaternion(object):
         return q.rotate(points)
 
 
-def get_tetrahedral_set(v: np.ndarray, ortho=None):
+def get_tetrahedral_set(v: np.ndarray, ortho=None) -> tuple:
     """
     treat input vector as first tetrahedral axis, return remaining 3
 
@@ -187,17 +187,17 @@ def get_tetrahedral_set(v: np.ndarray, ortho=None):
     v = np.reshape(v, (3,))
     if ortho is None:
         # default choice of ortho based on `v`
-        if v[0] != 0. and v[1] != 0.:
+        if v[0] != 0. and v[1] != 0.:  # (x, y, z)
             ortho_v1 = np.array([-v[1], v[0], 0.])
-        elif v[0] != 0. and v[2] != 0.:
+        elif v[0] != 0. and v[2] != 0.:  # (x, 0, z)
             ortho_v1 = np.array([-v[2], 0., v[0]])
-        elif v[1] != 0. and v[2] != 0.:
+        elif v[1] != 0. and v[2] != 0.:  # (0, y, z)
             ortho_v1 = np.array([0., -v[2], v[1]])
-        elif v[0] != 0.:
+        elif v[0] != 0.:  # (x, 0, 0)
             ortho_v1 = np.array([0., v[0], 0.])
-        elif v[1] != 0.:
+        elif v[1] != 0.:  # (0, y, 0)
             ortho_v1 = np.array([0., 0., v[1]])
-        elif v[2] != 0.:
+        elif v[2] != 0.:  # (0, 0, z)
             ortho_v1 = np.array([v[2], 0., 0.])
         else:
             raise ValueError("can not rotate zero vector")
@@ -214,7 +214,7 @@ def get_tetrahedral_set(v: np.ndarray, ortho=None):
     theta = 1.9106332362490184  # ~109.4˚ in rad
     q1 = Quaternion.rotator(ortho_v1, theta)
     q2 = Quaternion.rotator(v, np.pi / 3)
-    v2 = q1.rotate(v)[0]
-    v3 = q2.rotate(v2)[0]
-    v4 = q2.rotate(v2)[0]
+    v2 = q1.rotate(v)
+    v3 = q2.rotate(v2)
+    v4 = q2.rotate(v2)
     return v2, v3, v4
