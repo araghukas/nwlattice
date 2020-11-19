@@ -9,13 +9,14 @@ from nwlattice.utilities import ROOT3
 class AStackLattice(ABC):
     """Abstract base class for wire lattices made of stacked planes"""
 
-    def __init__(self, planes, dz, dr):
+    def __init__(self, planes, vz, vr):
         super().__init__()
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
         self._nz = None  # number of planes in wire lattice
-        self._dz = None  # array of offsets from 0. to plane z in a0=1 units
-        self._dr = None  # xy-plane offset between planes in a0=1 units
+        self._vz_unit = None
+        self._vz = None  # array of offsets from 0. to plane z in a0=1 units
+        self._vr = None  # xy-plane offset between planes in a0=1 units
         self._D = None  # actual diameter (scaled)
         self._L = None  # actual length (scaled)
         self._P = None  # actual period (scaled)
@@ -30,8 +31,8 @@ class AStackLattice(ABC):
             else:
                 raise TypeError("all items in planes list must be PointPlanes")
 
-        self._dz = np.reshape(dz, (self.nz, 3))  # z offset for each plane
-        self._dr = np.reshape(dr, (self.nz, 3))  # xy offset for each plane
+        self._vz = np.reshape(vz, (self.nz, 3))  # z offset for each plane
+        self._vr = np.reshape(vr, (self.nz, 3))  # xy offset for each plane
 
     @classmethod
     @abstractmethod
@@ -51,14 +52,8 @@ class AStackLattice(ABC):
 
     @property
     @abstractmethod
-    def dz_unit(self):
+    def vz_unit(self):
         """unit offset between planes in scaled units"""
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def L(self):
-        """real length in scaled units"""
         raise NotImplementedError
 
     # --------------------------------------------------------------------------
@@ -68,6 +63,13 @@ class AStackLattice(ABC):
     @property
     def scale(self):
         return self._scale
+
+    @property
+    def L(self):
+        """real length in scaled units"""
+        if self._L is None and self._vz_unit:
+            self._L = self._scale * (self._nz - 1) * self._vz_unit
+        return self._L
 
     @property
     def D(self):
@@ -125,14 +127,14 @@ class AStackLattice(ABC):
         return self._basis
 
     @property
-    def dz(self):
+    def vz(self):
         """z offset for each plane"""
-        return self._dz
+        return self._vz
 
     @property
-    def dr(self):
+    def vr(self):
         """xy offset for each plane"""
-        return self._dr
+        return self._vr
 
     # --------------------------------------------------------------------------
     # concrete methods
@@ -160,7 +162,7 @@ class AStackLattice(ABC):
         else:
             self._basis[t] = [pt]
 
-    def get_points(self, t):
+    def get_points(self, t: int) -> np.ndarray:
         """
         Return an array of all atom points of type `t`
 
@@ -173,8 +175,8 @@ class AStackLattice(ABC):
         for i, plane in enumerate(self.planes):
             pts[n:(n + plane.N)] = (
                     plane.get_points(center=True)
-                    + self.dr[i]
-                    + self.dz[i]
+                    + self.vr[i]
+                    + self.vz[i]
             )
             n += plane.N
 
@@ -191,7 +193,7 @@ class AStackLattice(ABC):
 
         return atom_pts + self._v_center_com
 
-    def write_points(self, file_path, wrap=True):
+    def write_points(self, file_path: str, wrap=True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
 
@@ -235,7 +237,7 @@ class AStackLattice(ABC):
             if wrap:
                 if basis_z_max != 0 or basis_z_min != 0:
                     # make room for basis points above/below planes
-                    zhi += self.dz_unit
+                    zhi += self.vz_unit
             else:
                 zhi += basis_z_max
 
@@ -350,19 +352,3 @@ class APointPlane(ABC):
         return self._scale
 
 
-class SuperCell(object):
-    def __init__(self, planes, vdz, vdr):
-        self.planes = []
-        for plane in planes:
-            if isinstance(plane, APointPlane):
-                self.planes.append(plane)
-
-        self._nz = len(self.planes)
-        self._vdz = np.asarray(vdz)
-        self._vdr = np.asarray(vdr)
-        if self._vdz.shape != (self._nz, 3):
-            raise ValueError("`vdz` has invalid shape {}"
-                             .format(self._vdz.shape))
-        if self._vdr.shape != (self._nz, 3):
-            raise ValueError("`vdr` has invalid shape {}"
-                             .format(self._vdr.shape))
