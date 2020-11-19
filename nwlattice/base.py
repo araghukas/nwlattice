@@ -45,10 +45,9 @@ class AStackLattice(ABC):
         raise NotImplementedError
 
     @property
-    @abstractmethod
     def type_name(self):
         """string identifying each sub-class"""
-        raise NotImplementedError
+        return str(self.__class__).split('.')[-1].strip("'>")
 
     @property
     @abstractmethod

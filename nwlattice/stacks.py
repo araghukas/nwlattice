@@ -33,10 +33,6 @@ class FCCPristine111(AStackLattice):
         super().__init__(planes, dz, dxy)
 
     @property
-    def type_name(self):
-        return "FCCPristine111"
-
-    @property
     def dz_unit(self):
         """unit offset between planes in scaled units"""
         return self._dz_unit * self._scale
@@ -104,10 +100,6 @@ class FCCPristine100(AStackLattice):
         super().__init__(planes, dz, dxy)
 
     @property
-    def type_name(self):
-        return "FCCPristine100"
-
-    @property
     def dz_unit(self):
         """unit offset between planes in scaled units"""
         return self._dz_unit * self._scale
@@ -156,6 +148,7 @@ class FCCPristine100(AStackLattice):
 
 class FCCTwin(AStackLattice):
     """A twinning FCC nanowire structure with smooth sidewalls"""
+
     def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
@@ -182,10 +175,6 @@ class FCCTwin(AStackLattice):
             dz[i][2] = i * self._dz_unit
             j += 1
         super().__init__(planes, dz, dxy)
-
-    @property
-    def type_name(self):
-        return "FCCTwin"
 
     @property
     def dz_unit(self):
@@ -282,6 +271,7 @@ class FCCTwin(AStackLattice):
 
 class FCCTwinFaceted(AStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
+
     def __init__(self, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = self.get_q_cycle(nz, q0, q_max)
@@ -295,10 +285,6 @@ class FCCTwinFaceted(AStackLattice):
         for i in range(nz):
             dz[i][2] = i * self._dz_unit
         super().__init__(planes, dz, dxy)
-
-    @property
-    def type_name(self):
-        return "FCCTwinFaceted"
 
     @property
     def dz_unit(self):
@@ -419,6 +405,7 @@ class FCCTwinFaceted(AStackLattice):
 
 class HexPristine0001(AStackLattice):
     """A pristine hexagonal nanowire structure oriented along [0001]"""
+
     def __init__(self, nz, p):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
@@ -432,10 +419,6 @@ class HexPristine0001(AStackLattice):
         for i in range(nz):
             dz[i][2] = i * self._dz_unit
         super().__init__(planes, dz, dxy)
-
-    @property
-    def type_name(self):
-        return "HexPristine111"
 
     @property
     def dz_unit(self):
@@ -463,7 +446,7 @@ class HexPristine0001(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: HexPristine0001 instance with given lattice dimensions
         """
-        
+
         if diameter is None and p is None:
             raise ValueError("must specify either `diameter` or `p`")
         if length is None and nz is None:
@@ -488,6 +471,7 @@ class HexPristine0001(AStackLattice):
 
 class FCCHexMixed(AStackLattice):
     """A mixed phase nanowire structure with FCC and hexagonal segments along"""
+
     def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
@@ -517,10 +501,6 @@ class FCCHexMixed(AStackLattice):
             j += 1
         super().__init__(planes, dz, dxy)
         self._fraction = len(index) / nz
-
-    @property
-    def type_name(self):
-        return "FCCHexMixed"
 
     @property
     def dz_unit(self):
