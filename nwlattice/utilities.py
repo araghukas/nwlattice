@@ -149,13 +149,12 @@ class Quaternion(object):
     def rotate(self, points):
         # rotate point or array of points
         points = np.asarray(points)
-        squeeze_out = False
-        if points.ndim == 0:
-            raise ValueError(
-                "quaternion rotations only defined for 3-coordinate points")
-        if points.ndim == 1:
-            squeeze_out = True
-            points = np.expand_dims(points, 0)
+        squeeze = False
+        if points.shape == (3,):
+            points = points[None]
+            squeeze = True
+        else:
+            points = np.reshape(points, (len(points), 3))
 
         inv = self.inv
         r_qinv = inv.r
@@ -166,8 +165,8 @@ class Quaternion(object):
             v_qp = self.r * point + np.cross(self.v, point)
             output[i] = r_qp * v_qinv + r_qinv * v_qp + np.cross(v_qp, v_qinv)
 
-        if squeeze_out:
-            output.squeeze()
+        if squeeze:
+            return output[0]
         return output
 
     @staticmethod
