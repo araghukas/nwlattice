@@ -4,4 +4,4 @@ __pycache__/
 _tests.py
 *.data
 outputs/
-nwlattice/_zb.py
+_zb.py
