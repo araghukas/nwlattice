@@ -172,21 +172,22 @@ class Quaternion(object):
 
     @staticmethod
     def qrotate(points, axis, theta):
+        """a single-use quaternion rotator"""
         q = Quaternion.rotator(axis, theta)
         return q.rotate(points)
 
 
-def get_tetrahedral_set(v, ortho=None):
+def get_tetrahedral_set(v: np.ndarray, ortho=None):
     """
     treat input vector as first tetrahedral axis, return remaining 3
 
     :param v: first 3-vector
-    :param ortho: (optional in lieu of default choice) axis for first rotation
+    :param ortho: (optional in lieu of default choice) first rotation axis
     :return: three vectors from tetrahedral rotations of v
     """
     v = np.reshape(v, (3,))
     if ortho is None:
-        # default ortho options based on `v`
+        # default choice of ortho based on `v`
         if v[0] != 0. and v[1] != 0.:
             ortho_v1 = np.array([-v[1], v[0], 0.])
         elif v[0] != 0. and v[2] != 0.:
