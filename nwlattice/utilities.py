@@ -154,7 +154,7 @@ class Quaternion(object):
             points = points[None]
             squeeze = True
         else:
-            points = np.reshape(points, (len(points), 3))
+            points = np.reshape(points, (points.shape[0], 3))
 
         inv = self.inv
         r_qinv = inv.r
