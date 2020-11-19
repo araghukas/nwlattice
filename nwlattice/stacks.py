@@ -8,27 +8,6 @@ from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 class FCCPristine111(AStackLattice):
     """A pristine FCC nanowire structure with axis along [111]"""
 
-    def __init__(self, nz, p):
-        # construct smallest list of unique planes
-        scale = 1 / ROOT2
-        unit_vr = np.array([0.35355339, 0.20412415, 0.])
-        base_planes = [
-            HexPlane(p - 1, even=False, scale=scale),
-            HexPlane(p, even=True, scale=scale),
-            HexPlane(p - 1, even=False, scale=scale)
-        ]
-        base_planes[2].inverted = True
-
-        # construct whole list of planes
-        planes = []
-        vr = np.zeros((nz, 3))
-        vz_unit = 1 / ROOT3
-        for i in range(nz):
-            planes.append(base_planes[i % 3])
-            vr[i] += (i % 3) * unit_vr
-        self._v_center_com = -unit_vr
-        super().__init__(planes, vz_unit, vr)
-
     @classmethod
     def from_dimensions(cls, a0: float = 1.0,
                         diameter: float = None, length: float = None,
@@ -63,24 +42,30 @@ class FCCPristine111(AStackLattice):
     def write_map(self, file_path):
         raise NotImplementedError
 
-
-class FCCPristine100(AStackLattice):
-    """A pristine FCC nanowire structure with axis along [100]"""
-
-    def __init__(self, nz, r):
+    def __init__(self, nz, p):
         # construct smallest list of unique planes
+        scale = 1 / ROOT2
+        unit_vr = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
-            SquarePlane(r, even=True, scale=1.0),
-            SquarePlane(r, even=False, scale=1.0)
+            HexPlane(p - 1, even=False, scale=scale),
+            HexPlane(p, even=True, scale=scale),
+            HexPlane(p - 1, even=False, scale=scale)
         ]
+        base_planes[2].inverted = True
 
         # construct whole list of planes
         planes = []
         vr = np.zeros((nz, 3))
-        vz_unit = 0.5
+        vz_unit = 1 / ROOT3
         for i in range(nz):
-            planes.append(base_planes[i % 2])
+            planes.append(base_planes[i % 3])
+            vr[i] += (i % 3) * unit_vr
+        self._v_center_com = -unit_vr
         super().__init__(planes, vz_unit, vr)
+
+
+class FCCPristine100(AStackLattice):
+    """A pristine FCC nanowire structure with axis along [100]"""
 
     @classmethod
     def from_dimensions(cls, a0=1.0, side_length=None, length=None,
@@ -116,34 +101,24 @@ class FCCPristine100(AStackLattice):
     def write_map(self, file_path):
         raise NotImplementedError
 
-
-class FCCTwin(ATwinStackLattice):
-    """A twinning FCC nanowire structure with smooth sidewalls"""
-
-    def __init__(self, nz, p, index, q_max: int = None):
-        index = set([int(j) for j in index])
-
+    def __init__(self, nz, r):
         # construct smallest list of unique planes
-        scale = 1 / ROOT2
-        unit_vr = np.array([0.35355339, 0.20412415, 0.])
         base_planes = [
-            HexPlane(p - 1, even=False, scale=scale),
-            HexPlane(p, even=True, scale=scale),
-            HexPlane(p - 1, even=False, scale=scale)
+            SquarePlane(r, even=True, scale=1.0),
+            SquarePlane(r, even=False, scale=1.0)
         ]
-        base_planes[2].inverted = True
+
         # construct whole list of planes
         planes = []
         vr = np.zeros((nz, 3))
-        vz_unit = 1 / ROOT3
-        j = 0
+        vz_unit = 0.5
         for i in range(nz):
-            if i in index:
-                j += 1
-            planes.append(base_planes[j % 3])
-            vr[i] += (j % 3) * unit_vr
-            j += 1
-        super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
+            planes.append(base_planes[i % 2])
+        super().__init__(planes, vz_unit, vr)
+
+
+class FCCTwin(ATwinStackLattice):
+    """A twinning FCC nanowire structure with smooth sidewalls"""
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
@@ -202,6 +177,34 @@ class FCCTwin(ATwinStackLattice):
             stk._P = 2 * a0 * q_max / ROOT3
         return stk
 
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p, index, q_max: int = None):
+        index = set([int(j) for j in index])
+
+        # construct smallest list of unique planes
+        scale = 1 / ROOT2
+        unit_vr = np.array([0.35355339, 0.20412415, 0.])
+        base_planes = [
+            HexPlane(p - 1, even=False, scale=scale),
+            HexPlane(p, even=True, scale=scale),
+            HexPlane(p - 1, even=False, scale=scale)
+        ]
+        base_planes[2].inverted = True
+        # construct whole list of planes
+        planes = []
+        vr = np.zeros((nz, 3))
+        vz_unit = 1 / ROOT3
+        j = 0
+        for i in range(nz):
+            if i in index:
+                j += 1
+            planes.append(base_planes[j % 3])
+            vr[i] += (j % 3) * unit_vr
+            j += 1
+        super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
+
     @staticmethod
     def get_cyclic_nz(*args):
         """
@@ -222,27 +225,9 @@ class FCCTwin(ATwinStackLattice):
         else:
             return nhi
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
 
 class FCCTwinFaceted(ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
-
-    def __init__(self, nz, p, q0, q_max: int = None):
-        # obtain cycle of `q` indices for comprising TwinPlanes
-        q_cycle = self.get_q_cycle(nz, q0, q_max)
-
-        # construct whole list of planes
-        scale = 1 / ROOT2
-        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
-        vr = np.zeros((nz, 3))
-        vz_unit = 1 / ROOT3
-        super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
-
-    @property
-    def q0(self):
-        return self.planes[0].q
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
@@ -300,6 +285,24 @@ class FCCTwinFaceted(ATwinStackLattice):
         stk._P = 2 * a0 * q_max / ROOT3
         return stk
 
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p, q0, q_max: int = None):
+        # obtain cycle of `q` indices for comprising TwinPlanes
+        q_cycle = self.get_q_cycle(nz, q0, q_max)
+
+        # construct whole list of planes
+        scale = 1 / ROOT2
+        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
+        vr = np.zeros((nz, 3))
+        vz_unit = 1 / ROOT3
+        super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
+
+    @property
+    def q0(self):
+        return self.planes[0].q
+
     @staticmethod
     def get_cyclic_nz(*args):
         """
@@ -341,23 +344,9 @@ class FCCTwinFaceted(ATwinStackLattice):
             count += 1
         return q_cycle
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
 
 class HexPristine0001(AStackLattice):
     """A pristine hexagonal nanowire structure oriented along [0001]"""
-
-    def __init__(self, nz, p):
-        # obtain cycle of `q` indices for comprising TwinPlanes
-        q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
-
-        # construct whole list of planes
-        scale = 1 / ROOT2
-        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
-        vr = np.zeros((nz, 3))
-        vz_unit = 1 / ROOT3
-        super().__init__(planes, vz_unit, vr)
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
@@ -395,40 +384,20 @@ class HexPristine0001(AStackLattice):
     def write_map(self, file_path):
         raise NotImplementedError
 
-
-class FCCHexMixed(AStackLattice):
-    """A mixed phase nanowire structure with FCC and hexagonal segments along"""
-
-    def __init__(self, nz, p, index):
-        index = set([int(j) for j in index])
-
-        # construct smallest list of unique planes
-        scale = 1 / ROOT2
-        unit_vr = np.array([0.35355339, 0.20412415, 0.])
-        base_planes = [
-            HexPlane(p - 1, even=False, scale=scale),
-            HexPlane(p, even=True, scale=scale),
-            HexPlane(p - 1, even=False, scale=scale)
-        ]
-        base_planes[2].inverted = True
+    def __init__(self, nz, p):
+        # obtain cycle of `q` indices for comprising TwinPlanes
+        q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
 
         # construct whole list of planes
-        planes = []
+        scale = 1 / ROOT2
+        planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         vr = np.zeros((nz, 3))
         vz_unit = 1 / ROOT3
-        j = 0
-        for i in range(nz):
-            if i in index:
-                j += -2 * (i % 2)
-            planes.append(base_planes[j % 3])
-            vr[i] += (j % 3) * unit_vr
-            j += 1
         super().__init__(planes, vz_unit, vr)
-        self._fraction = len(index) / nz
 
-    @property
-    def fraction(self):
-        return self._fraction
+
+class FCCHexMixed(AStackLattice):
+    """A mixed phase nanowire structure with FCC and hexagonal segments"""
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, index=None,
@@ -468,3 +437,105 @@ class FCCHexMixed(AStackLattice):
 
     def write_map(self, file_path):
         raise NotImplementedError
+
+    def __init__(self, nz, p, index):
+        index = set([int(j) for j in index])
+
+        # construct smallest list of unique planes
+        scale = 1 / ROOT2
+        unit_vr = np.array([0.35355339, 0.20412415, 0.])
+        base_planes = [
+            HexPlane(p - 1, even=False, scale=scale),
+            HexPlane(p, even=True, scale=scale),
+            HexPlane(p - 1, even=False, scale=scale)
+        ]
+        base_planes[2].inverted = True
+
+        # construct whole list of planes
+        planes = []
+        vr = np.zeros((nz, 3))
+        vz_unit = 1 / ROOT3
+        j = 0
+        for i in range(nz):
+            if i in index:
+                j += -2 * (i % 2)
+            planes.append(base_planes[j % 3])
+            vr[i] += (j % 3) * unit_vr
+            j += 1
+        super().__init__(planes, vz_unit, vr)
+        self._fraction = len(index) / nz
+
+    @property
+    def fraction(self):
+        return self._fraction
+
+
+class ZBPristine111(FCCPristine111):
+    """A pristine zincblende nanowire structure with axis along [111]"""
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p):
+        super().__init__(nz, p)
+        super().__init__(nz, p)
+        self.add_basis(2, np.array([0.353553, -0.204124, -0.144338]))
+
+
+class ZBPristine100(FCCPristine100):
+    """A pristine zincblende nanowire structure with axis along [100]"""
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, r):
+        super().__init__(nz, r)
+        self.add_basis(2, np.array([0., -0.40824829, -0.14433757]))
+
+
+class ZBTwin(FCCTwin):
+    """A twinning zincblende nanowire structure with smooth sidewalls"""
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p, index, q_max=None):
+        super().__init__(nz, p, index, q_max)
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
+
+
+class ZBTwinFaceted(FCCTwinFaceted):
+    """A twinning zincblende nanowire structure with faceted sidewalls"""
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p, q0, q_max=None):
+        super().__init__(nz, p, q0, q_max)
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
+
+
+class WZPristine0001(HexPristine0001):
+    """A pristine wurtzite nanowire structure oriented along [0001]"""
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p):
+        super().__init__(nz, p)
+        self.add_basis(2, np.array([0., -0.40824829, -0.14433757]))
+
+
+class ZBWZMixed(FCCHexMixed):
+    """A mixed phase nanowire structure with ZB and WZ segments"""
+
+    def write_map(self, file_path):
+        raise NotImplementedError
+
+    def __init__(self, nz, p, index):
+        super().__init__(nz, p, index)
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
+
+# twin_basis = np.array([0., 0., ROOT3 / 4])
+# hex_basis_1 = np.array([0.353553, -0.204124, -0.144338])
+# hex_basis_2 = np.array([0., -0.40824829, -0.14433757]
