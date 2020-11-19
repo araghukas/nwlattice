@@ -9,12 +9,12 @@ from nwlattice.utilities import ROOT3
 class AStackLattice(ABC):
     """Abstract base class for wire lattices made of stacked planes"""
 
-    def __init__(self, planes, vz, vr):
+    def __init__(self, planes, vz_unit, vr):
         super().__init__()
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
         self._nz = None  # number of planes in wire lattice
-        self._vz_unit = None
+        self._vz_unit = float(vz_unit)  # unit inter-planar dist. in z direction
         self._vz = None  # array of offsets from 0. to plane z in a0=1 units
         self._vr = None  # xy-plane offset between planes in a0=1 units
         self._D = None  # actual diameter (scaled)
@@ -31,7 +31,9 @@ class AStackLattice(ABC):
             else:
                 raise TypeError("all items in planes list must be PointPlanes")
 
-        self._vz = np.reshape(vz, (self.nz, 3))  # z offset for each plane
+        self._vz = np.zeros((self.nz, 3))
+        for i in range(self.nz):
+            self._vz[i][2] = i * self._vz_unit
         self._vr = np.reshape(vr, (self.nz, 3))  # xy offset for each plane
 
     @classmethod
@@ -41,19 +43,8 @@ class AStackLattice(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def write_map(self, file_path):
+    def write_map(self, *args):
         """write phana compatible map file for smallest unit cell"""
-        raise NotImplementedError
-
-    @property
-    def type_name(self):
-        """string identifying each sub-class"""
-        return str(self.__class__).split('.')[-1].strip("'>")
-
-    @property
-    @abstractmethod
-    def vz_unit(self):
-        """unit offset between planes in scaled units"""
         raise NotImplementedError
 
     # --------------------------------------------------------------------------
@@ -63,6 +54,11 @@ class AStackLattice(ABC):
     @property
     def scale(self):
         return self._scale
+
+    @property
+    def vz_unit(self):
+        """unit offset between planes in scaled units"""
+        return self._vz_unit * self._scale
 
     @property
     def L(self):
@@ -135,6 +131,11 @@ class AStackLattice(ABC):
     def vr(self):
         """xy offset for each plane"""
         return self._vr
+
+    @property
+    def type_name(self):
+        """string identifying each sub-class"""
+        return str(self.__class__).split('.')[-1].strip("'>")
 
     # --------------------------------------------------------------------------
     # concrete methods
