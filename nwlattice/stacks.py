@@ -479,7 +479,7 @@ class ZBPristine111(FCCPristine111):
     def __init__(self, nz, p):
         super().__init__(nz, p)
         super().__init__(nz, p)
-        self.add_basis(2, np.array([0.353553, -0.204124, -0.144338]))
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class ZBPristine100(FCCPristine100):
@@ -523,7 +523,7 @@ class WZPristine0001(HexPristine0001):
 
     def __init__(self, nz, p):
         super().__init__(nz, p)
-        self.add_basis(2, np.array([0., -0.40824829, -0.14433757]))
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class ZBWZMixed(FCCHexMixed):
@@ -535,7 +535,3 @@ class ZBWZMixed(FCCHexMixed):
     def __init__(self, nz, p, index):
         super().__init__(nz, p, index)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
-
-# twin_basis = np.array([0., 0., ROOT3 / 4])
-# hex_basis_1 = np.array([0.353553, -0.204124, -0.144338])
-# hex_basis_2 = np.array([0., -0.40824829, -0.14433757]
