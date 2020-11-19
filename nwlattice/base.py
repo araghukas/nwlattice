@@ -3,11 +3,89 @@ import numpy as np
 from time import time
 from os.path import expanduser
 
-from nwlattice.utilities import ROOT3
+from nwlattice.utilities import ROOT3, Quaternion
+
+
+class APointPlane(ABC):
+    """Abstract base class for planes of points stacked by AStackLattice"""
+    # translation vectors for planar lattices
+    hex_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])
+    sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
+
+    # centering offset vectors for planar lattices
+    ohex_delta = .5 * np.array([1., 1. / ROOT3, 0.])
+    ehex_delta = .25 * np.array([1, -1. / ROOT3, 0.])
+
+    @abstractmethod
+    def get_points(self, center=True):
+        """return an array of all atom points"""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_index_for_diameter(scale, D):
+        """return plane index for given diameter"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def N(self):
+        # implement N formula for each subclass
+        return self._N
+
+    @property
+    @abstractmethod
+    def D(self):
+        # implement diameter formula for each subclass
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def area(self):
+        # implement area formula for each subclass
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def vectors(self):
+        # set translation vectors for each subclass
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def com(self):
+        # implement com formula for each subclass
+        raise NotImplementedError
+
+    def __init__(self, scale):
+        super().__init__()
+        self._N = None  # number of lattice points
+        self._D = None  # diameter
+        self._vectors = None  # translation vectors
+        self._area = None  # cross sectional area
+        self._com = None  # points centre of mass
+        self._scale = scale  # scaling factor
+        self._points = None  # array of points in this PointPlane
+
+    @property
+    def scale(self):
+        # global scaling of all point in plane
+        return self._scale
 
 
 class AStackLattice(ABC):
     """Abstract base class for wire lattices made of stacked planes"""
+
+    @classmethod
+    @abstractmethod
+    def from_dimensions(cls, *args):
+        """create stack lattice from measurements instead of indices"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def write_map(self, *args):
+        """write phana compatible map file for smallest unit cell"""
+        raise NotImplementedError
 
     def __init__(self, planes, vz_unit, vr):
         super().__init__()
@@ -21,7 +99,7 @@ class AStackLattice(ABC):
         self._L = None  # actual length (scaled)
         self._P = None  # actual period (scaled)
         self._area = None  # cross sectional area (scaled)
-        self._basis = {}  # atom types attached to lattice
+        self._basis = {1: [np.zeros(3)]}  # atom types attached to lattice
         self._v_center_com = np.zeros(3)  # vector that centers lattice in box
         self._scale = 1.0  # scaling factor; effectively lattice constant
 
@@ -35,17 +113,6 @@ class AStackLattice(ABC):
         for i in range(self.nz):
             self._vz[i][2] = i * self._vz_unit
         self._vr = np.reshape(vr, (self.nz, 3))  # xy offset for each plane
-
-    @classmethod
-    @abstractmethod
-    def from_dimensions(cls, *args):
-        """create stack lattice from measurements instead of indices"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def write_map(self, *args):
-        """write phana compatible map file for smallest unit cell"""
-        raise NotImplementedError
 
     # --------------------------------------------------------------------------
     # concrete properties
@@ -137,10 +204,6 @@ class AStackLattice(ABC):
         """string identifying each sub-class"""
         return str(self.__class__).split('.')[-1].strip("'>")
 
-    # --------------------------------------------------------------------------
-    # concrete methods
-    # --------------------------------------------------------------------------
-
     def add_basis(self, t, pt):
         """
         Add a basis point of type `t` at 3-point `pt`
@@ -163,7 +226,7 @@ class AStackLattice(ABC):
         else:
             self._basis[t] = [pt]
 
-    def get_points(self, t: int) -> np.ndarray:
+    def get_points(self, t: int, **kwargs) -> np.ndarray:
         """
         Return an array of all atom points of type `t`
 
@@ -206,9 +269,9 @@ class AStackLattice(ABC):
         # create dict of atom types and arrays of corresponding points
         N_atoms = 0  # total number of atoms
         points_dict = {}
-        for b in self.basis:
-            points_dict[b] = self.get_points(b)
-            N_atoms += self.N * len(self.basis[b])
+        for t in self.basis:
+            points_dict[t] = self.get_points(t)
+            N_atoms += self.N * len(self.basis[t])
 
         t1 = time()
         path_ = expanduser(file_path)
@@ -222,17 +285,16 @@ class AStackLattice(ABC):
             file_.write("%d atom types\n" % len(self.basis))
             file_.write("\n")
 
-            # simulation box
+            # decide simulation box dimensions
             x = 2 * self.D  # keep atoms' (x,y) in box
             y = x
             basis_z_min = basis_z_max = 0.
-            for b in self._basis:
-                for bpt in self._basis[b]:
+            for t in self._basis:
+                for bpt in self._basis[t]:
                     if bpt[2] < basis_z_min:
                         basis_z_min = bpt[2] * self._scale
                     elif bpt[2] > basis_z_max:
                         basis_z_max = bpt[2] * self._scale
-
             zlo = 0. if wrap else basis_z_min
             zhi = self.L
             if wrap:
@@ -242,6 +304,7 @@ class AStackLattice(ABC):
             else:
                 zhi += basis_z_max
 
+            # write simulation box
             file_.write("{} {} xlo xhi\n".format(-x / 2., x / 2.))
             file_.write("{} {} ylo yhi\n".format(-y / 2., y / 2.))
             file_.write("{} {} zlo zhi\n".format(zlo, zhi))
@@ -286,70 +349,132 @@ class AStackLattice(ABC):
             return nhi
 
 
-class APointPlane(ABC):
-    """Abstract base class for planes of points stacked by AStackLattice"""
-    # translation vectors for planar lattices
-    hex_vectors = np.array([[1., 0., 0.], [-.5, ROOT3 / 2., 0.]])
-    sq_vectors = np.array([[1., 0., 0.], [0., 1., 0.]])
-
-    # centering offset vectors for planar lattices
-    ohex_delta = .5 * np.array([1., 1. / ROOT3, 0.])
-    ehex_delta = .25 * np.array([1, -1. / ROOT3, 0.])
-
-    def __init__(self, scale):
-        super().__init__()
-        self._N = None  # number of lattice points
-        self._D = None  # diameter
-        self._vectors = None  # translation vectors
-        self._area = None  # cross sectional area
-        self._com = None  # points centre of mass
-        self._scale = scale  # scaling factor
-        self._points = None  # array of points in this PointPlane
-
+class ATwinStackLattice(AStackLattice):
+    @classmethod
     @abstractmethod
-    def get_points(self, center=True):
-        """return an array of all atom points"""
+    def from_dimensions(cls, *args):
+        """create stack lattice from measurements instead of indices"""
         raise NotImplementedError
 
-    @staticmethod
     @abstractmethod
-    def get_index_for_diameter(scale, D):
-        """return plane index for given diameter"""
+    def write_map(self, *args):
+        """write phana compatible map file for smallest unit cell"""
         raise NotImplementedError
 
-    @property
-    @abstractmethod
-    def N(self):
-        # implement N formula for each subclass
-        return self._N
+    def __init__(self, planes, vz_unit, vr, q_max, theta):
+        super().__init__(planes, vz_unit, vr)
+        self._q_max = q_max
+        self._theta = theta
+        self._deg = theta * 180. / np.pi
+        self._qtr = Quaternion.rotator([0, 0, 1], theta)
 
-    @property
-    @abstractmethod
-    def D(self):
-        # implement diameter formula for each subclass
-        raise NotImplementedError
+    def get_points(self, t: int, rotate=False) -> np.ndarray:
+        """
+        Return an array of all atom points of type `t`
 
-    @property
-    @abstractmethod
-    def area(self):
-        # implement area formula for each subclass
-        raise NotImplementedError
+        :param t: integer atom type ID
+        :param rotate: if true, apply rotation through `theta` about z axis
+        :return: array of 3-points indicating all locations of type `t` atoms
+        """
+        # set up lattice points
+        pts = np.zeros((self.N, 3))
+        n = 0
+        for i, plane in enumerate(self.planes):
+            pts[n:(n + plane.N)] = (
+                    plane.get_points(center=True)
+                    + self.vr[i]
+                    + self.vz[i]
+            )
+            n += plane.N
 
-    @property
-    @abstractmethod
-    def vectors(self):
-        # set translation vectors for each subclass
-        raise NotImplementedError
+        # populate lattice points with basis points of type `t`
+        atom_pts = np.zeros((self.N * len(self.basis[t]), 3))
+        n = 0
+        for bpt in self.basis[t]:
+            nb = 0
+            rotate_bpt = False
+            for i in range(self.nz):
+                if rotate and self._q_max and i % self._q_max == 0:
+                    rotate_bpt = not rotate_bpt
 
-    @property
-    @abstractmethod
-    def com(self):
-        # implement com formula for each subclass
-        raise NotImplementedError
+                plane = self.planes[i]
+                if rotate_bpt:
+                    atom_pts[n:(n + plane.N)] = (pts[nb:(nb + plane.N)]
+                                                 + self._qtr.rotate(bpt))
+                else:
+                    atom_pts[n:(n + plane.N)] = pts[nb:(nb + plane.N)] + bpt
+                nb += plane.N
+                n += plane.N
 
-    @property
-    def scale(self):
-        # global scaling of all point in plane
-        return self._scale
+        return atom_pts + self._v_center_com
 
+    def write_points(self, file_path: str, wrap=True):
+        """
+        Write LAMMPS/OVITO compatible data file of all atom points
 
+        OVERRIDE: add rotation for non-primary basis
+
+        :param file_path: string indicating target file (created/overwritten)
+        :param wrap: if True, z-periodicity of the structure is enforced; else
+        the z limits of the simulation box align with the highest/lowest atoms.
+        :return: None
+        """
+        # create dict of atom types and arrays of corresponding points
+        N_atoms = 0  # total number of atoms
+        points_dict = {}
+        for t in self.basis:
+            rotate = t > 1
+            points_dict[t] = self.get_points(t, rotate)
+            N_atoms += self.N * len(self.basis[t])
+
+        t1 = time()
+        path_ = expanduser(file_path)
+        with open(path_, "w") as file_:
+            # header (ignored)
+            file_.write("atom coordinates generated by 'nwlattice' package\n")
+            file_.write("\n")
+
+            # number of atoms and number of atom types
+            file_.write("%d atoms\n" % N_atoms)
+            file_.write("%d atom types\n" % len(self.basis))
+            file_.write("\n")
+
+            # decide simulation box dimensions
+            x = 2 * self.D  # keep atoms' (x,y) in box
+            y = x
+            basis_z_min = basis_z_max = 0.
+            for t in self._basis:
+                for bpt in self._basis[t]:
+                    if bpt[2] < basis_z_min:
+                        basis_z_min = bpt[2] * self._scale
+                    elif bpt[2] > basis_z_max:
+                        basis_z_max = bpt[2] * self._scale
+            zlo = 0. if wrap else basis_z_min
+            zhi = self.L
+            if wrap:
+                if basis_z_max != 0 or basis_z_min != 0:
+                    # make room for basis points above/below planes
+                    zhi += self.vz_unit
+            else:
+                zhi += basis_z_max
+
+            # write simulation box
+            file_.write("{} {} xlo xhi\n".format(-x / 2., x / 2.))
+            file_.write("{} {} ylo yhi\n".format(-y / 2., y / 2.))
+            file_.write("{} {} zlo zhi\n".format(zlo, zhi))
+            file_.write("\n")
+
+            # Atoms section
+            file_.write("Atoms # atomic\n")
+            file_.write("\n")
+            id_ = 1
+            for typ, points in points_dict.items():
+                for pt in points:
+                    pt *= self._scale
+                    ptz = pt[2] % zhi if wrap else pt[2]
+                    file_.write("{} {} {} {} {} 0 0 0\n"
+                                .format(id_, typ, pt[0], pt[1], ptz))
+                    id_ += 1
+            t2 = time()
+            print("wrote %d atoms to data file '%s' in %f seconds"
+                  % (N_atoms, path_, t2 - t1))

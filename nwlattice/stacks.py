@@ -1,7 +1,7 @@
 import numpy as np
 
 from nwlattice.utilities import ROOT2, ROOT3
-from nwlattice.base import AStackLattice
+from nwlattice.base import AStackLattice, ATwinStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
 
@@ -117,10 +117,10 @@ class FCCPristine100(AStackLattice):
         raise NotImplementedError
 
 
-class FCCTwin(AStackLattice):
+class FCCTwin(ATwinStackLattice):
     """A twinning FCC nanowire structure with smooth sidewalls"""
 
-    def __init__(self, nz, p, index):
+    def __init__(self, nz, p, index, q_max: int = None):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
@@ -143,7 +143,7 @@ class FCCTwin(AStackLattice):
             planes.append(base_planes[j % 3])
             vr[i] += (j % 3) * unit_vr
             j += 1
-        super().__init__(planes, vz_unit, vr)
+        super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
@@ -184,7 +184,7 @@ class FCCTwin(AStackLattice):
 
         if index is not None:
             pass
-        elif period or q_max:
+        elif q_max or period:
             index = []
             i_period = q_max
             include = True
@@ -196,7 +196,7 @@ class FCCTwin(AStackLattice):
         else:
             index = []
 
-        stk = cls(nz, p, index)
+        stk = cls(nz, p, index, q_max)
         stk._scale = a0
         if q_max:
             stk._P = 2 * a0 * q_max / ROOT3
@@ -226,10 +226,10 @@ class FCCTwin(AStackLattice):
         raise NotImplementedError
 
 
-class FCCTwinFaceted(AStackLattice):
+class FCCTwinFaceted(ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
 
-    def __init__(self, nz, p, q0, q_max):
+    def __init__(self, nz, p, q0, q_max: int = None):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = self.get_q_cycle(nz, q0, q_max)
 
@@ -238,7 +238,7 @@ class FCCTwinFaceted(AStackLattice):
         planes = [TwinPlane(p, q, scale=scale) for q in q_cycle]
         vr = np.zeros((nz, 3))
         vz_unit = 1 / ROOT3
-        super().__init__(planes, vz_unit, vr)
+        super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
 
     @property
     def q0(self):
