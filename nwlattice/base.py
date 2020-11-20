@@ -368,6 +368,10 @@ class ATwinStackLattice(AStackLattice):
         self._deg = theta * 180. / np.pi
         self._qtr = Quaternion.rotator([0, 0, 1], theta)
 
+    @property
+    def q_max(self):
+        return self._q_max
+
     def get_points(self, t: int, rotate=False) -> np.ndarray:
         """
         Return an array of all atom points of type `t`
