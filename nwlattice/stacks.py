@@ -45,7 +45,7 @@ class FCCPristine111(AStackLattice):
     def __init__(self, nz, p):
         # construct smallest list of unique planes
         scale = 1 / ROOT2
-        unit_vr = np.array([0.35355339, 0.20412415, 0.])
+        unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
@@ -185,7 +185,7 @@ class FCCTwin(ATwinStackLattice):
 
         # construct smallest list of unique planes
         scale = 1 / ROOT2
-        unit_vr = np.array([0.35355339, 0.20412415, 0.])
+        unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
@@ -443,7 +443,7 @@ class FCCHexMixed(AStackLattice):
 
         # construct smallest list of unique planes
         scale = 1 / ROOT2
-        unit_vr = np.array([0.35355339, 0.20412415, 0.])
+        unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
         base_planes = [
             HexPlane(p - 1, even=False, scale=scale),
             HexPlane(p, even=True, scale=scale),
