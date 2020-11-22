@@ -4,3 +4,4 @@ __pycache__/
 _tests.py
 outputs/
 _zb.py
+*.data
