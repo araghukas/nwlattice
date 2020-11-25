@@ -52,13 +52,13 @@ class HexPlane(APointPlane):
     @property
     def area(self):
         if self._area is None:
+            p = self.p
             if self.even:
-                self._area = 0.5 * (3 * (self.p - 1)) * (self.p - 1) * ROOT3
+                # 6 big triangles, each containing (p-1)^2 small triangles
+                self._area = (ROOT3 / 4) * 6 * (p - 1)**2
             else:
-                self._area = 0.25 * (
-                        ((self.p - 1) + (2 * self.p - 1)) * self.p * ROOT3
-                        + (self.p + (2 * self.p - 1)) * (self.p - 1) * ROOT3
-                )
+                # central triangle surrounded by 3 parallelograms
+                self._area = (ROOT3 / 4) * (1 + 6 * p * (p - 1))
         return self._area
 
     @property
