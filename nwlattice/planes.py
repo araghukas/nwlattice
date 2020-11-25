@@ -59,6 +59,7 @@ class HexPlane(APointPlane):
             else:
                 # central triangle surrounded by 3 parallelograms
                 self._area = (ROOT3 / 4) * (1 + 6 * p * (p - 1))
+            self._area *= self._scale**2
         return self._area
 
     @property
@@ -214,6 +215,7 @@ class SquarePlane(APointPlane):
     def area(self):
         if self._area is None:
             self._area = (self.r - 1)**2
+            self._area *= self._scale**2
         return self._area
 
     @property
@@ -322,6 +324,7 @@ class TwinPlane(APointPlane):
             self._area = ((3 * (self.p - 1) + self.q) * (self.p - 1 - self.q)
                           + (3 * (self.p - 1) - self.q) * (self.p - 1 + self.q)
                           ) * ROOT3 / 4
+            self._area *= self._scale**2
         return self._area
 
     @property
