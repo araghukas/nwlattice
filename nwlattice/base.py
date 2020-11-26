@@ -323,17 +323,19 @@ class AStackLattice(ABC):
         """returns simulation box dimensions for write_points() method"""
         x = 2 * self.D  # keep atoms' (x,y) in box
         y = x
+        n_atom_types = len(self._basis)
         basis_z_min = basis_z_max = 0.
-        for t in self._basis:
-            for bpt in self._basis[t]:
-                if bpt[2] < basis_z_min:
-                    basis_z_min = bpt[2] * self._scale
-                elif bpt[2] > basis_z_max:
-                    basis_z_max = bpt[2] * self._scale
+        if n_atom_types > 1:
+            for t in self._basis:
+                for bpt in self._basis[t]:
+                    if bpt[2] < basis_z_min:
+                        basis_z_min = bpt[2] * self._scale
+                    elif bpt[2] > basis_z_max:
+                        basis_z_max = bpt[2] * self._scale
         zlo = 0. if wrap else basis_z_min
         zhi = self.L
         if wrap:
-            if basis_z_max != 0 or basis_z_min != 0:
+            if basis_z_max != 0 or basis_z_min != 0 or n_atom_types == 1:
                 # make room for basis points above/below planes
                 zhi += self.vz_unit
         else:
