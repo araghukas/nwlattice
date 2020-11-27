@@ -335,9 +335,7 @@ class AStackLattice(ABC):
         zlo = 0. if wrap else basis_z_min
         zhi = self.L
         if wrap:
-            if basis_z_max != 0 or basis_z_min != 0 or n_atom_types == 1:
-                # make room for basis points above/below planes
-                zhi += self.vz_unit
+            zhi += self.vz_unit
         else:
             zhi += basis_z_max
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
