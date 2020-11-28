@@ -147,6 +147,7 @@ class FCCPristine100(AStackLattice):
 
 class FCCTwin(ATwinStackLattice):
     """A twinning FCC nanowire structure with smooth sidewalls"""
+
     @property
     def supercell(self):
         if self._supercell is self:
@@ -276,6 +277,7 @@ class FCCTwin(ATwinStackLattice):
 
 class FCCTwinFaceted(ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
+
     @property
     def supercell(self):
         if self._supercell is self:
@@ -410,6 +412,7 @@ class FCCTwinFaceted(ATwinStackLattice):
 
 class HexPristine0001(AStackLattice):
     """A pristine hexagonal nanowire structure oriented along [0001]"""
+
     @property
     def supercell(self):
         if self._supercell is self:
@@ -474,6 +477,7 @@ class HexPristine0001(AStackLattice):
 
 class FCCHexMixed(AStackLattice):
     """A mixed phase nanowire structure with FCC and hexagonal segments"""
+
     @property
     def supercell(self):
         return self
