@@ -116,37 +116,6 @@ class AStackLattice(ABC):
 
     @abstractmethod
     def write_map(self, *args):
-        """
-        Write a map file for the LAMMPS command `fix phonon`
-
-        The map file specification is found at:
-        <https://code.google.com/archive/p/fix-phonon/wikis/MapFile.wiki>
-
-        Basically,
-
-            The map file simply shows the map between the lattice indices of an
-            atom and its unique id in the simulation box. The format of the map
-            file read:
-
-                nx ny nz n
-                # comment line
-                l1 l2 l3 k id
-                .
-                .
-                .
-
-            The first line: nx, ny, and nz are the number of extensions of the
-            unit cell in x, y, and z directions, respectively. That is to say,
-            your simulation box contains nx x ny x nz unit cells. And n is the
-            number of atoms in each unit cell.
-
-            The second line: comment line, put whatever you want. From line 3
-            to line (nx*ny*nz*n+2): l1, l2, l3 are the indices of the unit cell
-            which atom id belongs to, and atom id is the k_th atom in this unit
-            cell.
-
-        NOTE: atom ID's must be consistent with `write_points()` method output
-        """
         raise NotImplementedError
 
     def __init__(self, planes, vz_unit, vr):
@@ -179,6 +148,10 @@ class AStackLattice(ABC):
     # --------------------------------------------------------------------------
     # concrete properties
     # --------------------------------------------------------------------------
+
+    def cycle_z(self, n):
+        self._planes = self._planes[-n:] + self._planes[:-n]
+        self._vr = np.concatenate((self._vr[-n:], self._vr[:-n]))
 
     @property
     def scale(self):
