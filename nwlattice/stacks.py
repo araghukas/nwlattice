@@ -9,6 +9,12 @@ class FCCPristine111(AStackLattice):
     """A pristine FCC nanowire structure with axis along [111]"""
 
     @classmethod
+    def get_supercell(cls, a0, p):
+        supercell = cls(3, p)
+        supercell._scale = a0
+        return supercell
+
+    @classmethod
     def from_dimensions(cls, a0: float = 1.0,
                         diameter: float = None, length: float = None,
                         p: int = None, nz: int = None, z_periodic: bool = True):
@@ -37,6 +43,7 @@ class FCCPristine111(AStackLattice):
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         stk = cls(nz, p)
         stk._scale = a0
+        stk._supercell = cls.get_supercell(a0, p)
         return stk
 
     def write_map(self, file_path):
@@ -68,6 +75,12 @@ class FCCPristine100(AStackLattice):
     """A pristine FCC nanowire structure with axis along [100]"""
 
     @classmethod
+    def get_supercell(cls, a0, nz, r):
+        supercell = cls(2, r)
+        supercell._scale = a0
+        return supercell
+
+    @classmethod
     def from_dimensions(cls, a0=1.0, side_length=None, length=None,
                         r=None, nz=None, z_periodic=True):
         """
@@ -96,6 +109,7 @@ class FCCPristine100(AStackLattice):
              if r is None else r)
         stk = cls(nz, r)
         stk._scale = a0
+        stk._supercell = cls.get_supercell(a0, nz, r)
         return stk
 
     def write_map(self, file_path):
@@ -119,6 +133,14 @@ class FCCPristine100(AStackLattice):
 
 class FCCTwin(ATwinStackLattice):
     """A twinning FCC nanowire structure with smooth sidewalls"""
+
+    @classmethod
+    def get_supercell(cls, a0, p, q_max):
+        nz = cls.get_cyclic_nz(0, q_max)
+        index = cls.get_index(nz, q_max)
+        supercell = cls(nz, p, index)
+        supercell._scale = a0
+        return supercell
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
@@ -160,14 +182,7 @@ class FCCTwin(ATwinStackLattice):
         if index is not None:
             pass
         elif q_max or period:
-            index = []
-            i_period = q_max
-            include = True
-            for i in range(nz):
-                if i % i_period == 0:
-                    include = not include
-                if include:
-                    index.append(i)
+            index = cls.get_index(nz, q_max)
         else:
             index = []
 
@@ -175,6 +190,7 @@ class FCCTwin(ATwinStackLattice):
         stk._scale = a0
         if q_max:
             stk._P = 2 * a0 * q_max / ROOT3
+        stk._supercell = cls.get_supercell(a0, p, q_max)
         return stk
 
     def write_map(self, file_path):
@@ -225,9 +241,28 @@ class FCCTwin(ATwinStackLattice):
         else:
             return nhi
 
+    @staticmethod
+    def get_index(nz, q_max):
+        index = []
+        i_period = q_max
+        include = True
+        for i in range(nz):
+            if i % i_period == 0:
+                include = not include
+            if include:
+                index.append(i)
+        return index
+
 
 class FCCTwinFaceted(ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
+
+    @classmethod
+    def get_supercell(cls, a0, p, q_max, q0=0):
+        nz = cls.get_cyclic_nz(0, q_max)
+        supercell = cls(nz, p, q0, q_max)
+        supercell._scale = a0
+        return supercell
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None,
@@ -283,12 +318,13 @@ class FCCTwinFaceted(ATwinStackLattice):
         stk = cls(nz, p, q0, q_max)
         stk._scale = a0
         stk._P = 2 * a0 * q_max / ROOT3
+        stk._supercell = cls.get_supercell(a0, p, q_max, q0)
         return stk
 
     def write_map(self, file_path):
         raise NotImplementedError
 
-    def __init__(self, nz, p, q0, q_max: int = None):
+    def __init__(self, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = self.get_q_cycle(nz, q0, q_max)
 
@@ -347,6 +383,11 @@ class FCCTwinFaceted(ATwinStackLattice):
 
 class HexPristine0001(AStackLattice):
     """A pristine hexagonal nanowire structure oriented along [0001]"""
+    @classmethod
+    def get_supercell(cls, a0, p):
+        supercell = cls(2, p)
+        supercell._scale = a0
+        return supercell
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None,
@@ -379,6 +420,7 @@ class HexPristine0001(AStackLattice):
 
         stk = cls(nz, p)
         stk._scale = a0
+        stk._supercell = cls.get_supercell(a0, p)
         return stk
 
     def write_map(self, file_path):
@@ -398,6 +440,9 @@ class HexPristine0001(AStackLattice):
 
 class FCCHexMixed(AStackLattice):
     """A mixed phase nanowire structure with FCC and hexagonal segments"""
+    @classmethod
+    def get_supercell(cls, nz, p, index):
+        raise cls(nz, p, index)
 
     @classmethod
     def from_dimensions(cls, a0=1.0, diameter=None, length=None, index=None,
@@ -433,6 +478,7 @@ class FCCHexMixed(AStackLattice):
             index = []
         stk = cls(nz, p, index)
         stk._scale = a0
+        stk._supercell = stk
         return stk
 
     def write_map(self, file_path):

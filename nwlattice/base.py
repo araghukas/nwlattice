@@ -110,6 +110,11 @@ class APointPlane(ABC):
 class AStackLattice(ABC):
     @classmethod
     @abstractmethod
+    def get_supercell(cls, *args):
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
     def from_dimensions(cls, *args):
         """create stack lattice from measurements instead of indices"""
         raise NotImplementedError
@@ -120,6 +125,7 @@ class AStackLattice(ABC):
 
     def __init__(self, planes, vz_unit, vr):
         super().__init__()
+        self._supercell = None  # an minimal-nz instance of the same class
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
         self._nz = None  # number of planes in wire lattice
@@ -149,9 +155,9 @@ class AStackLattice(ABC):
     # concrete properties
     # --------------------------------------------------------------------------
 
-    def cycle_z(self, n):
-        self._planes = self._planes[-n:] + self._planes[:-n]
-        self._vr = np.concatenate((self._vr[-n:], self._vr[:-n]))
+    @property
+    def supercell(self):
+        return self._supercell
 
     @property
     def scale(self):
@@ -239,6 +245,10 @@ class AStackLattice(ABC):
         """string identifying each sub-class"""
         return str(self.__class__).split('.')[-1].strip("'>")
 
+    def cycle_z(self, n):
+        self._planes = self._planes[-n:] + self._planes[:-n]
+        self._vr = np.concatenate((self._vr[-n:], self._vr[:-n]))
+
     def add_basis(self, t: int, pt):
         """
         Add a basis point of type `t` at 3-point `pt`
@@ -269,9 +279,11 @@ class AStackLattice(ABC):
         :return: array of 3-points indicating all locations of type `t` atoms
         """
         # set up lattice points
+        n_supercell_planes = len(self.supercell.planes)
         pts = np.zeros((self.N, 3))
         n = 0
-        for i, plane in enumerate(self.planes):
+        for i in range(self._nz):
+            plane = self.supercell.planes[i % n_supercell_planes]
             pts[n:(n + plane.N)] = (
                     plane.get_points(center=True)
                     + self.vr[i]
@@ -285,7 +297,7 @@ class AStackLattice(ABC):
         for bpt in self.basis[t]:
             nb = 0
             for i in range(self.nz):
-                plane = self.planes[i]
+                plane = self.supercell.planes[i % n_supercell_planes]
                 atom_pts[n:(n + plane.N)] = pts[nb:(nb + plane.N)] + bpt
                 nb += plane.N
                 n += plane.N
