@@ -123,6 +123,11 @@ class AStackLattice(ABC):
     def write_map(self, *args):
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def supercell(self):
+        raise NotImplementedError
+
     def __init__(self, planes, vz_unit, vr):
         super().__init__()
         self._supercell = self  # an minimal-nz instance of the same class
@@ -150,14 +155,6 @@ class AStackLattice(ABC):
         for i in range(self.nz):
             self._vz[i][2] = i * self._vz_unit
         self._vr = np.reshape(vr, (self.nz, 3))  # xy offset for each plane
-
-    # --------------------------------------------------------------------------
-    # concrete properties
-    # --------------------------------------------------------------------------
-
-    @property
-    def supercell(self):
-        return self._supercell
 
     @property
     def scale(self):

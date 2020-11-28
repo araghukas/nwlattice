@@ -8,6 +8,13 @@ from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 class FCCPristine111(AStackLattice):
     """A pristine FCC nanowire structure with axis along [111]"""
 
+    @property
+    def supercell(self):
+        if self._supercell is self:
+            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            self._supercell = self.get_supercell(self.scale, p)
+        return self._supercell
+
     @classmethod
     def get_supercell(cls, a0, p):
         supercell = cls(3, p)
@@ -74,6 +81,13 @@ class FCCPristine111(AStackLattice):
 class FCCPristine100(AStackLattice):
     """A pristine FCC nanowire structure with axis along [100]"""
 
+    @property
+    def supercell(self):
+        if self._supercell is self:
+            r = SquarePlane.get_index_for_diameter(self.scale, self.D)
+            self._supercell = self.get_supercell(self.scale, self.nz, r)
+        return self._supercell
+
     @classmethod
     def get_supercell(cls, a0, nz, r):
         supercell = cls(2, r)
@@ -133,6 +147,12 @@ class FCCPristine100(AStackLattice):
 
 class FCCTwin(ATwinStackLattice):
     """A twinning FCC nanowire structure with smooth sidewalls"""
+    @property
+    def supercell(self):
+        if self._supercell is self:
+            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            self._supercell = self.get_supercell(self.scale, p, self.q_max)
+        return self._supercell
 
     @classmethod
     def get_supercell(cls, a0, p, q_max):
@@ -256,6 +276,13 @@ class FCCTwin(ATwinStackLattice):
 
 class FCCTwinFaceted(ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
+    @property
+    def supercell(self):
+        if self._supercell is self:
+            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            self._supercell = self.get_supercell(self.scale, p, self.q_max,
+                                                 self.q0)
+        return self._supercell
 
     @classmethod
     def get_supercell(cls, a0, p, q_max, q0=0):
@@ -383,6 +410,13 @@ class FCCTwinFaceted(ATwinStackLattice):
 
 class HexPristine0001(AStackLattice):
     """A pristine hexagonal nanowire structure oriented along [0001]"""
+    @property
+    def supercell(self):
+        if self._supercell is self:
+            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            self._supercell = self.get_supercell(self.scale, p)
+        return self._supercell
+
     @classmethod
     def get_supercell(cls, a0, p):
         supercell = cls(2, p)
@@ -440,6 +474,10 @@ class HexPristine0001(AStackLattice):
 
 class FCCHexMixed(AStackLattice):
     """A mixed phase nanowire structure with FCC and hexagonal segments"""
+    @property
+    def supercell(self):
+        return self
+
     @classmethod
     def get_supercell(cls, nz, p, index):
         raise cls(nz, p, index)
