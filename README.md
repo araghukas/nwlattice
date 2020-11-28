@@ -13,3 +13,6 @@ Navigate to the `nwlattice` directory, which containts `setup.py`, then
     
 ## Tutorial
 See the `example` directory. For available structure classes, see `nwlattice/stacks.py`.
+
+## Disclaimer
+Please note that this project is a work in progress. Use at your own risk.
