@@ -478,7 +478,6 @@ class FCCHexMixed(AStackLattice):
             index = []
         stk = cls(nz, p, index)
         stk._scale = a0
-        stk._supercell = stk
         return stk
 
     def write_map(self, file_path):

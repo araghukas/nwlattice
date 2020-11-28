@@ -125,7 +125,7 @@ class AStackLattice(ABC):
 
     def __init__(self, planes, vz_unit, vr):
         super().__init__()
-        self._supercell = None  # an minimal-nz instance of the same class
+        self._supercell = self  # an minimal-nz instance of the same class
         self._planes = []  # list of PointPlane objects to be stacked
         self._N = None  # number of lattice points
         self._nz = None  # number of planes in wire lattice
