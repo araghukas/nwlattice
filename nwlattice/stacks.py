@@ -260,12 +260,6 @@ class FCCTwinFaceted(ATwinStackLattice):
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         q_max = round(ROOT3 * period / 2 / a0) if q_max is None else q_max
 
-        if z_periodic:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz, q_max)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
-
         if q_max >= p:
             q_max = p - 1
             if q_max_auto:
@@ -279,6 +273,12 @@ class FCCTwinFaceted(ATwinStackLattice):
                                  "(or `q_max = {:d}`)"
                                  .format(period, diameter,
                                          2. * a0 * q_max / ROOT3, q_max))
+
+        if z_periodic:
+            old_nz = nz
+            nz = cls.get_cyclic_nz(nz, q_max)
+            print("forced z periodicity, adjusted nz: %d --> %d"
+                  % (old_nz, nz))
 
         stk = cls(nz, p, q0, q_max)
         stk._scale = a0
