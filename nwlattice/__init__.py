@@ -13,4 +13,4 @@ def toggle_printing(b: bool):
     AStackLattice.PRINT = bool(b)
 
 
-__version__ = "24Nov2020"
+__version__ = "29Nov2020"
