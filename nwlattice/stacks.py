@@ -45,8 +45,8 @@ class FCCPristine111(AStackLattice):
         if z_periodic:
             old_nz = nz
             nz = cls.get_cyclic_nz(nz)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
+            super().print("forced z periodicity, adjusted nz: %d --> %d"
+                          % (old_nz, nz))
         p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         stk = cls(nz, p)
         stk._scale = a0
@@ -114,8 +114,8 @@ class FCCPristine100(AStackLattice):
         if z_periodic:
             old_nz = nz
             nz = cls.get_cyclic_nz(nz)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
+            super().print("forced z periodicity, adjusted nz: %d --> %d"
+                          % (old_nz, nz))
         r = (SquarePlane.get_index_for_diameter(a0, side_length)
              if r is None else r)
         stk = cls(nz, r)
@@ -191,8 +191,8 @@ class FCCTwin(ATwinStackLattice):
         if z_periodic and q_max:
             old_nz = nz
             nz = cls.get_cyclic_nz(nz, q_max)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
+            super().print("forced z periodicity, adjusted nz: %d --> %d"
+                          % (old_nz, nz))
 
         if index is not None:
             pass
@@ -320,8 +320,8 @@ class FCCTwinFaceted(ATwinStackLattice):
             if q_max_auto:
                 old_period = period
                 period = 2. * a0 * q_max / ROOT3
-                print("Period is too large, corrected: %f --> %f "
-                      % (old_period, period))
+                super().print("Period is too large, corrected: %f --> %f "
+                              % (old_period, period))
             else:
                 raise ValueError("period {:f} is too large for given "
                                  "diameter {:f}\n Maximum period is {:f} "
@@ -332,8 +332,8 @@ class FCCTwinFaceted(ATwinStackLattice):
         if z_periodic:
             old_nz = nz
             nz = cls.get_cyclic_nz(nz, q_max)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
+            super().print("forced z periodicity, adjusted nz: %d --> %d"
+                          % (old_nz, nz))
 
         stk = cls(nz, p, q0, q_max)
         stk._scale = a0
@@ -440,8 +440,8 @@ class HexPristine0001(AStackLattice):
         if z_periodic:
             old_nz = nz
             nz = cls.get_cyclic_nz(nz)
-            print("forced z periodicity, adjusted nz: %d --> %d"
-                  % (old_nz, nz))
+            super().print("forced z periodicity, adjusted nz: %d --> %d"
+                          % (old_nz, nz))
 
         stk = cls(nz, p)
         stk._scale = a0
