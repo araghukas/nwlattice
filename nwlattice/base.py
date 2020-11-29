@@ -119,10 +119,6 @@ class AStackLattice(ABC):
         """create stack lattice from measurements instead of indices"""
         raise NotImplementedError
 
-    @abstractmethod
-    def write_map(self, *args):
-        raise NotImplementedError
-
     @property
     @abstractmethod
     def supercell(self):
@@ -268,38 +264,81 @@ class AStackLattice(ABC):
         else:
             self._basis[t] = [pt]
 
-    def get_points(self, t: int, **kwargs) -> np.ndarray:
+    def get_types(self) -> np.ndarray:
+        """
+        Return the integer type identifier for atoms identifier `ID`
+
+        :return: atom type
+        """
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        n_supercell_planes = len(self.supercell.planes)
+        types = np.zeros(self.N * n_basis_atoms)
+        ID = 1
+        for i in range(self._nz):
+            plane = self.supercell.planes[i % n_supercell_planes]
+            for t in self.basis:
+                for _ in self.basis[t]:
+                    types[(ID - 1):(ID - 1) + plane.N] = t
+                    ID += plane.N
+
+        return types
+
+    def get_points(self, **kwargs) -> np.ndarray:
         """
         Return an array of all atom points of type `t`
 
-        :param t: integer atom type ID
         :return: array of 3-points indicating all locations of type `t` atoms
         """
-        # set up lattice points
         n_supercell_planes = len(self.supercell.planes)
-        pts = np.zeros((self.N, 3))
-        n = 0
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        atom_pts = np.zeros((self.N * n_basis_atoms, 3))
+        n_ID = 0
         for i in range(self._nz):
             plane = self.supercell.planes[i % n_supercell_planes]
-            pts[n:(n + plane.N)] = (
-                    plane.get_points(center=True)
-                    + self.vr[i]
-                    + self.vz[i]
-            )
-            n += plane.N
-
-        # populate lattice points with basis points of type `t`
-        atom_pts = np.zeros((self.N * len(self.basis[t]), 3))
-        n = 0
-        for bpt in self.basis[t]:
-            nb = 0
-            for i in range(self.nz):
-                plane = self.supercell.planes[i % n_supercell_planes]
-                atom_pts[n:(n + plane.N)] = pts[nb:(nb + plane.N)] + bpt
-                nb += plane.N
-                n += plane.N
+            for t in self.basis:
+                for bpt in self.basis[t]:
+                    atom_pts[n_ID:(n_ID + plane.N)] = (
+                            plane.get_points(center=True)
+                            + self.vr[i]
+                            + self.vz[i]
+                            + bpt
+                    )
+                    n_ID += plane.N
 
         return atom_pts + self._v_center_com
+
+    def get_map(self):
+        """return `phana` map row for every atom"""
+        # rows = [l1, l2, l3, k, ID]
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        rows = []
+        l1 = l2 = l3 = 0
+        k = 0
+        ID = 1
+        n = 0
+        for i in range(self._nz):
+            plane = self.supercell.planes[i % self.supercell.nz]
+            for t in self.basis:
+                for _ in plane.get_points(t):
+                    for _ in self.basis[t]:
+                        rows.append((l1, l2, l3, k, ID))
+                        n += 1
+                        ID += 1
+                        if n % (self.supercell.N * n_basis_atoms) == 0:
+                            l3 += 1
+                            k = 0
+                        else:
+                            k += 1
+
+        assert n == (self.N * n_basis_atoms), \
+            "{} != {}".format(n, self.N * n_basis_atoms)
+        assert len(rows) == n, \
+            "{} != {}".format(len(rows), n)
+
+        print(n)
+        print(l3)
+
+        return rows
 
     def _get_points_box_dims(self, wrap: bool) -> tuple:
         """returns simulation box dimensions for write_points() method"""
@@ -322,19 +361,6 @@ class AStackLattice(ABC):
             zhi += basis_z_max
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
 
-    def _get_points_dict(self) -> (int, dict):
-        """
-        Returns a dict where keys are atom types and values are arrays of all
-        points of that atom type. Also counts the total number of atoms across
-        all types.
-        """
-        N_atoms = 0
-        points_dict = {}
-        for t in self.basis:
-            points_dict[t] = self.get_points(t)
-            N_atoms += self.N * len(self.basis[t])
-        return N_atoms, points_dict
-
     def write_points(self, file_path: str, wrap=True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
@@ -343,10 +369,11 @@ class AStackLattice(ABC):
         :param wrap: toggle taking (z_coord % zhi) when writing atoms to file
         :return: None
         """
-        N_atoms, points_dict = self._get_points_dict()
-
         t1 = time()
         path_ = expanduser(file_path)
+        atom_points = self.get_points()
+        atom_types = self.get_types()
+        N_atoms = len(atom_points)
         with open(path_, "w") as file_:
             # header (ignored)
             file_.write("atom coordinates generated by 'nwlattice' package\n")
@@ -370,16 +397,68 @@ class AStackLattice(ABC):
             file_.write("Atoms # atomic\n")
             file_.write("\n")
             id_ = 1
-            for typ, points in points_dict.items():
-                for pt in points:
-                    pt *= self._scale
-                    ptz = pt[2] % zhi if wrap else pt[2]
-                    file_.write("{} {} {} {} {} 0 0 0\n"
-                                .format(id_, typ, pt[0], pt[1], ptz))
-                    id_ += 1
+            for pt, typ in zip(atom_points, atom_types):
+                pt *= self._scale
+                ptz = pt[2] % zhi if wrap else pt[2]
+                file_.write("{} {} {} {} {} 0 0 0\n"
+                            .format(id_, typ, pt[0], pt[1], ptz))
+                id_ += 1
             t2 = time()
             print("wrote %d atoms to data file '%s' in %f seconds"
                   % (N_atoms, path_, t2 - t1))
+
+    def write_map(self, file_path):
+        """
+        Write a map file for the LAMMPS command `fix phonon`
+
+        The map file conforms to the specification found at:
+        <https://code.google.com/archive/p/fix-phonon/wikis/MapFile.wiki>
+
+        Basically,
+
+            The map file simply shows the map between the lattice indices of an
+            atom and its unique id in the simulation box. The format of the map
+            file read:
+
+                nx ny nz n
+                comment line
+                l1 l2 l3 k id
+                ...
+
+            The first line: nx, ny, and nz are the number of extensions of the
+            unit cell in x, y, and z directions, respectively. That is to say,
+            your simulation box contains nx x ny x nz unit cells. And n is the
+            number of atoms in each unit cell.
+
+            The second line: comment line, put whatever you want. From line 3
+            to line (nx*ny*nz*n+2): l1, l2, l3 are the indices of the unit cell
+            which atom id belongs to, and the atom corresponding to atom id is
+            the k_th atom in this unit cell, starting at k = 0.
+
+        For a stack of twins, the smallest repeating unit is the set of
+        consecutive planes in a full q-cycle. Use this as the supercell.
+
+        NOTE: atom ID's must be consistent with `write_points()` method output
+        """
+        cell_nz = self.supercell.nz
+        cell_N = self.supercell.N
+        if self.nz % cell_nz != 0:
+            raise ArithmeticError("could not divide twinstack into integer "
+                                  "number of cells; stack is not z-periodic")
+        n_cells = self.nz // cell_nz
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        n_atoms_cell = n_basis_atoms * cell_N
+
+        with open(file_path, 'w+') as file_:
+            # first line
+            file_.write("1 1 %d %d\n" % (n_cells, n_atoms_cell))
+
+            # second line (ignored)
+            file_.write("# l1 l2 l3 k id (generated by 'nwlattice' package)\n")
+
+            # data lines
+            for row in self.get_map():
+                file_.write("%d %d %d %d %d\n" % row)
 
     @staticmethod
     def get_cyclic_nz(*args):
@@ -412,11 +491,6 @@ class ATwinStackLattice(AStackLattice):
         """create stack lattice from measurements instead of indices"""
         raise NotImplementedError
 
-    @abstractmethod
-    def write_map(self, *args):
-        """write phana compatible map file for smallest unit cell"""
-        raise NotImplementedError
-
     def __init__(self, planes, vz_unit, vr, q_max, theta):
         super().__init__(planes, vz_unit, vr)
         self._q_max = q_max
@@ -428,52 +502,31 @@ class ATwinStackLattice(AStackLattice):
     def q_max(self):
         return self._q_max
 
-    def get_points(self, t: int, rotate=False) -> np.ndarray:
+    def get_points(self) -> np.ndarray:
         """
         Return an array of all atom points of type `t`
 
-        :param t: integer atom type ID
-        :param rotate: if true, apply rotation through `theta` about z axis
         :return: array of 3-points indicating all locations of type `t` atoms
         """
-        # set up lattice points
-        pts = np.zeros((self.N, 3))
-        n = 0
-        for i, plane in enumerate(self.planes):
-            pts[n:(n + plane.N)] = (
-                    plane.get_points(center=True)
-                    + self.vr[i]
-                    + self.vz[i]
-            )
-            n += plane.N
+        n_supercell_planes = len(self.supercell.planes)
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        atom_pts = np.zeros((self.N * n_basis_atoms, 3))
+        n_ID = 0
+        for i in range(self._nz):
+            plane = self.supercell.planes[i % n_supercell_planes]
+            for t in self.basis:
+                for bpt in self.basis[t]:
+                    if i % (2 * self.supercell.nz) > self.supercell.nz:
+                        _bpt = self._qtr.rotate(bpt)
+                    else:
+                        _bpt = bpt
 
-        # populate lattice points with basis points of type `t`
-        atom_pts = np.zeros((self.N * len(self.basis[t]), 3))
-        n = 0
-        for bpt in self.basis[t]:
-            nb = 0
-            rotate_bpt = False
-            for i in range(self.nz):
-                if rotate and self._q_max and i % self._q_max == 0:
-                    rotate_bpt = not rotate_bpt
-
-                plane = self.planes[i]
-                if rotate_bpt:
-                    atom_pts[n:(n + plane.N)] = (pts[nb:(nb + plane.N)]
-                                                 + self._qtr.rotate(bpt))
-                else:
-                    atom_pts[n:(n + plane.N)] = pts[nb:(nb + plane.N)] + bpt
-                nb += plane.N
-                n += plane.N
+                    atom_pts[n_ID:(n_ID + plane.N)] = (
+                            plane.get_points(center=True)
+                            + self.vr[i]
+                            + self.vz[i]
+                            + _bpt
+                    )
+                    n_ID += plane.N
 
         return atom_pts + self._v_center_com
-
-    def _get_points_dict(self) -> (int, dict):
-        """override AStackLattice method to add rotation to non-primary basis"""
-        N_atoms = 0  # total number of atoms
-        points_dict = {}
-        for t in self.basis:
-            rotate = t > 1
-            points_dict[t] = self.get_points(t, rotate)  # extra rotation here
-            N_atoms += self.N * len(self.basis[t])
-        return N_atoms, points_dict
