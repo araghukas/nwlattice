@@ -53,9 +53,6 @@ class FCCPristine111(AStackLattice):
         stk._supercell = cls.get_supercell(a0, p)
         return stk
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p):
         # construct smallest list of unique planes
         scale = 1 / ROOT2
@@ -125,9 +122,6 @@ class FCCPristine100(AStackLattice):
         stk._scale = a0
         stk._supercell = cls.get_supercell(a0, nz, r)
         return stk
-
-    def write_map(self, file_path):
-        raise NotImplementedError
 
     def __init__(self, nz, r):
         # construct smallest list of unique planes
@@ -213,9 +207,6 @@ class FCCTwin(ATwinStackLattice):
             stk._P = 2 * a0 * q_max / ROOT3
         stk._supercell = cls.get_supercell(a0, p, q_max)
         return stk
-
-    def write_map(self, file_path):
-        raise NotImplementedError
 
     def __init__(self, nz, p, index, q_max: int = None):
         index = set([int(j) for j in index])
@@ -350,9 +341,6 @@ class FCCTwinFaceted(ATwinStackLattice):
         stk._supercell = cls.get_supercell(a0, p, q_max, q0)
         return stk
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = self.get_q_cycle(nz, q0, q_max)
@@ -460,9 +448,6 @@ class HexPristine0001(AStackLattice):
         stk._supercell = cls.get_supercell(a0, p)
         return stk
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p):
         # obtain cycle of `q` indices for comprising TwinPlanes
         q_cycle = FCCTwinFaceted.get_q_cycle(nz, 0, 1)
@@ -522,9 +507,6 @@ class FCCHexMixed(AStackLattice):
         stk._scale = a0
         return stk
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p, index):
         index = set([int(j) for j in index])
 
@@ -560,9 +542,6 @@ class FCCHexMixed(AStackLattice):
 class ZBPristine111(FCCPristine111):
     """A pristine zincblende nanowire structure with axis along [111]"""
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p):
         super().__init__(nz, p)
         super().__init__(nz, p)
@@ -572,9 +551,6 @@ class ZBPristine111(FCCPristine111):
 class ZBPristine100(FCCPristine100):
     """A pristine zincblende nanowire structure with axis along [100]"""
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, r):
         super().__init__(nz, r)
         self.add_basis(2, np.array([0., -0.40824829, -0.14433757]))
@@ -582,9 +558,6 @@ class ZBPristine100(FCCPristine100):
 
 class ZBTwin(FCCTwin):
     """A twinning zincblende nanowire structure with smooth sidewalls"""
-
-    def write_map(self, file_path):
-        raise NotImplementedError
 
     def __init__(self, nz, p, index, q_max=None):
         super().__init__(nz, p, index, q_max)
@@ -594,9 +567,6 @@ class ZBTwin(FCCTwin):
 class ZBTwinFaceted(FCCTwinFaceted):
     """A twinning zincblende nanowire structure with faceted sidewalls"""
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p, q0, q_max=None):
         super().__init__(nz, p, q0, q_max)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
@@ -605,9 +575,6 @@ class ZBTwinFaceted(FCCTwinFaceted):
 class WZPristine0001(HexPristine0001):
     """A pristine wurtzite nanowire structure oriented along [0001]"""
 
-    def write_map(self, file_path):
-        raise NotImplementedError
-
     def __init__(self, nz, p):
         super().__init__(nz, p)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
@@ -615,9 +582,6 @@ class WZPristine0001(HexPristine0001):
 
 class ZBWZMixed(FCCHexMixed):
     """A mixed phase nanowire structure with ZB and WZ segments"""
-
-    def write_map(self, file_path):
-        raise NotImplementedError
 
     def __init__(self, nz, p, index):
         super().__init__(nz, p, index)
