@@ -527,8 +527,9 @@ class ATwinStackLattice(AStackLattice):
             plane = self.supercell.planes[i % n_supercell_planes]
             for t in self.basis:
                 for bpt in self.basis[t]:
-                    if i % (2 * self.supercell.nz) > self.supercell.nz:
-                        _bpt = self._qtr.rotate(bpt)
+                    ss_nz = self.supercell.nz
+                    if (i % (2 * ss_nz) > ss_nz) and t > 1:
+                        _bpt = self._qtr.rotate(bpt)  # rotate non-primary bpts
                     else:
                         _bpt = bpt
 
