@@ -153,7 +153,7 @@ class FCCTwin(ATwinStackLattice):
     def get_supercell(cls, a0, p, q_max):
         nz = cls.get_cyclic_nz(0, q_max)
         index = cls.get_index(nz, q_max)
-        supercell = cls(nz, p, index)
+        supercell = cls(nz, p, index, q_max)
         supercell._scale = a0
         return supercell
 
@@ -203,12 +203,11 @@ class FCCTwin(ATwinStackLattice):
 
         stk = cls(nz, p, index, q_max)
         stk._scale = a0
-        if q_max:
-            stk._P = 2 * a0 * q_max / ROOT3
+        stk._P = 2 * a0 * q_max / ROOT3
         stk._supercell = cls.get_supercell(a0, p, q_max)
         return stk
 
-    def __init__(self, nz, p, index, q_max: int = None):
+    def __init__(self, nz, p, index, q_max):
         index = set([int(j) for j in index])
 
         # construct smallest list of unique planes
