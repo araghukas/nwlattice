@@ -1,4 +1,4 @@
-from nwlattice.fcc import *
+from nwlattice.dimensions import *
 from nwlattice.base import AStackLattice, ATwinStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
@@ -9,7 +9,7 @@ class FCCPristine111(AStackLattice):
     @property
     def supercell(self):
         if self._supercell is self:
-            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            p = HexPlane.index_for_diameter(self.scale, self.D)
             self._supercell = self.get_supercell(self.scale, p)
         return self._supercell
 
@@ -34,14 +34,10 @@ class FCCPristine111(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCPristine111 instance with given lattice dimensions
         """
-        geometry = FaceCenteredCubic111(a0)
-        diameter, length, nz, p = geometry.parse_dims(
-            diameter, length, p, nz, z_periodic
-        )
-
-        stk = cls(nz, p)
-        stk._scale = a0
-        stk._supercell = cls.get_supercell(a0, p)
+        gp = FCC111GP(a0, diameter, length, p, nz, z_periodic)
+        stk = cls(gp.nz, gp.p)
+        stk._scale = gp.a0
+        stk._supercell = cls.get_supercell(gp.a0, gp.p)
         return stk
 
     def __init__(self, nz, p):
@@ -72,7 +68,7 @@ class FCCPristine100(AStackLattice):
     @property
     def supercell(self):
         if self._supercell is self:
-            r = SquarePlane.get_index_for_diameter(self.scale, self.D)
+            r = SquarePlane.index_for_diameter(self.scale, self.D)
             self._supercell = self.get_supercell(self.scale, self.nz, r)
         return self._supercell
 
@@ -96,14 +92,10 @@ class FCCPristine100(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCPristine100 instance with given lattice dimensions
         """
-        geometry = FaceCenteredCubic100(a0)
-        side_length, length, r, nz = geometry.parse_dims(
-            side_length, length, r, nz, z_periodic
-        )
-
-        stk = cls(nz, r)
-        stk._scale = a0
-        stk._supercell = cls.get_supercell(a0, nz, r)
+        gp = FCC100GP(a0, side_length, length, r, nz, z_periodic)
+        stk = cls(gp.nz, gp.r)
+        stk._scale = gp.a0
+        stk._supercell = cls.get_supercell(gp.a0, gp.nz, gp.r)
         return stk
 
     def __init__(self, nz, r):
@@ -128,14 +120,14 @@ class FCCTwin(ATwinStackLattice):
     @property
     def supercell(self):
         if self._supercell is self:
-            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            p = HexPlane.index_for_diameter(self.scale, self.D)
             self._supercell = self.get_supercell(self.scale, p, self.q_max)
         return self._supercell
 
     @classmethod
     def get_supercell(cls, a0, p, q_max):
-        nz = Geometry.get_cyclic_z_index(0, 2 * q_max)
-        index = TwinFaceCenteredCubic111.get_index(nz, q_max)
+        nz = StackGeometryParser.get_cyclic_z_index(0, 2 * q_max)
+        index = TwinFCC111GP.get_index(nz, q_max)
         supercell = cls(nz, p, index, q_max)
         supercell._scale = a0
         return supercell
@@ -158,15 +150,12 @@ class FCCTwin(ATwinStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCTwin instance with given lattice dimensions
         """
-        geometry = TwinFaceCenteredCubic111(a0)
-        diameter, length, period, index, p, nz, q_max = geometry.parse_dims(
-            diameter, length, period, p, nz, q_max, z_periodic, index
-        )
-
-        stk = cls(nz, p, index, q_max)
+        gp = TwinFCC111GP(a0, diameter, length, period, index, p, nz, q_max,
+                          z_periodic)
+        stk = cls(gp.nz, gp.p, gp.index, gp.q_max)
         stk._scale = a0
-        stk._P = geometry.period(q_max)
-        stk._supercell = cls.get_supercell(a0, p, q_max)
+        stk._P = gp.get_period()
+        stk._supercell = cls.get_supercell(gp.a0, gp.p, gp.q_max)
         return stk
 
     def __init__(self, nz, p, index, q_max):
@@ -201,14 +190,14 @@ class FCCTwinFaceted(ATwinStackLattice):
     @property
     def supercell(self):
         if self._supercell is self:
-            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            p = HexPlane.index_for_diameter(self.scale, self.D)
             self._supercell = self.get_supercell(self.scale, p, self.q_max,
                                                  self.q0)
         return self._supercell
 
     @classmethod
     def get_supercell(cls, a0, p, q_max, q0=0):
-        nz = Geometry.get_cyclic_z_index(0, 2 * q_max)
+        nz = StackGeometryParser.get_cyclic_z_index(0, 2 * q_max)
         supercell = cls(nz, p, q0, q_max)
         supercell._scale = a0
         return supercell
@@ -232,15 +221,12 @@ class FCCTwinFaceted(ATwinStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCTwinFaceted instance with given lattice dimensions
         """
-        geometry = TwinFaceCenteredCubic111(a0)
-        diameter, length, period, p, nz, q_max = geometry.parse_dims(
-            diameter, length, period, p, nz, q_max, z_periodic, faceted=True
-        )
-
-        stk = cls(nz, p, q0, q_max)
-        stk._scale = a0
-        stk._P = geometry.period(q_max)
-        stk._supercell = cls.get_supercell(a0, p, q_max, q0)
+        gp = FacetedTwinFCC111GP(a0, diameter, length, period, p, nz, q_max, q0,
+                                 z_periodic)
+        stk = cls(gp.nz, gp.p, gp.q0, gp.q_max)
+        stk._scale = gp.a0
+        stk._P = gp.get_period()
+        stk._supercell = cls.get_supercell(gp.a0, gp.p, gp.q_max, gp.q0)
         return stk
 
     def __init__(self, nz, p, q0, q_max):
@@ -286,7 +272,7 @@ class HexPristine0001(AStackLattice):
     @property
     def supercell(self):
         if self._supercell is self:
-            p = HexPlane.get_index_for_diameter(self.scale, self.D)
+            p = HexPlane.index_for_diameter(self.scale, self.D)
             self._supercell = self.get_supercell(self.scale, p)
         return self._supercell
 
@@ -310,14 +296,10 @@ class HexPristine0001(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: HexPristine0001 instance with given lattice dimensions
         """
-        geometry = Hexagonal0001(a0)
-        diameter, length, nz, p = geometry.parse_dims(
-            diameter, length, p, nz, z_periodic
-        )
-
-        stk = cls(nz, p)
-        stk._scale = a0
-        stk._supercell = cls.get_supercell(a0, p)
+        gp = Hexagonal0001GP(a0, diameter, length, p, nz, z_periodic)
+        stk = cls(gp.nz, gp.p)
+        stk._scale = gp.a0
+        stk._supercell = cls.get_supercell(gp.a0, gp.p)
         return stk
 
     def __init__(self, nz, p):
@@ -358,21 +340,17 @@ class FCCHexMixed(AStackLattice):
         :param nz: number of planes stacked (in lieu of `length`)
         :return: FCCHexMixed instance with given lattice dimensions
         """
-        geometry = FaceCenteredCubic111(a0)
-        diameter, length, p, nz = geometry.parse_dims(
-            diameter, length, p, nz, z_periodic=False
-        )
-
+        gp = FCC111GP(a0, diameter, length, p, nz, z_periodic=False)
         if index:
             pass
         elif frac:
             index = []
-            for i in range(nz):
+            for i in range(gp.nz):
                 if np.random.uniform(0, 1) < frac:
                     index.append(i)
         else:
             index = []
-        stk = cls(nz, p, index)
+        stk = cls(gp.nz, gp.p, index)
         stk._scale = a0
         return stk
 
