@@ -15,7 +15,7 @@ class ABCPrinter(ABC):
             print(s)
 
 
-class Geometry(ABCPrinter):
+class StackGeometryParser(ABCPrinter):
     @abstractmethod
     def z_index(self, length: float) -> int:
         raise NotImplementedError
@@ -25,7 +25,7 @@ class Geometry(ABCPrinter):
         raise NotImplementedError
 
     @abstractmethod
-    def parse_dims(self, *args) -> tuple:
+    def validate_args(self, *args):
         raise NotImplementedError
 
     def __init__(self, a0: float):
@@ -66,7 +66,7 @@ class APointPlane(ABCPrinter):
 
     @staticmethod
     @abstractmethod
-    def get_index_for_diameter(scale, D):
+    def index_for_diameter(scale, D):
         """return plane index for given diameter"""
         raise NotImplementedError
 
