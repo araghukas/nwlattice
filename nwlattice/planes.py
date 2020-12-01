@@ -174,7 +174,7 @@ class HexPlane(APointPlane):
         return pts
 
     @staticmethod
-    def get_index_for_diameter(scale, D):
+    def index_for_diameter(scale, D):
         p = round(1. + ROOT2 / ROOT3 * D / scale)
         return p
 
@@ -280,7 +280,7 @@ class SquarePlane(APointPlane):
         return pts
 
     @staticmethod
-    def get_index_for_diameter(scale, D):
+    def index_for_diameter(scale, D):
         r = 1 + round(D / scale)
         return r
 
@@ -378,6 +378,6 @@ class TwinPlane(APointPlane):
         return self._points
 
     @staticmethod
-    def get_index_for_diameter(scale, D):
+    def index_for_diameter(scale, D):
         p = round(1. + ROOT2 / ROOT3 * D / scale)
         return p
