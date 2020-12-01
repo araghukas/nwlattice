@@ -8,9 +8,8 @@ def toggle_printing(b: bool):
     :param b: True or False, indicating messages printed or not
     :return:
     """
-    from nwlattice.base import APointPlane, AStackLattice
-    APointPlane.PRINT = bool(b)
-    AStackLattice.PRINT = bool(b)
+    from nwlattice.base import ABCPrinter
+    ABCPrinter.PRINT = b
 
 
 __version__ = "29Nov2020"

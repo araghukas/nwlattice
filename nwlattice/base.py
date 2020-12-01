@@ -6,7 +6,37 @@ from os.path import expanduser
 from nwlattice.utilities import ROOT3, Quaternion
 
 
-class APointPlane(ABC):
+class ABCPrinter(ABC):
+    PRINT = False
+
+    @staticmethod
+    def print(s):
+        if ABCPrinter.PRINT:
+            print(s)
+
+
+class Geometry(ABCPrinter):
+    @abstractmethod
+    def z_index(self, length: float) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    def xy_index(self, xy_length: float) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_cyclic_z_index(self, *args) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    def parse_dimensions(self, *args) -> tuple:
+        raise NotImplementedError
+
+    def __init__(self, a0: float):
+        self.a0 = a0
+
+
+class APointPlane(ABCPrinter):
     """Abstract base class for planes of points stacked by AStackLattice"""
     PRINT = False
 
@@ -108,13 +138,8 @@ class APointPlane(ABC):
             self.print("wrote %d atoms to map file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    @staticmethod
-    def print(s):
-        if APointPlane.PRINT:
-            print(s)
 
-
-class AStackLattice(ABC):
+class AStackLattice(ABCPrinter):
     PRINT = False
 
     @classmethod
@@ -462,34 +487,6 @@ class AStackLattice(ABC):
         t2 = time()
         self.print("wrote %d atoms to data file '%s' in %f seconds"
                    % (n_atoms_cell * n_cells, file_path, t2 - t1))
-
-    @staticmethod
-    def get_cyclic_nz(*args):
-        """
-        Converts `nz` to the nearest multiple of 3 such that 3-plane super cell
-        structures maintain lattice periodicity given z-periodicity
-
-        NOTE: must override this method for twinning structures!
-
-        :param args: args[0] should be `nz`
-        :return: an int `nhi` or `nlo`, the multiple of 3 nearest to `nz`
-        """
-        nz = args[0]
-        k = 3
-        nlo = (nz // k) * k
-        nhi = ((nz + k) // k) * k
-
-        if nlo == 0:
-            return nhi
-        elif (nz - nlo) < (nhi - nz):
-            return nlo
-        else:
-            return nhi
-
-    @staticmethod
-    def print(s):
-        if AStackLattice.PRINT:
-            print(s)
 
 
 class ATwinStackLattice(AStackLattice):
