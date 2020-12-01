@@ -105,19 +105,11 @@ class FCCPristine100(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCPristine100 instance with given lattice dimensions
         """
-        if side_length is None and r is None:
-            raise ValueError("must specify either `diameter` or `r`")
-        if length is None and nz is None:
-            raise ValueError("must specify either `length` or `nz`")
+        geometry = FaceCenteredCubic100(a0)
+        side_length, length, r, nz = geometry.parse_dims(
+            side_length, length, r, nz, z_periodic
+        )
 
-        nz = 1 + round(2. * length / a0) if nz is None else nz
-        if z_periodic:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz)
-            super().print("forced z periodicity, adjusted nz: %d --> %d"
-                          % (old_nz, nz))
-        r = (SquarePlane.get_index_for_diameter(a0, side_length)
-             if r is None else r)
         stk = cls(nz, r)
         stk._scale = a0
         stk._supercell = cls.get_supercell(a0, nz, r)
@@ -151,8 +143,8 @@ class FCCTwin(ATwinStackLattice):
 
     @classmethod
     def get_supercell(cls, a0, p, q_max):
-        nz = cls.get_cyclic_nz(0, q_max)
-        index = cls.get_index(nz, q_max)
+        nz = Geometry.get_cyclic_z_index(0, 2 * q_max)
+        index = TwinFaceCenteredCubic111.get_index(nz, q_max)
         supercell = cls(nz, p, index, q_max)
         supercell._scale = a0
         return supercell
@@ -175,35 +167,14 @@ class FCCTwin(ATwinStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCTwin instance with given lattice dimensions
         """
-        if diameter is None and p is None:
-            raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
-            raise ValueError("must specify either `length` or `nz`")
-        if period is None and q_max is None and index is None:
-            raise ValueError(
-                "must specify either `period`, `q_max`, or `index`")
-
-        nz = round(ROOT3 * length / a0) if nz is None else nz
-        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
-        if q_max or period:
-            q_max = round(ROOT3 * period / 2. / a0) if q_max is None else q_max
-
-        if z_periodic and q_max:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz, q_max)
-            super().print("forced z periodicity, adjusted nz: %d --> %d"
-                          % (old_nz, nz))
-
-        if index is not None:
-            pass
-        elif q_max or period:
-            index = cls.get_index(nz, q_max)
-        else:
-            index = []
+        geometry = TwinFaceCenteredCubic111(a0)
+        diameter, length, period, index, p, nz, q_max = geometry.parse_dims(
+            diameter, length, period, p, nz, q_max, z_periodic, index=index
+        )
 
         stk = cls(nz, p, index, q_max)
         stk._scale = a0
-        stk._P = 2 * a0 * q_max / ROOT3
+        stk._P = geometry.period(q_max)
         stk._supercell = cls.get_supercell(a0, p, q_max)
         return stk
 
@@ -232,38 +203,6 @@ class FCCTwin(ATwinStackLattice):
             j += 1
         super().__init__(planes, vz_unit, vr, q_max, theta=np.pi / 3)
 
-    @staticmethod
-    def get_cyclic_nz(*args):
-        """
-        Overridden base method: returns `nz` for for integer number of twins
-
-        :param args: first argument should be `nz`, and the second `q_max`
-        :return: an int `nhi` or `nlo`, the nearest `2 * q_max` multiple of `nz`
-        """
-        nz, q_max = args
-        k = 2 * q_max
-        nlo = (nz // k) * k
-        nhi = ((nz + k) // k) * k
-
-        if nlo == 0:
-            return nhi
-        elif (nz - nlo) < (nhi - nz):
-            return nlo
-        else:
-            return nhi
-
-    @staticmethod
-    def get_index(nz, q_max):
-        index = []
-        i_period = q_max
-        include = True
-        for i in range(nz):
-            if i % i_period == 0:
-                include = not include
-            if include:
-                index.append(i)
-        return index
-
 
 class FCCTwinFaceted(ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
@@ -278,7 +217,7 @@ class FCCTwinFaceted(ATwinStackLattice):
 
     @classmethod
     def get_supercell(cls, a0, p, q_max, q0=0):
-        nz = cls.get_cyclic_nz(0, q_max)
+        nz = Geometry.get_cyclic_z_index(0, 2 * q_max)
         supercell = cls(nz, p, q0, q_max)
         supercell._scale = a0
         return supercell
@@ -302,47 +241,20 @@ class FCCTwinFaceted(ATwinStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCTwinFaceted instance with given lattice dimensions
         """
-
-        if diameter is None and p is None:
-            raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
-            raise ValueError("must specify either `length` or `nz`")
-        if period is None and q_max is None:
-            raise ValueError("must specify either `period` or `q_max`")
-
-        nz = round(ROOT3 * length / a0) if nz is None else nz
-        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
-        q_max = round(ROOT3 * period / 2 / a0) if q_max is None else q_max
-
-        if q_max >= p:
-            q_max = p - 1
-            if q_max_auto:
-                old_period = period
-                period = 2. * a0 * q_max / ROOT3
-                super().print("Period is too large, corrected: %f --> %f "
-                              % (old_period, period))
-            else:
-                raise ValueError("period {:f} is too large for given "
-                                 "diameter {:f}\n Maximum period is {:f} "
-                                 "(or `q_max = {:d}`)"
-                                 .format(period, diameter,
-                                         2. * a0 * q_max / ROOT3, q_max))
-
-        if z_periodic:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz, q_max)
-            super().print("forced z periodicity, adjusted nz: %d --> %d"
-                          % (old_nz, nz))
+        geometry = TwinFaceCenteredCubic111(a0)
+        diameter, length, period, p, nz, q_max = geometry.parse_dims(
+            diameter, length, period, p, nz, q_max, z_periodic, faceted=True
+        )
 
         stk = cls(nz, p, q0, q_max)
         stk._scale = a0
-        stk._P = 2 * a0 * q_max / ROOT3
+        stk._P = geometry.period(q_max)
         stk._supercell = cls.get_supercell(a0, p, q_max, q0)
         return stk
 
     def __init__(self, nz, p, q0, q_max):
         # obtain cycle of `q` indices for comprising TwinPlanes
-        q_cycle = self.get_q_cycle(nz, q0, q_max)
+        q_cycle = FCCTwinFaceted.get_q_cycle(nz, q0, q_max)
 
         # construct whole list of planes
         scale = 1 / ROOT2
@@ -354,26 +266,6 @@ class FCCTwinFaceted(ATwinStackLattice):
     @property
     def q0(self):
         return self.planes[0].q
-
-    @staticmethod
-    def get_cyclic_nz(*args):
-        """
-        Overridden base method: returns `nz` for for integer number of twins
-
-        :param args: first argument should be `nz`, and the second `q_max`
-        :return: an int `nhi` or `nlo`, the nearest `2 * q_max` multiple of `nz`
-        """
-        nz, q_max = args
-        k = 2 * q_max
-        nlo = (nz // k) * k
-        nhi = ((nz + k) // k) * k
-
-        if nlo == 0:
-            return nhi
-        elif (nz - nlo) < (nhi - nz):
-            return nlo
-        else:
-            return nhi
 
     @staticmethod
     def get_q_cycle(nz, q0, q_max):
@@ -427,20 +319,10 @@ class HexPristine0001(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: HexPristine0001 instance with given lattice dimensions
         """
-
-        if diameter is None and p is None:
-            raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
-            raise ValueError("must specify either `length` or `nz`")
-
-        nz = round(ROOT3 * length / a0) if nz is None else nz
-        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
-
-        if z_periodic:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz)
-            super().print("forced z periodicity, adjusted nz: %d --> %d"
-                          % (old_nz, nz))
+        geometry = Hexagonal0001(a0)
+        diameter, length, p, nz = geometry.parse_dims(
+            diameter, length, p, nz, z_periodic
+        )
 
         stk = cls(nz, p)
         stk._scale = a0
@@ -485,13 +367,10 @@ class FCCHexMixed(AStackLattice):
         :param nz: number of planes stacked (in lieu of `length`)
         :return: FCCHexMixed instance with given lattice dimensions
         """
-        if diameter is None and p is None:
-            raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
-            raise ValueError("must specify either `length` or `nz`")
-
-        nz = round(ROOT3 * length / a0) if nz is None else nz
-        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
+        geometry = FaceCenteredCubic111(a0)
+        diameter, length, p, nz = geometry.parse_dims(
+            diameter, length, p, nz, z_periodic=False
+        )
 
         if index:
             pass
@@ -542,7 +421,6 @@ class ZBPristine111(FCCPristine111):
     """A pristine zincblende nanowire structure with axis along [111]"""
 
     def __init__(self, nz, p):
-        super().__init__(nz, p)
         super().__init__(nz, p)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 

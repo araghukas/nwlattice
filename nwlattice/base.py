@@ -25,15 +25,26 @@ class Geometry(ABCPrinter):
         raise NotImplementedError
 
     @abstractmethod
-    def get_cyclic_z_index(self, *args) -> int:
-        raise NotImplementedError
-
-    @abstractmethod
-    def parse_dimensions(self, *args) -> tuple:
+    def parse_dims(self, *args) -> tuple:
         raise NotImplementedError
 
     def __init__(self, a0: float):
         self.a0 = a0
+
+    @staticmethod
+    def get_cyclic_z_index(z_index, k, nearest=True):
+        nlo = (z_index // k) * k
+        nhi = ((z_index + k) // k) * k
+
+        if nearest:
+            if nlo == 0:
+                return nhi
+            elif (z_index - nlo) < (nhi - z_index):
+                return nlo
+            else:
+                return nhi
+        else:
+            return nlo, nhi
 
 
 class APointPlane(ABCPrinter):
