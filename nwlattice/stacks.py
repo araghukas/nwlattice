@@ -1,6 +1,4 @@
-import numpy as np
-
-from nwlattice.utilities import ROOT2, ROOT3
+from nwlattice.fcc import *
 from nwlattice.base import AStackLattice, ATwinStackLattice
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
@@ -36,18 +34,11 @@ class FCCPristine111(AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCPristine111 instance with given lattice dimensions
         """
-        if diameter is None and p is None:
-            raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
-            raise ValueError("must specify either `length` or `nz`")
+        geometry = FaceCenteredCubic111(a0)
+        diameter, length, nz, p = geometry.parse_dims(
+            diameter, length, p, nz, z_periodic
+        )
 
-        nz = round(ROOT3 * length / a0) if nz is None else nz
-        if z_periodic:
-            old_nz = nz
-            nz = cls.get_cyclic_nz(nz)
-            super().print("forced z periodicity, adjusted nz: %d --> %d"
-                          % (old_nz, nz))
-        p = HexPlane.get_index_for_diameter(a0, diameter) if p is None else p
         stk = cls(nz, p)
         stk._scale = a0
         stk._supercell = cls.get_supercell(a0, p)
