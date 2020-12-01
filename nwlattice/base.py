@@ -151,10 +151,7 @@ class AStackLattice(ABC):
         self._scale = 1.0  # scaling factor; effectively lattice constant
 
         for plane in planes:
-            if isinstance(plane, APointPlane):
-                self._planes.append(plane)
-            else:
-                raise TypeError("all items in planes list must be PointPlanes")
+            self._planes.append(plane)
 
         self._vz = np.zeros((self.nz, 3))
         for i in range(self.nz):
