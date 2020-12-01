@@ -81,6 +81,7 @@ class TwinFaceCenteredCubic111(Geometry):
                 include = not include
             if include:
                 index.append(i)
+        return index
 
     def parse_dims(self, diameter, length, period, p, nz, q_max,
                    z_periodic, index=None, faceted=False) -> tuple:
@@ -104,12 +105,12 @@ class TwinFaceCenteredCubic111(Geometry):
         if faceted and q_max >= p:
             q_max = p - 1
             old_period = period
-            period = 2. * self.a0 * q_max / ROOT3
+            period = self.period(q_max)
             super().print("Period is too large, corrected: %f --> %f "
                           % (old_period, period))
 
         if not faceted and index is None:
-            self.get_index(q_max, nz)
+            index = self.get_index(q_max, nz)
 
         if z_periodic:
             old_nz = nz
@@ -117,8 +118,29 @@ class TwinFaceCenteredCubic111(Geometry):
             super().print("forced z periodicity, adjusted nz: %d --> %d"
                           % (old_nz, nz))
 
-        return diameter, length, period, index, p, nz, q_max
+        if not faceted:
+            return diameter, length, period, index, p, nz, q_max
+        return diameter, length, period, p, nz, q_max
 
 
 class Hexagonal0001(FaceCenteredCubic111):
-    pass
+
+    def parse_dims(self, diameter, length, p, nz, z_periodic) -> tuple:
+        if diameter is None and p is None:
+            raise ValueError("must specify either `diameter` or `p`")
+        if length is None and nz is None:
+            raise ValueError("must specify either `length` or `nz`")
+
+        if nz is None:
+            nz = self.z_index(length)
+
+        if p is None:
+            p = self.xy_index(diameter)
+
+        if z_periodic:
+            old_nz = nz
+            nz = super().get_cyclic_z_index(nz, 2)
+            super().print("forced z periodicity, adjusted nz: %d --> %d"
+                          % (old_nz, nz))
+
+        return diameter, length, nz, p

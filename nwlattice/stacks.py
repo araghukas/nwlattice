@@ -160,7 +160,7 @@ class FCCTwin(ATwinStackLattice):
         """
         geometry = TwinFaceCenteredCubic111(a0)
         diameter, length, period, index, p, nz, q_max = geometry.parse_dims(
-            diameter, length, period, p, nz, q_max, z_periodic, index=index
+            diameter, length, period, p, nz, q_max, z_periodic, index
         )
 
         stk = cls(nz, p, index, q_max)
@@ -311,7 +311,7 @@ class HexPristine0001(AStackLattice):
         :return: HexPristine0001 instance with given lattice dimensions
         """
         geometry = Hexagonal0001(a0)
-        diameter, length, p, nz = geometry.parse_dims(
+        diameter, length, nz, p = geometry.parse_dims(
             diameter, length, p, nz, z_periodic
         )
 
