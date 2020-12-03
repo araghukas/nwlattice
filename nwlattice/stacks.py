@@ -1,10 +1,9 @@
 import numpy as np
 
-import nwlattice.stacks_base as base
+import nwlattice.base as base
 import nwlattice.dimensions as dims
 
 from nwlattice.utilities import ROOT3, ROOT2
-from nwlattice.dimensions_base import AStackGeometry
 from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
 
@@ -134,7 +133,7 @@ class FCCTwin(base.ATwinStackLattice):
 
     @classmethod
     def get_supercell(cls, a0, p, q_max):
-        nz = AStackGeometry.get_cyclic_nz(0, 2 * q_max)
+        nz = base.AStackGeometry.get_cyclic_nz(0, 2 * q_max)
         index = dims.FCCTwin111GP.get_index(nz, q_max)
         supercell = cls(nz, p, index, q_max)
         supercell._scale = a0
@@ -206,7 +205,7 @@ class FCCTwinFaceted(base.ATwinStackLattice):
 
     @classmethod
     def get_supercell(cls, a0, p, q_max, q0=0):
-        nz = AStackGeometry.get_cyclic_nz(0, 2 * q_max)
+        nz = base.AStackGeometry.get_cyclic_nz(0, 2 * q_max)
         supercell = cls(nz, p, q0, q_max)
         supercell._scale = a0
         return supercell

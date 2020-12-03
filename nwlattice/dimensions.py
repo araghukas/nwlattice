@@ -1,4 +1,4 @@
-import nwlattice.dimensions_base as base
+import nwlattice.base as base
 import nwlattice.stacks as stacks
 
 from nwlattice.planes import HexPlane, SquarePlane
