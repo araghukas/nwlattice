@@ -1,7 +1,7 @@
 import numpy as np
 
 from nwlattice.utilities import ROOT2, ROOT3
-from nwlattice.base import APointPlane
+from nwlattice.planes_base import APointPlane
 from nwlattice.utilities import Quaternion
 
 
