@@ -5,23 +5,23 @@ from nwlattice.planes import HexPlane, SquarePlane
 from nwlattice.utilities import ROOT3
 
 
-class FCCPristine111GP(base.AStackGeometry):
-    def z_index(self, length: float) -> int:
+class FCCPristine111G(base.AStackGeometry):
+    def nz(self, length: float) -> int:
         return round(ROOT3 * length / self.a0)
 
     def xy_index(self, xy_length: float) -> int:
         return HexPlane.index_for_diameter(self.a0, xy_length)
 
     def validate_args(self, diameter, length, p, nz):
-        if diameter is None and p is None:
+        if not (diameter or p):
             raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
+        if not (length or nz):
             raise ValueError("must specify either `length` or `nz`")
 
     def __init__(self, a0, diameter, length, p=None, nz=None, z_periodic=False):
         super().__init__(a0)
         self.validate_args(diameter, length, p, nz)
-        nz = self.z_index(length) if nz is None else nz
+        nz = self.nz(length) if nz is None else nz
         if z_periodic:
             nz = base.AStackGeometry.get_cyclic_nz(nz, 3)
         self.nz = nz
@@ -31,24 +31,24 @@ class FCCPristine111GP(base.AStackGeometry):
         self.diameter = diameter
 
 
-class FCCPristine100GP(base.AStackGeometry):
-    def z_index(self, length: float) -> int:
+class FCCPristine100G(base.AStackGeometry):
+    def nz(self, length: float) -> int:
         return 1 + round(2 * length / self.a0)
 
     def xy_index(self, side_length: float) -> int:
         return SquarePlane.index_for_diameter(self.a0, side_length)
 
     def validate_args(self, side_length, length, r, nz):
-        if side_length is None and r is None:
+        if not (side_length or r):
             raise ValueError("must specify either `diameter` or `r`")
-        if length is None and nz is None:
+        if not (length or nz):
             raise ValueError("must specify either `length` or `nz`")
 
     def __init__(self, a0, side_length, length, r=None, nz=None,
                  z_periodic=False):
         super().__init__(a0)
         self.validate_args(side_length, length, r, nz)
-        nz = self.z_index(length) if nz is None else nz
+        nz = self.nz(length) if nz is None else nz
         if z_periodic:
             nz = base.AStackGeometry.get_cyclic_nz(nz, 2)
         self.nz = nz
@@ -58,8 +58,8 @@ class FCCPristine100GP(base.AStackGeometry):
         self.side_length = side_length
 
 
-class FCCTwin111GP(base.AStackGeometry):
-    def z_index(self, length: float) -> int:
+class FCCTwin111G(base.AStackGeometry):
+    def nz(self, length: float) -> int:
         return round(ROOT3 * length / self.a0)
 
     def xy_index(self, xy_length: float) -> int:
@@ -72,9 +72,9 @@ class FCCTwin111GP(base.AStackGeometry):
         return 2 * self.a0 * self.q_max / ROOT3
 
     def validate_args(self, diameter, length, period, index, p, nz, q_max):
-        if diameter is None and p is None:
+        if not (diameter or p):
             raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
+        if not (length or nz):
             raise ValueError("must specify either `length` or `nz`")
         if period is None and q_max is None and index is None:
             raise ValueError(
@@ -85,7 +85,7 @@ class FCCTwin111GP(base.AStackGeometry):
         super().__init__(a0)
         self.validate_args(diameter, length, period, index, p, nz, q_max)
         self.q_max = self.get_q_max(period) if q_max is None else q_max
-        nz = self.z_index(length) if nz is None else nz
+        nz = self.nz(length) if nz is None else nz
         if z_periodic:
             nz = base.AStackGeometry.get_cyclic_nz(nz, 2 * self.q_max)
         self.nz = nz
@@ -108,9 +108,9 @@ class FCCTwin111GP(base.AStackGeometry):
         return index
 
 
-class FCCTwinFacetedGP(base.AStackGeometry):
+class FCCTwinFacetedG(base.AStackGeometry):
 
-    def z_index(self, length: float) -> int:
+    def nz(self, length: float) -> int:
         return round(ROOT3 * length / self.a0)
 
     def xy_index(self, xy_length: float) -> int:
@@ -123,11 +123,11 @@ class FCCTwinFacetedGP(base.AStackGeometry):
         return 2 * self.a0 * self.q_max / ROOT3
 
     def validate_args(self, diameter, length, period, p, nz, q_max):
-        if diameter is None and p is None:
+        if not (diameter or p):
             raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
+        if not (length or nz):
             raise ValueError("must specify either `length` or `nz`")
-        if period is None and q_max is None:
+        if not (period or q_max):
             raise ValueError("must specify either `period` or `q_max`")
 
     def __init__(self, a0, diameter, length, period, p=None, nz=None,
@@ -139,7 +139,7 @@ class FCCTwinFacetedGP(base.AStackGeometry):
         if q_max >= self.p:
             q_max = self.p - 1
         self.q_max = q_max
-        nz = self.z_index(length) if nz is None else nz
+        nz = self.nz(length) if nz is None else nz
         if z_periodic:
             nz = base.AStackGeometry.get_cyclic_nz(nz, 2 * self.q_max)
         self.nz = nz
@@ -150,23 +150,23 @@ class FCCTwinFacetedGP(base.AStackGeometry):
         self.period = self.get_period()
 
 
-class HexPristine0001GP(base.AStackGeometry):
-    def z_index(self, length: float) -> int:
+class HexPristine0001G(base.AStackGeometry):
+    def nz(self, length: float) -> int:
         return round(ROOT3 * length / self.a0)
 
     def xy_index(self, xy_length: float) -> int:
         return HexPlane.index_for_diameter(self.a0, xy_length)
 
     def validate_args(self, diameter, length, p, nz):
-        if diameter is None and p is None:
+        if not (diameter or p):
             raise ValueError("must specify either `diameter` or `p`")
-        if length is None and nz is None:
+        if not (length or nz):
             raise ValueError("must specify either `length` or `nz`")
 
     def __init__(self, a0, diameter, length, p=None, nz=None, z_periodic=False):
         super().__init__(a0)
         self.validate_args(diameter, length, p, nz)
-        nz = self.z_index(length) if nz is None else nz
+        nz = self.nz(length) if nz is None else nz
         if z_periodic:
             nz = base.AStackGeometry.get_cyclic_nz(nz, 2)
         self.nz = nz
@@ -176,19 +176,19 @@ class HexPristine0001GP(base.AStackGeometry):
         self.diameter = diameter
 
 
-class FCCTwinPaddedStackGeometry(base.APaddedStackGeometry):
+class FCCTwinPaddedG(base.APaddedStackGeometry):
     @property
     def nz_bottom(self) -> int:
         if self._nz_bottom is None:
-            self._nz_bottom = ((self.p_sg.nz - self.nz_core) // 2) // 3 * 3
+            self._nz_bottom = ((self.pg.nz - self.nz_core) // 2) // 3 * 3
         return self._nz_bottom
 
     @property
     def nz_core(self) -> int:
         if self._nz_core is None:
-            nz_core = self.c_sg.nz
-            nz_pad = self.p_sg.nz
-            k = 2 * self.c_sg.q_max
+            nz_core = self.cg.nz
+            nz_pad = self.pg.nz
+            k = 2 * self.cg.q_max
             while nz_pad - nz_core < 2:
                 if nz_core <= 0:
                     raise ValueError("can't fit given dimensions, nz_core = 0")
@@ -204,8 +204,45 @@ class FCCTwinPaddedStackGeometry(base.APaddedStackGeometry):
         return self._nz_top
 
     def __init__(self, a0, diameter, length, period):
-        c_sg = stacks.FCCTwin.sg(a0, diameter, length, period, z_periodic=True)
-        p_sg = stacks.FCCPristine111.sg(a0, diameter, length, z_periodic=False)
-        super().__init__(c_sg, p_sg)
-        self.p = c_sg.p
-        self.q_max = c_sg.get_q_max(period)
+        cg = stacks.FCCTwin.geometry(a0, diameter, length, period,
+                                     z_periodic=True)
+        pg = stacks.FCCPristine111.geometry(a0, diameter, length,
+                                            z_periodic=False)
+        super().__init__(cg, pg)
+        self.p = cg.p
+        self.q_max = cg.get_q_max(period)
+
+
+class FCCTwinFacetedPaddedG(base.APaddedStackGeometry):
+    @property
+    def nz_bottom(self) -> int:
+        if self._nz_bottom is None:
+            self._nz_bottom = ((self.pg.nz - self.nz_core) // 2) // 3 * 3
+        return self._nz_bottom
+
+    @property
+    def nz_core(self) -> int:
+        if self._nz_core is None:
+            nz_core = self.cg.nz
+            nz_pad = self.pg.nz
+            k = 2 * self.cg.q_max
+            while nz_pad - nz_core < 2:
+                if nz_core <= 0:
+                    raise ValueError("can't fit given dimensions, nz_core = 0")
+                nz_core = base.AStackGeometry.get_cyclic_nz(
+                    nz_core - k, k, False)[0]
+            self._nz_core = nz_core
+        return self._nz_core
+
+    @property
+    def nz_top(self) -> int:
+        if self._nz_top is None:
+            self._nz_top = self.nz_bottom
+        return self._nz_top
+
+    def __init__(self, a0, diameter, length, period):
+        cg = stacks.FCCTwinFaceted.geometry(a0, diameter, length, period)
+        pg = stacks.FCCPristine111.geometry(a0, diameter, length)
+        super().__init__(cg, pg)
+        self.p = cg.p
+        self.q_max = cg.get_q_max(period)

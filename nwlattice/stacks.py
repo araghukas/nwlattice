@@ -9,7 +9,7 @@ from nwlattice.planes import HexPlane, TwinPlane, SquarePlane
 
 class FCCPristine111(base.AStackLattice):
     """A pristine FCC nanowire structure with axis along [111]"""
-    sg = dims.FCCPristine111GP
+    geometry = dims.FCCPristine111G
 
     @property
     def supercell(self):
@@ -39,10 +39,10 @@ class FCCPristine111(base.AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCPristine111 instance with given lattice dimensions
         """
-        sg = FCCPristine111.sg(a0, diameter, length, p, nz, z_periodic)
-        stk = cls(sg.nz, sg.p)
-        stk._scale = sg.a0
-        stk._supercell = cls.get_supercell(sg.a0, sg.p)
+        g = cls.geometry(a0, diameter, length, p, nz, z_periodic)
+        stk = cls(g.nz, g.p)
+        stk._scale = g.a0
+        stk._supercell = cls.get_supercell(g.a0, g.p)
         return stk
 
     def __init__(self, nz, p):
@@ -69,7 +69,7 @@ class FCCPristine111(base.AStackLattice):
 
 class FCCPristine100(base.AStackLattice):
     """A pristine FCC nanowire structure with axis along [100]"""
-    sg = dims.FCCPristine100GP
+    geometry = dims.FCCPristine100G
 
     @property
     def supercell(self):
@@ -98,10 +98,10 @@ class FCCPristine100(base.AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCPristine100 instance with given lattice dimensions
         """
-        sg = FCCPristine100.sg(a0, side_length, length, r, nz, z_periodic)
-        stk = cls(sg.nz, sg.r)
-        stk._scale = sg.a0
-        stk._supercell = cls.get_supercell(sg.a0, sg.nz, sg.r)
+        g = cls.geometry(a0, side_length, length, r, nz, z_periodic)
+        stk = cls(g.nz, g.r)
+        stk._scale = g.a0
+        stk._supercell = cls.get_supercell(g.a0, g.nz, g.r)
         return stk
 
     def __init__(self, nz, r):
@@ -122,7 +122,7 @@ class FCCPristine100(base.AStackLattice):
 
 class FCCTwin(base.ATwinStackLattice):
     """A twinning FCC nanowire structure with smooth sidewalls"""
-    sg = dims.FCCTwin111GP
+    geometry = dims.FCCTwin111G
 
     @property
     def supercell(self):
@@ -134,7 +134,7 @@ class FCCTwin(base.ATwinStackLattice):
     @classmethod
     def get_supercell(cls, a0, p, q_max):
         nz = base.AStackGeometry.get_cyclic_nz(0, 2 * q_max)
-        index = dims.FCCTwin111GP.get_index(nz, q_max)
+        index = dims.FCCTwin111G.get_index(nz, q_max)
         supercell = cls(nz, p, index, q_max)
         supercell._scale = a0
         return supercell
@@ -157,12 +157,12 @@ class FCCTwin(base.ATwinStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCTwin instance with given lattice dimensions
         """
-        sg = FCCTwin.sg(a0, diameter, length, period, index, p, nz, q_max,
-                        z_periodic)
-        stk = cls(sg.nz, sg.p, sg.index, sg.q_max)
+        g = cls.geometry(a0, diameter, length, period, index, p, nz, q_max,
+                         z_periodic)
+        stk = cls(g.nz, g.p, g.index, g.q_max)
         stk._scale = a0
-        stk._P = sg.get_period()
-        stk._supercell = cls.get_supercell(sg.a0, sg.p, sg.q_max)
+        stk._P = g.get_period()
+        stk._supercell = cls.get_supercell(g.a0, g.p, g.q_max)
         return stk
 
     def __init__(self, nz, p, index, q_max):
@@ -193,7 +193,7 @@ class FCCTwin(base.ATwinStackLattice):
 
 class FCCTwinFaceted(base.ATwinStackLattice):
     """A twinning FCC nanowire structure with faceted sidewalls"""
-    sg = dims.FCCTwinFacetedGP
+    geometry = dims.FCCTwinFacetedG
 
     @property
     def supercell(self):
@@ -229,12 +229,12 @@ class FCCTwinFaceted(base.ATwinStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: FCCTwinFaceted instance with given lattice dimensions
         """
-        sg = FCCTwinFaceted.sg(a0, diameter, length, period, p, nz, q_max, q0,
-                               z_periodic)
-        stk = cls(sg.nz, sg.p, sg.q0, sg.q_max)
-        stk._scale = sg.a0
-        stk._P = sg.get_period()
-        stk._supercell = cls.get_supercell(sg.a0, sg.p, sg.q_max, sg.q0)
+        g = cls.geometry(a0, diameter, length, period, p, nz, q_max,
+                         q0, z_periodic)
+        stk = cls(g.nz, g.p, g.q0, g.q_max)
+        stk._scale = g.a0
+        stk._P = g.get_period()
+        stk._supercell = cls.get_supercell(g.a0, g.p, g.q_max, g.q0)
         return stk
 
     def __init__(self, nz, p, q0, q_max):
@@ -276,7 +276,7 @@ class FCCTwinFaceted(base.ATwinStackLattice):
 
 class HexPristine0001(base.AStackLattice):
     """A pristine hexagonal nanowire structure oriented along [0001]"""
-    sg = dims.HexPristine0001GP
+    geometry = dims.HexPristine0001G
 
     @property
     def supercell(self):
@@ -305,10 +305,10 @@ class HexPristine0001(base.AStackLattice):
         :param z_periodic: enforce z-periodicity by adjusting `nz` and `length`
         :return: HexPristine0001 instance with given lattice dimensions
         """
-        sg = HexPristine0001.sg(a0, diameter, length, p, nz, z_periodic)
-        stk = cls(sg.nz, sg.p)
-        stk._scale = sg.a0
-        stk._supercell = cls.get_supercell(sg.a0, sg.p)
+        g = cls.geometry(a0, diameter, length, p, nz, z_periodic)
+        stk = cls(g.nz, g.p)
+        stk._scale = g.a0
+        stk._supercell = cls.get_supercell(g.a0, g.p)
         return stk
 
     def __init__(self, nz, p):
@@ -325,7 +325,7 @@ class HexPristine0001(base.AStackLattice):
 
 class FCCHexMixed(base.AStackLattice):
     """A mixed phase nanowire structure with FCC and hexagonal segments"""
-    sg = dims.FCCPristine111GP
+    geometry = dims.FCCPristine111G
 
     @property
     def supercell(self):
@@ -350,17 +350,17 @@ class FCCHexMixed(base.AStackLattice):
         :param nz: number of planes stacked (in lieu of `length`)
         :return: FCCHexMixed instance with given lattice dimensions
         """
-        sg = FCCHexMixed.sg(a0, diameter, length, p, nz, z_periodic=False)
+        g = cls.geometry(a0, diameter, length, p, nz, z_periodic=False)
         if index:
             pass
         elif frac:
             index = []
-            for i in range(sg.nz):
+            for i in range(g.nz):
                 if np.random.uniform(0, 1) < frac:
                     index.append(i)
         else:
             index = []
-        stk = cls(sg.nz, sg.p, index)
+        stk = cls(g.nz, g.p, index)
         stk._scale = a0
         return stk
 
@@ -397,19 +397,37 @@ class FCCHexMixed(base.AStackLattice):
 
 
 class FCCTwinPadded(base.APaddedStackLattice):
-    sg = dims.FCCTwinPaddedStackGeometry
+    geometry = dims.FCCTwinPaddedG
 
     @classmethod
-    def from_dimensions(cls, a0=1.0, diameter=None, length=None, period=None):
-        sg = FCCTwinPadded.sg(a0, diameter, length, period)
+    def from_dimensions(cls, a0, diameter, length, period):
+        g = cls.geometry(a0, diameter, length, period)
 
-        stk_core = FCCTwin.from_dimensions(a0, p=sg.p, q_max=sg.q_max, nz=sg.nz)
-        stk_top = FCCPristine111.from_dimensions(a0, p=sg.p, nz=sg.nz)
+        stk_core = FCCTwin.from_dimensions(a0, p=g.p, q_max=g.q_max, nz=g.nz)
+        stk_top = FCCPristine111.from_dimensions(a0, p=g.p, nz=g.nz)
         stk_bottom = stk_top.inverted()
 
         stk = cls(stk_bottom, stk_core, stk_top,
-                  sg.nz_bottom, sg.nz_core, sg.nz_top,
+                  g.nz_bottom, g.nz_core, g.nz_top,
                   vz_unit=1 / ROOT3)
+        stk._scale = a0
+        return stk
+
+
+class FCCTwinFacetedPadded(base.APaddedStackLattice):
+    geometry = dims.FCCTwinFacetedPaddedG
+
+    @classmethod
+    def from_dimensions(cls, a0, diameter, length, period):
+        g = cls.geometry(a0, diameter, length, period)
+
+        stk_core = FCCTwinFaceted.from_dimensions(a0, p=g.p, q_max=g.q_max,
+                                                  nz=g.nz)
+        stk_top = FCCPristine111.from_dimensions(a0, p=g.p, nz=g.nz)
+        stk_bottom = stk_top.inverted()
+
+        stk = cls(stk_bottom, stk_core, stk_top,
+                  g.nz_bottom, g.nz_core, g.nz_top)
         stk._scale = a0
         return stk
 

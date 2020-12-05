@@ -50,7 +50,7 @@ class APaddedStackGeometry(AStackGeometry):
         return self.nz_bottom, self.nz_core, self.nz_top
 
     def xy_index(self, xy_length: float) -> int:
-        return self.c_sg.xy_index(xy_length), self.p_sg.xy_index(xy_length)
+        return self.cg.xy_index(xy_length), self.pg.xy_index(xy_length)
 
     def validate_args(self, *args):
         # not necessary by construction
@@ -71,10 +71,10 @@ class APaddedStackGeometry(AStackGeometry):
     def nz_top(self):
         raise NotImplementedError
 
-    def __init__(self, c_sg, p_sg):
-        super().__init__(c_sg.a0)
-        self.c_sg = c_sg
-        self.p_sg = p_sg
+    def __init__(self, cg, pg):
+        super().__init__(cg.a0)
+        self.cg = cg
+        self.pg = pg
 
         self._nz_bottom = None
         self._nz_core = None
