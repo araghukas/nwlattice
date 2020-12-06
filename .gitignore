@@ -2,6 +2,6 @@
 __pycache__/
 .idea/
 *_tests.py
-outputs/
+outputs*/
 _zb.py
 *.data
