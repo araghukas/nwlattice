@@ -6,53 +6,61 @@ import numpy as np
 from nwlattice2.utilities import Quaternion as Qtr
 
 
-class ADataWriter(ABC):
+class IDataWriter(ABC):
     """
-    The interface that writes the LAMMPS/phana atom data and map files
+    The interface for writing the LAMMPS/phana atom data and map files
     """
+
+    # globally toggles runtime printing of feedback
     WILL_PRINT = False
 
     @property
-    def type_name(self):
-        """string identifying each sub-class"""
+    def type_name(self) -> str:
+        """return class name as a string"""
         return str(self.__class__).split('.')[-1].strip("'>")
 
     @abstractmethod
     def get_points(self) -> np.ndarray:
+        """returns an N x 3 array containing all atoms points"""
         raise NotImplementedError
 
     @abstractmethod
     def get_types(self) -> np.ndarray:
+        """returns an N x 1 array containing all atom types"""
         raise NotImplementedError
 
     @abstractmethod
     def get_map_rows(self) -> list:
+        """returns a list of tuples representing `phana` map file rows"""
         raise NotImplementedError
 
     @abstractmethod
     def write_points(self, file_path: str):
+        """writes the LAMMPS data file readable via the `read_data` command"""
         raise NotImplementedError
 
     @abstractmethod
     def write_map(self, file_path: str):
+        """writes the `phana` map file"""
         raise NotImplementedError
 
     @staticmethod
-    def print(s):
-        if ADataWriter.WILL_PRINT:
+    def print(s: str):
+        """prints the string `s` if `WILL_PRINT` is True"""
+        if IDataWriter.WILL_PRINT:
             print(s)
 
 
-class APointPlane(ADataWriter):
+class APointPlane(IDataWriter):
     """
-    Base class for planar base lattices. These do not support multi-atom bases.
+    Base class for single-basis-atom planar lattices.
     """
 
     def __init__(self, size_obj, vectors, theta=None):
         super().__init__()
         self._vectors = vectors  # translation vectors
-        self._size_obj = size_obj
-        self._theta = theta
+        self._size_obj = size_obj  # dimensions/geometry handler
+        self._theta = theta  # in-plane rotation angle
 
         self._N = None  # number of lattice points
         self._com = None  # points centre of mass
@@ -60,22 +68,26 @@ class APointPlane(ADataWriter):
 
     @staticmethod
     @abstractmethod
-    def get_n_xy(scale, width):
+    def get_n_xy(scale: float, width: float) -> int:
+        """returns nearest integer lattice width from continuous width"""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def get_width(scale, n_xy):
+    def get_width(scale: float, n_xy: int) -> float:
+        """returns continuous width from integer lattice width"""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def get_area(scale, n_xy):
+    def get_area(scale: float, n_xy: int) -> float:
+        """returns area of plane"""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def get_vectors():
+    def get_vectors() -> np.ndarray:
+        """returns the translation vectors for the given plane class"""
         raise NotImplementedError
 
     @property
@@ -112,9 +124,7 @@ class APointPlane(ADataWriter):
     def write_points(self, file_path: str):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
-
         :param file_path: string indicating target file (created/overwritten)
-        :return: None
         """
         N_atoms = self.N  # total number of atoms
 
@@ -220,28 +230,28 @@ class APointPlane(ADataWriter):
         return rows
 
 
-class ANanowireLattice(ADataWriter):
+class ANanowireLattice(IDataWriter):
     """
-    Base class for nanowire lattice (planes stacked along z-axis) objects
+    Base class for nanowire lattice objects (planes stacked along z-axis)
     """
 
     def __init__(self, size_obj, planes, vr):
         super().__init__()
-        self._size_obj = size_obj
-        self._planes = []
+        self._size_obj = size_obj  # dimensions/geometry handler
+        self._planes = []  # list ref's to every comprising plane
         for plane in planes:
             self._planes.append(plane)
 
-        self._vz = np.zeros((self.size.nz, 3))
+        self._vz = np.zeros((self.size.nz, 3))  # plane z positions
         for i in range(self.size.nz):
             self._vz[i][2] = i * size_obj.unit_dz
-        self._vr = np.reshape(vr, (self.size.nz, 3))
+        self._vr = np.reshape(vr, (self.size.nz, 3))  # plane xy positions
 
-        self._N = None
-        self._supercell = self
-        self._basis = {1: [np.zeros(3)]}
-        self._area = None
-        self._v_center_com = np.zeros(3)
+        self._N = None  # number of lattice points
+        self._supercell = self  # a minimum length instance of the same class
+        self._basis = {1: [np.zeros(3)]}  # points tacked onto lattice points
+        self._area = None  # average cross sectional area among planes
+        self._v_center_com = np.zeros(3)  # vector to center the structure
 
     @classmethod
     @abstractmethod
@@ -251,20 +261,24 @@ class ANanowireLattice(ADataWriter):
 
     @staticmethod
     @abstractmethod
-    def get_n_xy(scale, width):
+    def get_n_xy(scale: float, width: float) -> int:
+        """returns nearest integer lattice width from continuous width"""
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def get_width(scale, n_xy):
+    def get_width(scale: float, n_xy) -> float:
+        """returns continuous width from integer lattice width"""
         raise NotImplementedError
 
     @staticmethod
-    def get_length(scale, nz, unit_dz) -> float:
+    def get_length(scale: float, nz, unit_dz) -> float:
+        """returns continuous length from number of planes"""
         return scale * (nz - 1) * unit_dz
 
     @staticmethod
-    def get_nz(scale, length, unit_dz) -> int:
+    def get_nz(scale: float, length: float, unit_dz) -> int:
+        """returns number of planes from continuous length"""
         return int(length / scale / unit_dz)
 
     @property
@@ -298,6 +312,8 @@ class ANanowireLattice(ADataWriter):
 
     @property
     def supercell(self):
+        # the supercell is updated from `self` when this property is accessed
+        # NOTE: this should be overridden for non-periodic nanowire lattices
         if self._supercell is self:
             scale = self.size.scale
             n_xy = self.size.n_xy
