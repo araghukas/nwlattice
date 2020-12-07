@@ -6,7 +6,6 @@ import nwlattice2.base as base
 
 
 class FCCa(base.APointPlane):
-
     def __init__(self, scale, n_xy=None, width=None, theta=None):
         size = PlaneSize(scale, n_xy, width)
         size._n_xy_func = self.get_n_xy

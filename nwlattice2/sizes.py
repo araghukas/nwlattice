@@ -26,7 +26,7 @@ class PlaneSize(object):
                                   "|n_xy : {:<20}|\n"
                                   "|width: {:<20}|\n"
                                   "|area : {:<20}|"
-        ).format(self.scale, self.n_xy, self.width, self.area)
+                ).format(self.scale, self.n_xy, self.width, self.area)
 
     @property
     def n_xy(self):
@@ -80,8 +80,9 @@ class NanowireSize(PlaneSize):
                                   "|nz    : {:<20}|\n"
                                   "|length: {:<20}|\n"
                                   "|area  : {:<20}|\n"
-        ).format(self.scale, self.n_xy, self.width, self.nz, self.length,
-                 self.area)
+                ).format(self.scale, self.n_xy, self.width, self.nz,
+                         self.length,
+                         self.area)
 
     @property
     def area(self):
