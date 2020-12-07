@@ -42,7 +42,7 @@ class FCCa(base.APointPlane):
             self._com = (self.size.n_xy - 1) * np.sum(self.vectors, axis=0)
         return self._com
 
-    def get_points(self) -> np.ndarray:
+    def get_points(self):
         pts = np.zeros((self.N, 3))
         i = 0
 
@@ -113,7 +113,7 @@ class FCCb(base.APointPlane):
             self._com = (self.size.n_xy - 1) * np.sum(self.vectors, axis=0)
         return self._com
 
-    def get_points(self) -> np.ndarray:
+    def get_points(self):
         pts = np.zeros((self.N, 3))
         i = 0
 
