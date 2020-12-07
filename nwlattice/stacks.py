@@ -63,8 +63,8 @@ class FCCPristine111(base.AStackLattice):
         for i in range(nz):
             planes.append(base_planes[i % 3])
             vr[i] += (i % 3) * unit_vr
-        self._v_center_com = -unit_vr
         super().__init__(planes, vz_unit, vr)
+        self._v_center_com = -unit_vr
 
 
 class FCCPristine100(base.AStackLattice):
