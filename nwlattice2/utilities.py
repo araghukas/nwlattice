@@ -6,6 +6,11 @@ ROOT3 = 1.7320508075688772
 ROOT6 = 2.449489742783178
 
 
+def toggle_printing(b: bool):
+    from nwlattice2.base import ADataWriter
+    ADataWriter.WILL_PRINT = bool(b)
+
+
 class Quaternion(object):
     """ a basic quaternion object """
 
