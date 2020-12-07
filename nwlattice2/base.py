@@ -1,16 +1,194 @@
+from abc import ABC, abstractmethod
 from os.path import expanduser
 from time import time
-
 import numpy as np
 
-from nwlattice2._output import IDataWriter
-from nwlattice2._points import IPointLattice
+from nwlattice2.utilities import Quaternion as Qtr
 
 
-class PlaneLattice(IDataWriter, IPointLattice):
+class IDataWriter(ABC):
     """
-    Base class for planar lattice objects
+    The interface that writes the LAMMPS/phana atom data and map files
     """
+    WILL_PRINT = False
+
+    @abstractmethod
+    def write_points(self, file_path: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def write_map(self, file_path: str):
+        raise NotImplementedError
+
+    @staticmethod
+    def print(s):
+        if IDataWriter.WILL_PRINT:
+            print(s)
+
+
+class IPointPlane(ABC):
+    """
+    The interface for implementing logic that generates point information
+    """
+
+    @abstractmethod
+    def get_points(self) -> np.ndarray:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_types(self) -> np.ndarray:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_map_rows(self) -> list:
+        raise NotImplementedError
+
+    def __init__(self):
+        self._N = None
+        self._v_center_com = np.zeros(3)
+
+    @property
+    @abstractmethod
+    def N(self):
+        raise NotImplementedError
+
+    @property
+    def type_name(self):
+        """string identifying each sub-class"""
+        return str(self.__class__).split('.')[-1].strip("'>")
+
+
+class IPointLattice(ABC):
+    """
+    The interface for implementing logic that generates point information
+    """
+
+    @abstractmethod
+    def get_points(self) -> np.ndarray:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_types(self) -> np.ndarray:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_map_rows(self) -> list:
+        raise NotImplementedError
+
+    def __init__(self):
+        self._supercell = self
+        self._N = None
+        self._basis = {1: [np.zeros(3)]}
+
+        self._v_center_com = np.zeros(3)
+
+    @classmethod
+    @abstractmethod
+    def get_supercell(cls, *args):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def N(self):
+        raise NotImplementedError
+
+    @property
+    def basis(self):
+        return self._basis
+
+    @property
+    def type_name(self):
+        """string identifying each sub-class"""
+        return str(self.__class__).split('.')[-1].strip("'>")
+
+    def add_basis(self, t: int, pt):
+        """
+        Add a basis point of type `t` at 3-point `pt`
+
+        :param t: integer atom type ID
+        :param pt: 3-point indicating basis point relative to lattice point
+        :return: None
+        """
+        t = int(t)
+        if t <= 0:
+            raise ValueError("only positive integers should be used for "
+                             "atom type identifiers")
+
+        pt = np.asarray(pt)
+        if len(pt) != 3:
+            raise ValueError("basis point must be 3-dimensional")
+
+        if t in self._basis:
+            self._basis[t].append(pt)
+        else:
+            self._basis[t] = [pt]
+
+
+class APointPlane(IDataWriter, IPointPlane):
+    """
+    Base class for planar base lattices. These do not support multi-atom bases.
+    """
+
+    def __init__(self, size_obj, vectors, theta=None):
+        super().__init__()
+        self._vectors = vectors  # translation vectors
+        self._size_obj = size_obj
+        self._theta = theta
+
+        self._N = None  # number of lattice points
+        self._com = None  # points centre of mass
+        self._points = None  # array of points in this PlaneLattice
+
+    @staticmethod
+    @abstractmethod
+    def get_n_xy(scale, width):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_width(scale, n_xy):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_area(scale, n_xy):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_vectors():
+        raise NotImplementedError
+
+    @property
+    def N(self):
+        # subclass-specific method
+        raise NotImplementedError
+
+    @property
+    def com(self):
+        # subclass-specific method
+        raise NotImplementedError
+
+    @property
+    def size(self):
+        return self._size_obj
+
+    @property
+    def vectors(self):
+        return self._vectors
+
+    @property
+    def points(self):
+        if self._points is None:
+            self._points = self.get_points()
+            if self.theta is not None:
+                axis = [0, 0, 1]
+                self._points = Qtr.qrotate(self._points, axis, self.theta)
+        return self.size.scale * self._points
+
+    @property
+    def theta(self):
+        return self._theta
 
     def write_points(self, file_path: str):
         """
@@ -37,8 +215,7 @@ class PlaneLattice(IDataWriter, IPointLattice):
             file_.write("Atoms # atomic\n")
             file_.write("\n")
             id_ = 1
-            for pt in self.get_points():
-                pt *= self._scale
+            for pt in self.points:
                 file_.write("{} {} {} {} {} 0 0 0\n"
                             .format(id_, 1, pt[0], pt[1], pt[2]))
                 id_ += 1
@@ -80,8 +257,8 @@ class PlaneLattice(IDataWriter, IPointLattice):
         NOTE: atom ID's must be consistent with `write_points()` method output
         """
         file_path = expanduser(file_path)
-        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        n_atoms_cell = n_basis_atoms
+        n_basis_atoms = 1
+        n_atoms_cell = n_basis_atoms * self.N
 
         t1 = time()
         with open(file_path, 'w+') as file_:
@@ -99,36 +276,104 @@ class PlaneLattice(IDataWriter, IPointLattice):
                    % (n_atoms_cell, file_path, t2 - t1))
 
     def get_points(self) -> np.ndarray:
-        pass
+        # subclass-specific method
+        raise NotImplementedError
 
     def get_types(self) -> np.ndarray:
-        pass
+        """
+        Return the integer type identifier for atoms identifier `ID`
+        :return: array of atom types
+        """
+        return np.ones(self.N)
 
     def get_map_rows(self) -> list:
-        pass
+        """return `phana` map row for every atom"""
+        rows = []
+        l1 = l2 = l3 = 0
+        k = 0
+        ID = 1
+
+        for i in range(self.N):
+            rows.append((l1, l2, l3, k, ID))
+            k += 1
+            ID += 1
+
+        return rows
+
+
+class ANanowireLattice(IDataWriter, IPointLattice):
+    """
+    Base class for nanowire lattice (planes stacked along z-axis) objects
+    """
+
+    def __init__(self, size_obj, planes, vr):
+        super().__init__()
+        self._size_obj = size_obj
+        self._planes = []
+        for plane in planes:
+            self._planes.append(plane)
+
+        self._vz = np.zeros((self.size.nz, 3))
+        for i in range(self.size.nz):
+            self._vz[i][2] = i * size_obj.unit_dz
+        self._vr = np.reshape(vr, (self.size.nz, 3))
+
+        self._N = None
+        self._supercell = self
+        self._area = None
+
+    @classmethod
+    @abstractmethod
+    def get_supercell(cls, *args):
+        # subclass-specific method
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_n_xy(scale, width):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_width(scale, n_xy):
+        raise NotImplementedError
+
+    @staticmethod
+    def get_length(scale, nz, unit_dz) -> float:
+        return scale * (nz - 1) * unit_dz
+
+    @staticmethod
+    def get_nz(scale, length, unit_dz) -> int:
+        return int(length / scale / unit_dz)
 
     @property
     def N(self):
+        if self._N is None:
+            N = 0
+            for plane in self.planes:
+                N += plane.N
+            self._N = N
         return self._N
-
-    def __init__(self, size_obj, vectors):
-        super().__init__()
-        self._vectors = vectors  # translation vectors
-        self._size_obj = size_obj
-
-        self._N = None  # number of lattice points
-        self._com = None  # points centre of mass
-        self._points = None  # array of points in this PlaneLattice
 
     @property
     def size(self):
         return self._size_obj
 
+    @property
+    def planes(self):
+        return self._planes
 
-class NWLattice(IDataWriter, IPointLattice):
-    """
-    Base class for nanowire lattice (planes stacked along z-axis) objects
-    """
+    @property
+    def vr(self):
+        return self._vr
+
+    @property
+    def vz(self):
+        return self._vz
+
+    @property
+    def supercell(self):
+        return self._supercell
 
     def write_points(self, file_path: str, wrap=True):
         """
@@ -167,7 +412,6 @@ class NWLattice(IDataWriter, IPointLattice):
             file_.write("\n")
             id_ = 1
             for pt, typ in zip(atom_points, atom_types):
-                pt *= self._scale
                 ptz = pt[2] % zhi if wrap else pt[2]
                 file_.write("{} {} {} {} {} 0 0 0\n"
                             .format(id_, typ, pt[0], pt[1], ptz))
@@ -249,13 +493,13 @@ class NWLattice(IDataWriter, IPointLattice):
             for t in self.basis:
                 for bpt in self.basis[t]:
                     atom_pts[n_ID:(n_ID + plane.N)] = (
-                            plane.get_points(center=True)
+                            plane.points
                             + self.vr[i]
                             + self.vz[i]
                             + bpt
                     )
                     n_ID += plane.N
-        return atom_pts + self._v_center_com
+        return self.size.scale * (atom_pts + self._v_center_com)
 
     def get_types(self) -> np.ndarray:
         """
@@ -287,7 +531,7 @@ class NWLattice(IDataWriter, IPointLattice):
         for i in range(self.size.nz):
             plane = self.supercell.planes[i % self.supercell.size.nz]
             for t in self.basis:
-                for _ in plane.get_points(t):
+                for _ in plane.get_points():
                     for _ in self.basis[t]:
                         rows.append((l1, l2, l3, k, ID))
                         n += 1
@@ -299,59 +543,20 @@ class NWLattice(IDataWriter, IPointLattice):
                             k += 1
         return rows
 
-    @property
-    def N(self):
-        if self._N is None:
-            N = 0
+    def get_area(self) -> float:
+        """returns average cross-sectional area of comprising planes"""
+        if self._area is None:
+            sum_area = 0
+            n = 0
             for plane in self.planes:
-                N += plane.N
-            self._N = N
-        return self._N
-
-    def __init__(self, size_obj, planes, unit_dz, vr):
-        super().__init__()
-        self._size_obj = size_obj
-        self._planes = []
-        for plane in planes:
-            self._planes.append(plane)
-
-        self._unit_dz = unit_dz
-
-        self._vz = np.zeros((self.size.nz, 3))
-        for i in range(self.size.nz):
-            self._vz[i][2] = i * unit_dz
-        self._vr = np.reshape(vr, (self.size.nz, 3))
-
-        self._N = None
-        self._supercell = self
-
-    @property
-    def size(self):
-        return self._size_obj
-
-    @property
-    def planes(self):
-        return self._planes
-
-    @property
-    def unit_dz(self):
-        return self._unit_dz
-
-    @property
-    def vr(self):
-        return self._vr
-
-    @property
-    def vz(self):
-        return self._vz
-
-    @property
-    def supercell(self):
-        return self._supercell
+                sum_area += plane.size.area
+                n += 1
+            self._area = sum_area / n * self.size.scale**2
+        return self._area
 
     def _get_points_box_dims(self, wrap: bool) -> tuple:
         """returns simulation box dimensions for write_points() method"""
-        x = 2 * self.size.diameter  # keep atoms' (x,y) in box
+        x = 2 * self.size.width  # keep atoms' (x,y) in box
         y = x
         n_atom_types = len(self._basis)
         basis_z_min = basis_z_max = 0.
@@ -359,13 +564,13 @@ class NWLattice(IDataWriter, IPointLattice):
             for t in self._basis:
                 for bpt in self._basis[t]:
                     if bpt[2] < basis_z_min:
-                        basis_z_min = bpt[2] * self._scale
+                        basis_z_min = bpt[2] * self.size.scale
                     elif bpt[2] > basis_z_max:
-                        basis_z_max = bpt[2] * self._scale
+                        basis_z_max = bpt[2] * self.size.scale
         zlo = 0. if wrap else basis_z_min
         zhi = self.size.length
         if wrap:
-            zhi += self.unit_dz
+            zhi += self.size.scale* self.size.unit_dz
         else:
             zhi += basis_z_max
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
