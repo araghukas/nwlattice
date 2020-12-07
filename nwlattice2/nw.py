@@ -2,7 +2,7 @@ import nwlattice2.base as base
 from nwlattice2.base import np
 from nwlattice2.sizes import NanowireSize
 from nwlattice2.utilities import ROOT2, ROOT3
-from nwlattice2.planes import FCCa, FCCb
+from nwlattice2.planes import FCCb, FCCa, FCCc
 
 
 class FCCPristine111(base.ANanowireLattice):
@@ -15,9 +15,9 @@ class FCCPristine111(base.ANanowireLattice):
         size._area_func = self.get_area
 
         base_planes = [
-            FCCb(1 / ROOT2, size.n_xy - 1),
-            FCCa(1 / ROOT2, size.n_xy),
-            FCCb(1 / ROOT2, size.n_xy - 1, theta=np.pi)
+            FCCa(1 / ROOT2, size.n_xy - 1),
+            FCCb(1 / ROOT2, size.n_xy),
+            FCCc(1 / ROOT2, size.n_xy - 1)
         ]
 
         # main structural logic
@@ -36,11 +36,11 @@ class FCCPristine111(base.ANanowireLattice):
 
     @staticmethod
     def get_n_xy(scale, width):
-        return FCCa.get_n_xy(scale, width / ROOT2)
+        return FCCb.get_n_xy(scale, width / ROOT2)
 
     @staticmethod
     def get_width(scale, n_xy):
-        return FCCa.get_width(scale, n_xy) / ROOT2
+        return FCCb.get_width(scale, n_xy) / ROOT2
 
 
 class ZBPristine111(FCCPristine111):
