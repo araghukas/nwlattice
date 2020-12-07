@@ -298,6 +298,10 @@ class ANanowireLattice(ADataWriter):
 
     @property
     def supercell(self):
+        if self._supercell is self:
+            scale = self.size.scale
+            n_xy = self.size.n_xy
+            self._supercell = self.get_supercell(scale, n_xy)
         return self._supercell
 
     def write_points(self, file_path: str, wrap=True):
