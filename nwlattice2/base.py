@@ -159,30 +159,6 @@ class APointPlane(IDataWriter):
         The map file conforms to the specification found at:
         <https://code.google.com/archive/p/fix-phonon/wikis/MapFile.wiki>
 
-        Basically,
-
-            The map file simply shows the map between the lattice indices of an
-            atom and its unique id in the simulation box. The format of the map
-            file read:
-
-                nx ny nz n
-                comment line
-                l1 l2 l3 k id
-                ...
-
-            The first line: nx, ny, and nz are the number of extensions of the
-            unit cell in x, y, and z directions, respectively. That is to say,
-            your simulation box contains nx x ny x nz unit cells. And n is the
-            number of atoms in each unit cell.
-
-            The second line: comment line, put whatever you want. From line 3
-            to line (nx*ny*nz*n+2): l1, l2, l3 are the indices of the unit cell
-            which atom id belongs to, and the atom corresponding to atom id is
-            the k_th atom in this unit cell, starting at k = 0.
-
-        For a stack of twins, the smallest repeating unit is the set of
-        consecutive planes in a full q-cycle. Use this as the supercell.
-
         NOTE: atom ID's must be consistent with `write_points()` method output
         """
         file_path = expanduser(file_path)
@@ -371,30 +347,6 @@ class ANanowireLattice(IDataWriter):
 
         The map file conforms to the specification found at:
         <https://code.google.com/archive/p/fix-phonon/wikis/MapFile.wiki>
-
-        Basically,
-
-            The map file simply shows the map between the lattice indices of an
-            atom and its unique id in the simulation box. The format of the map
-            file read:
-
-                nx ny nz n
-                comment line
-                l1 l2 l3 k id
-                ...
-
-            The first line: nx, ny, and nz are the number of extensions of the
-            unit cell in x, y, and z directions, respectively. That is to say,
-            your simulation box contains nx x ny x nz unit cells. And n is the
-            number of atoms in each unit cell.
-
-            The second line: comment line, put whatever you want. From line 3
-            to line (nx*ny*nz*n+2): l1, l2, l3 are the indices of the unit cell
-            which atom id belongs to, and the atom corresponding to atom id is
-            the k_th atom in this unit cell, starting at k = 0.
-
-        For a stack of twins, the smallest repeating unit is the set of
-        consecutive planes in a full q-cycle. Use this as the supercell.
 
         NOTE: atom ID's must be consistent with `write_points()` method output
         """

@@ -20,7 +20,7 @@ class FCCPristine111(base.ANanowireLattice):
             FCCc(1 / ROOT2, size.n_xy - 1)
         ]
 
-        # main structural logic
+        # main structural logic: periodic -[A-B-C]- stacking of planes
         planes = []
         vr = np.zeros((size.nz, 3))
         unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
