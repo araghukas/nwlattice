@@ -80,7 +80,7 @@ class APointPlane(IDataWriter):
 
     @staticmethod
     @abstractmethod
-    def get_area(scale: float, n_xy: int) -> float:
+    def get_area(*args) -> float:
         """returns area of plane"""
         raise NotImplementedError
 
