@@ -131,6 +131,10 @@ class NanowireSizePeriodic(NanowireSize):
     def period(self):
         return self._period_func(self.scale, self.q)
 
+    def fix_nz(self, nz):
+        self._nz_func = lambda *args: nz
+        self._nz = None
+
 
 if __name__ == "__main__":
     size = NanowireSizePeriodic(1.0, unit_dz=0.5, width=15, length=50, q=13)
