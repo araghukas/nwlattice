@@ -22,10 +22,10 @@ class PlaneSize(object):
 
     def __str__(self):
         return (self.__repr__() + "\n"
-                                  "|scale: {:<20}|\n"
-                                  "|n_xy : {:<20}|\n"
-                                  "|width: {:<20}|\n"
-                                  "|area : {:<20}|"
+                                  "scale: {:<20}\n"
+                                  "n_xy : {:<20}\n"
+                                  "width: {:<20}\n"
+                                  "area : {:<20}"
                 ).format(self.scale, self.n_xy, self.width, self.area)
 
     @property
@@ -74,12 +74,12 @@ class NanowireSize(PlaneSize):
 
     def __str__(self):
         return (self.__repr__() + "\n"
-                                  "|scale : {:<20}|\n"
-                                  "|n_xy  : {:<20}|\n"
-                                  "|width : {:<20}|\n"
-                                  "|nz    : {:<20}|\n"
-                                  "|length: {:<20}|\n"
-                                  "|area  : {:<20}|\n"
+                                  "scale : {:<20}\n"
+                                  "n_xy  : {:<20}\n"
+                                  "width : {:<20}\n"
+                                  "nz    : {:<20}\n"
+                                  "length: {:<20}\n"
+                                  "area  : {:<20}\n"
                 ).format(self.scale, self.n_xy, self.width, self.nz,
                          self.length,
                          self.area)
@@ -115,10 +115,9 @@ class NanowireSizePeriodic(NanowireSize):
             raise ValueError("must specify either `p` or `period`")
 
         self._q = q
-        self._period = period
-
-        # size calculator functions
         self._q_func = None
+
+        self._period = period
         self._period_func = None
 
     @property
@@ -132,8 +131,7 @@ class NanowireSizePeriodic(NanowireSize):
         return self._period_func(self.scale, self.q)
 
     def fix_nz(self, nz):
-        self._nz_func = lambda *args: nz
-        self._nz = None
+        self._nz = nz
 
 
 if __name__ == "__main__":
