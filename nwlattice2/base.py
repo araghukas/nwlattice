@@ -121,11 +121,14 @@ class APointPlane(IDataWriter):
     def theta(self):
         return self._theta
 
-    def write_points(self, file_path: str):
+    def write_points(self, file_path: str = None):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
         :param file_path: string indicating target file (created/overwritten)
         """
+        if file_path is None:
+            file_path = "{}_structure.data".format(self.type_name)
+
         N_atoms = self.N  # total number of atoms
 
         t1 = time()
@@ -152,7 +155,7 @@ class APointPlane(IDataWriter):
             self.print("wrote %d atoms to map file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    def write_map(self, file_path: str):
+    def write_map(self, file_path: str = None):
         """
         Write a map file for the LAMMPS command `fix phonon`
 
@@ -161,6 +164,8 @@ class APointPlane(IDataWriter):
 
         NOTE: atom ID's must be consistent with `write_points()` method output
         """
+        if file_path is None:
+            file_path = "{}_map.data".format(self.type_name)
         file_path = expanduser(file_path)
         n_basis_atoms = 1
         n_atoms_cell = n_basis_atoms * self.N
@@ -229,6 +234,8 @@ class ANanowireLattice(IDataWriter):
         self._area = None  # average cross sectional area among planes
         self._v_center_com = np.zeros(3)  # vector to center the structure
 
+        self.print("\n".join(str(self.size).split("\n")[1:]))
+
     @classmethod
     @abstractmethod
     def get_supercell(cls, *args):
@@ -245,6 +252,10 @@ class ANanowireLattice(IDataWriter):
     @abstractmethod
     def get_width(scale: float, n_xy) -> float:
         """returns continuous width from integer lattice width"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def _assign_rules(self, size):
         raise NotImplementedError
 
     @staticmethod
@@ -296,7 +307,7 @@ class ANanowireLattice(IDataWriter):
             self._supercell = self.get_supercell(scale, n_xy)
         return self._supercell
 
-    def write_points(self, file_path: str, wrap=True):
+    def write_points(self, file_path: str = None, wrap=True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
 
@@ -304,6 +315,8 @@ class ANanowireLattice(IDataWriter):
         :param wrap: toggle taking (z_coord % zhi) when writing atoms to file
         :return: None
         """
+        if file_path is None:
+            file_path = "{}_structure.data".format(self.type_name)
         t1 = time()
         file_path = expanduser(file_path)
         atom_points = self.get_points()
@@ -341,7 +354,7 @@ class ANanowireLattice(IDataWriter):
             self.print("wrote %d atoms to data file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    def write_map(self, file_path: str):
+    def write_map(self, file_path: str = None):
         """
         Write a map file for the LAMMPS command `fix phonon`
 
@@ -350,6 +363,8 @@ class ANanowireLattice(IDataWriter):
 
         NOTE: atom ID's must be consistent with `write_points()` method output
         """
+        if file_path is None:
+            file_path = "{}_map.data".format(self.type_name)
         file_path = expanduser(file_path)
         cell_nz = self.supercell.size.nz
         cell_N = self.supercell.N
@@ -519,6 +534,11 @@ class ANanowireLatticePeriodic(ANanowireLattice):
     @staticmethod
     @abstractmethod
     def get_period(scale: float, p: int) -> float:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_cyclic_nz(nz: int, k: int, nearest=True):
         raise NotImplementedError
 
     @property
