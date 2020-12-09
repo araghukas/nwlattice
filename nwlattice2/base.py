@@ -493,3 +493,41 @@ class ANanowireLattice(IDataWriter):
         else:
             zhi += basis_z_max
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
+
+
+class ANanowireLatticePeriodic(ANanowireLattice):
+    @classmethod
+    @abstractmethod
+    def get_supercell(cls, *args):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_width(scale: float, n_xy) -> float:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_p(scale: float, period: float) -> int:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_period(scale: float, p: int) -> float:
+        raise NotImplementedError
+
+    @property
+    def supercell(self):
+        # the supercell is updated from `self` when this property is accessed
+        # NOTE: this should be overridden for non-periodic nanowire lattices
+        if self._supercell is self:
+            scale = self.size.scale
+            n_xy = self.size.n_xy
+            q = self.size.q
+            self._supercell = self.get_supercell(scale, n_xy, q)
+        return self._supercell

@@ -108,25 +108,29 @@ class NanowireSizePeriodic(NanowireSize):
     A size information handler for periodic nanowire lattices
     """
 
-    def __init__(self, scale, n_xy=None, nz=None, p=None,
+    def __init__(self, scale, unit_dz, n_xy=None, nz=None, q=None,
                  width=None, length=None, period=None):
-        super().__init__(scale, n_xy, nz, width, length)
-        if not (p or period):
+        super().__init__(scale, unit_dz, n_xy, nz, width, length)
+        if not (q or period):
             raise ValueError("must specify either `p` or `period`")
 
-        self._p = p
+        self._q = q
         self._period = period
 
         # size calculator functions
-        self._p_func = None
+        self._q_func = None
         self._period_func = None
 
     @property
-    def p(self):
-        if self._p is None:
-            self._p = self._p_func(self._period)
-        return self._p
+    def q(self):
+        if self._q is None:
+            self._q = self._q_func(self.scale, self._period)
+        return self._q
 
     @property
     def period(self):
-        return self._period_func(self.p)
+        return self._period_func(self.scale, self.q)
+
+
+if __name__ == "__main__":
+    size = NanowireSizePeriodic(1.0, unit_dz=0.5, width=15, length=50, q=13)
