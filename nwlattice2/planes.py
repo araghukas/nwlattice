@@ -6,7 +6,8 @@ import nwlattice2.base as base
 
 
 class FCCa(base.APointPlane):
-    def __init__(self, scale, n_xy=None, width=None, theta=None):
+    def __init__(self, scale: float, n_xy: int = None, width: float = None,
+                 theta: float = None):
         size = PlaneSize(scale, n_xy, width)
         size._n_xy_func = self.get_n_xy
         size._width_func = self.get_width
@@ -131,13 +132,13 @@ class FCCb(FCCa):
 
 
 class FCCc(FCCa):
-    def __init__(self, scale, n_xy=None, width=None):
+    def __init__(self, scale: float, n_xy: int = None, width: float = None):
         super().__init__(scale, n_xy, width, theta=np.pi)
 
 
 class SqFCCa(base.APointPlane):
 
-    def __init__(self, scale, n_xy=None, width=None):
+    def __init__(self, scale: float, n_xy: int = None, width: float = None):
         size = PlaneSize(scale, n_xy, width)
         size._n_xy_func = self.get_n_xy
         size._width_func = self.get_width
@@ -228,7 +229,8 @@ class SqFCCb(SqFCCa):
 
 
 class TwFCC(base.APointPlane):
-    def __init__(self, scale, n_xy=None, m_xy=0, width=None):
+    def __init__(self, scale: float, n_xy: int = None, m_xy: int = 0,
+                 width: float = None):
         self._m_xy = m_xy
         size = PlaneSize(scale, n_xy, width)
         size._n_xy_func = self.get_n_xy
