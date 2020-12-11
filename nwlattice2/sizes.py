@@ -11,8 +11,17 @@ class PlaneSize(object):
         """
         if not (width or n_xy):
             raise ValueError("must specify wither `n_xy` or `width`")
+
+        if scale <= 0:
+            raise ValueError("`scale` must be a positive number")
         self._scale = scale
+
+        if n_xy is not None and n_xy <= 0:
+            raise ValueError("`n_xy` must be a positive integer")
         self._n_xy = n_xy
+
+        if width is not None and width <= 0:
+            raise ValueError("`width` must be a positive number")
         self._width = width
 
         # size calculator functions

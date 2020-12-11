@@ -231,7 +231,6 @@ class SqFCCb(SqFCCa):
 class TwFCC(base.APointPlane):
     def __init__(self, scale: float, n_xy: int = None, m_xy: int = 0,
                  width: float = None):
-        self._m_xy = m_xy
         size = PlaneSize(scale, n_xy, width)
         size._n_xy_func = self.get_n_xy
         size._width_func = self.get_width
@@ -239,6 +238,7 @@ class TwFCC(base.APointPlane):
         if not (0 <= m_xy < size.n_xy):
             raise ValueError("index `m_xy = %d` is not compatible with "
                              "`n_xy = %d`" % (m_xy, size.n_xy))
+        self._m_xy = int(m_xy)
         vectors = self.get_vectors()
         super().__init__(size, vectors)
 
@@ -316,3 +316,8 @@ class TwFCC(base.APointPlane):
             pts -= self.com
             self._points = pts
         return self._points
+
+
+if __name__ == "__main__":
+    p = FCCa(scale=1.0, n_xy=1)
+    p.write_points()
