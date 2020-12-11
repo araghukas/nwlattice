@@ -6,7 +6,7 @@ from nwlattice2 import planes, base
 
 
 class PlaneObjectsTest(unittest.TestCase):
-    """convenient base class for every other test here"""
+    """convenient base class for every other test in this module"""
 
     def setUp(self) -> None:
         self.plane_types = self.get_all_plane_objects()
@@ -54,7 +54,7 @@ class AnnotationsCompleteTest(PlaneObjectsTest):
             s1 = set(a.args[1:])
             s2 = set(a.annotations.keys())
             s = s1 - s2
-            msg = ("\nfound argument(s) without annotation: {} in {}"
+            msg = ("\nfound non-annotated argument(s) {} in type {}"
                    .format(s, t))
             self.assertEqual(s, set(), msg=msg)
 

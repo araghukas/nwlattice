@@ -1,8 +1,9 @@
-import nwlattice2.base as base
-from nwlattice2.base import np
+from nwlattice2 import base
 from nwlattice2.sizes import NanowireSize, NanowireSizePeriodic
 from nwlattice2.utilities import ROOT2, ROOT3, ROOT6
 from nwlattice2.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
+
+import numpy as np
 
 
 # TODO: there is no argument checking! m_xy too large... period too large?
