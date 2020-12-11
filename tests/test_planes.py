@@ -128,7 +128,7 @@ class PlaneDimensionsTest(PlaneObjectsTest):
             p = t(scale=self.scale, width=width)
             self.assertEqual(n_xy, p.size.n_xy)
 
-    def test_consistent_width_in_TwFCC(self):
+    def test_TwFCC_widths_same_all_m_xy(self):
         width = uniform(10., 40.)
         n_xy = planes.TwFCC.get_n_xy(self.scale, width)
         resulting_widths = []
@@ -158,14 +158,14 @@ class SmallWidthValuesTest(PlaneObjectsTest):
             p = t(scale=self.scale, width=width)
             file_path = "./{}._data".format(p.type_name)
             p.write_points(file_path)
+            self.written_files.append(file_path)
             n_atoms = self.count_written_atoms(file_path)
             print("plane type {} writes {} atoms when n_xy = {}"
                   .format(t, n_atoms, p.size.n_xy))
 
     def tearDown(self):
-        for file_ in os.listdir("."):
-            if file_.endswith('._data'):
-                os.remove(file_)
+        for file_ in self.written_files:
+            os.remove(file_)
 
     @staticmethod
     def count_written_atoms(file_path):
