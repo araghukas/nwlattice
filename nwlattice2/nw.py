@@ -6,15 +6,31 @@ from nwlattice2.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
 import numpy as np
 
 
-# TODO: there is no argument checking! m_xy too large... period too large?
-# TODO: all objects should have cyclic only option
-
 class FCCPristine111(base.ANanowireLattice):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine face-centered cubic nanowire with axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None,
+                 force_cyclic: bool = True):
         dz = 1 / ROOT3
         size = self._assign_rules(
             NanowireSize(scale, dz, n_xy, nz, width, length)
         )
+        if force_cyclic:
+            old_nz = size.nz
+            old_length = size.length
+            size.fix_nz(self.get_cyclic_nz(size.nz, 3))
+            self.print("forced cyclic structure in periodic z: (unit nz = %d) "
+                       "(nz: %d -> %d) "
+                       "(length: %.2f -> %.2f)"
+                       % (3, old_nz, size.nz, old_length, size.length))
+
         base_planes = [
             FCCa(1 / ROOT2, size.n_xy - 1),
             FCCb(1 / ROOT2, size.n_xy),
@@ -53,11 +69,29 @@ class FCCPristine111(base.ANanowireLattice):
 
 
 class FCCPristine100(base.ANanowireLattice):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine face-centered cubic nanowire with axis along [100].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None,
+                 force_cyclic: bool = True):
         dz = 0.5
         size = self._assign_rules(
             NanowireSize(scale, dz, n_xy, nz, width, length)
         )
+        if force_cyclic:
+            old_nz = size.nz
+            old_length = size.length
+            size.fix_nz(self.get_cyclic_nz(size.nz, 2))
+            self.print("forced cyclic structure in periodic z: (unit nz = %d) "
+                       "(nz: %d -> %d) "
+                       "(length: %.2f -> %.2f)"
+                       % (2, old_nz, size.nz, old_length, size.length))
         base_planes = [
             SqFCCa(1.0, size.n_xy),
             SqFCCb(1.0, size.n_xy)
@@ -92,8 +126,20 @@ class FCCPristine100(base.ANanowireLattice):
 
 
 class FCCTwin(base.ANanowireLatticePeriodic):
-    def __init__(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None, force_cyclic=True):
+    """
+    Constant-width periodically twinning face-centered cubic nanowire with axis
+    along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 q: int = None,
+                 width: float = None,
+                 length: float = None,
+                 period: float = None,
+                 force_cyclic: bool = True):
         dz = 1 / ROOT3
         size = self._assign_rules(
             NanowireSizePeriodic(scale, dz, n_xy, nz, q, width, length, period)
@@ -160,20 +206,6 @@ class FCCTwin(base.ANanowireLatticePeriodic):
                 index.append(i)
         return set(index)
 
-    @staticmethod
-    def get_cyclic_nz(nz, k, nearest=True):
-        nlo = (nz // k) * k
-        nhi = ((nz + k) // k) * k
-        if nearest:
-            if nlo == 0:
-                return nhi
-            elif (nz - nlo) < (nhi - nz):
-                return nlo
-            else:
-                return nhi
-        else:
-            return nlo, nhi
-
     def _assign_rules(self, size):
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
@@ -186,12 +218,33 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
 
 class FCCTwinFaceted(base.ANanowireLatticePeriodic):
-    def __init__(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None, force_cyclic=True):
+    """
+    Faceted twinning face-centered cubic nanowire with axis along [111].
+    Each twin sister is a section of a non-primitive octahedral unit cell.
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 q: int = None,
+                 width: float = None,
+                 length: float = None,
+                 period: float = None,
+                 force_cyclic: bool = True):
+
         dz = 1 / ROOT3
         size = self._assign_rules(
             NanowireSizePeriodic(scale, dz, n_xy, nz, q, width, length, period)
         )
+
+        if size.q >= size.n_xy:
+            raise ValueError(
+                "period {:.2f} (q = {:d}) is too large for width "
+                "{:.2f} (n_xy = {:d})"
+                .format(size.period, size.q, size.width, size.n_xy)
+            )
+
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -203,7 +256,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
         # main structural logic:
         # -[A-B-C]- stacking, planes cycle through constant-perimeter variants
-        m_cycle = self.get_m_cycle(size.nz, 0, q)
+        m_cycle = self.get_m_cycle(size.nz, 0, size.q)
         planes = [TwFCC(1 / ROOT2, size.n_xy, m) for m in m_cycle]
         vr = np.zeros((size.nz, 3))
         super().__init__(size, planes, vr)
@@ -231,19 +284,13 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         return scale * 2 * q / ROOT3
 
     @staticmethod
-    def get_cyclic_nz(nz, k, nearest=True):
-        return FCCTwin.get_cyclic_nz(nz, k, nearest)
-
-    @staticmethod
     def get_m_cycle(nz, m0, q):
         """
         List of `m_xy` indices for TwFCC in an FCCTwinFaceted instance.
 
-        Example for (nz=9, m0=0, q=4):
-            [0, 1, 2, 3, 4, 3, 2, 1, 0]
+        Example, for (nz=9, m0=0, q=4): -> [0, 1, 2, 3, 4, 3, 2, 1, 0]
 
-        Example for (nz=12, m0=4, q=7):
-            [4, 5, 6, 7, 6, 5, 4, 3, 2, 1, 0, 1]
+        Example, for (nz=12, m0=4, q=7): -> [4, 5, 6, 7, 6, 5, 4, 3, 2, 1, 0, 1]
 
         :param nz: number of planes stacked
         :param m0: `m_xy` index of first TwFCC in the list
@@ -273,11 +320,29 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
 
 class HexPristine0001(base.ANanowireLattice):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine hexagonal nanowire with axis along [0001].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None,
+                 force_cyclic: bool = True):
         dz = 1 / ROOT3
         size = self._assign_rules(
             NanowireSize(scale, dz, n_xy, nz, width, length)
         )
+        if force_cyclic:
+            old_nz = size.nz
+            old_length = size.length
+            size.fix_nz(self.get_cyclic_nz(size.nz, 2))
+            self.print("forced cyclic structure in periodic z: (unit nz = %d) "
+                       "(nz: %d -> %d) "
+                       "(length: %.2f -> %.2f)"
+                       % (2, old_nz, size.nz, old_length, size.length))
         base_planes = [
             FCCa(1 / ROOT2, size.n_xy - 1),
             FCCb(1 / ROOT2, size.n_xy),
@@ -315,8 +380,19 @@ class HexPristine0001(base.ANanowireLattice):
 
 
 class FCCRandomHex(base.ANanowireLattice):
-    def __init__(self, scale, wz_fraction,
-                 n_xy=None, nz=None, width=None, length=None):
+    """
+    Face-centered cubic nanowire with a specific fraction of hexagonal planes
+    substituted in at random locations. Axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 hex_fraction: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
+
         dz = 1 / ROOT3
         size = self._assign_rules(
             NanowireSize(scale, dz, n_xy, nz, width, length)
@@ -331,7 +407,7 @@ class FCCRandomHex(base.ANanowireLattice):
         planes = []
         vr = np.zeros((size.nz, 3))
         unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
-        plane_index = self.get_plane_index(size.nz, wz_fraction)
+        plane_index = self.get_plane_index(size.nz, hex_fraction)
         j = 0
         for i in range(size.nz):
             if i in plane_index:
@@ -390,32 +466,79 @@ class FCCRandomHex(base.ANanowireLattice):
 # Derived classes
 # ------------------------------------------------------------------------------
 class ZBPristine111(FCCPristine111):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine zincblende nanowire with axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class DiamondPristine111(FCCPristine111):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine diamond nanowire with axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
 
 
 class ZBPristine100(FCCPristine100):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine zincblende nanowire with axis along [100].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(2, [0.25, 0.25, 0.25])
 
 
 class DiamondPristine100(FCCPristine100):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine diamond nanowire with axis along [100].
+    """
+
+    def __init__(self, scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(1, [0.25, 0.25, 0.25])
 
 
 class ZBTwin(FCCTwin):
-    def __init__(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None, force_cyclic=True):
+    """
+    Constant-width periodically twinning zincblende nanowire with axis along
+    [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 q: int = None,
+                 width: float = None,
+                 length: float = None,
+                 period: float = None,
+                 force_cyclic: bool = True):
         super().__init__(scale, n_xy=n_xy, nz=nz, q=q,
                          width=width, length=length, period=period,
                          force_cyclic=force_cyclic)
@@ -423,8 +546,19 @@ class ZBTwin(FCCTwin):
 
 
 class DiamondTwin(FCCTwin):
-    def __init__(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None, force_cyclic=True):
+    """
+    Constant-width periodically twinning diamond nanowire with axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 q: int = None,
+                 width: float = None,
+                 length: float = None,
+                 period: float = None,
+                 force_cyclic: bool = True):
         super().__init__(scale, n_xy=n_xy, nz=nz, q=q,
                          width=width, length=length, period=period,
                          force_cyclic=force_cyclic)
@@ -432,36 +566,89 @@ class DiamondTwin(FCCTwin):
 
 
 class ZBTwinFaceted(FCCTwinFaceted):
-    def __init__(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None, force_cyclic=True):
+    """
+    Faceted twinning zincblende nanowire with axis along [111].
+    Each twin sister is a section of a non-primitive octahedral unit cell.
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 q: int = None,
+                 width: float = None,
+                 length: float = None,
+                 period: float = None,
+                 force_cyclic: bool = True):
         super().__init__(scale, n_xy, nz, q, width, length, period,
                          force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class DiamondTwinFaceted(FCCTwinFaceted):
-    def __init__(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None, force_cyclic=True):
+    """
+    Faceted twinning diamond nanowire with axis along [111].
+    Each twin sister is a section of a non-primitive octahedral unit cell.
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 q: int = None,
+                 width: float = None,
+                 length: float = None,
+                 period: float = None,
+                 force_cyclic: bool = True):
         super().__init__(scale, n_xy, nz, q, width, length, period,
                          force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
 
 
 class WZPristine0001(HexPristine0001):
-    def __init__(self, scale, n_xy=None, nz=None, width=None, length=None):
+    """
+    Pristine wurtzite nanowire with axis along [0001].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class ZBRandomWZ(FCCRandomHex):
-    def __init__(self, scale, wz_fraction,
-                 n_xy=None, nz=None, width=None, length=None):
+    """
+    Zincblende nanowire with a specific fraction of wurtzite planes
+    substituted in at random locations. Axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 wz_fraction: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, wz_fraction, n_xy, nz, width, length)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class DiamondRandomWZ(FCCRandomHex):
-    def __init__(self, scale, wz_fraction,
-                 n_xy=None, nz=None, width=None, length=None):
+    """
+    Diamond nanowire with a specific fraction of 'wurtzite-but-same-atom' planes
+    substituted in at random locations. Axis along [111].
+    """
+
+    def __init__(self,
+                 scale: float,
+                 wz_fraction: float,
+                 n_xy: int = None,
+                 nz: int = None,
+                 width: float = None,
+                 length: float = None):
         super().__init__(scale, wz_fraction, n_xy, nz, width, length)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
