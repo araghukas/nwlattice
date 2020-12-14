@@ -19,8 +19,7 @@ class NanowireObjectsTest(unittest.TestCase):
         'period': 50.0,
         'length': 250.0,
         'force_cyclic': True,
-        'hex_fraction': 0.5,
-        'wz_fraction': 0.5
+        'fraction': 0.5,
     }
 
     def setUp(self) -> None:
@@ -135,11 +134,6 @@ class InitAnnotationsCompleteTest(NanowireObjectsTest):
                 self.assertEqual(act, exp, msg=msg)
 
 
-@unittest.skip("not implemented yet")
-class MethodAnnotationsCompleteTest(NanowireObjectsTest):
-    pass
-
-
 class ClassDocstringsNonEmptyTest(NanowireObjectsTest):
     def test_nonempty_class_docstrings(self):
         for t in self.all_nw_types:
@@ -194,6 +188,11 @@ class ForceCyclicTest(NanowireObjectsTest):
             else:
                 self.assertEqual(wire.size.nz % n_unit, 0,
                                  msg=msg.format(t))
+
+
+@unittest.skip("no need to do this yet")
+class MapAndDataAgreementTest(NanowireObjectsTest):
+    pass
 
 
 if __name__ == "__main__":

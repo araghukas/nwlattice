@@ -380,7 +380,7 @@ class HexPristine0001(base.ANanowireLattice):
         return size
 
 
-class FCCRandomHex(base.ANanowireLattice):
+class FCCRandomHex(base.ANanowireLatticeRandom):
     """
     Face-centered cubic nanowire with a specific fraction of hexagonal planes
     substituted in at random locations. Axis along [111].
@@ -388,7 +388,7 @@ class FCCRandomHex(base.ANanowireLattice):
 
     def __init__(self,
                  scale: float,
-                 hex_fraction: float,
+                 fraction: float,
                  n_xy: int = None,
                  nz: int = None,
                  width: float = None,
@@ -408,7 +408,7 @@ class FCCRandomHex(base.ANanowireLattice):
         planes = []
         vr = np.zeros((size.nz, 3))
         unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
-        plane_index = self.get_plane_index(size.nz, hex_fraction)
+        plane_index = self.get_plane_index(size.nz, fraction)
         j = 0
         for i in range(size.nz):
             if i in plane_index:
@@ -418,12 +418,13 @@ class FCCRandomHex(base.ANanowireLattice):
             j += 1
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
+        self._fraction = fraction
 
     @classmethod
-    def get_supercell(cls, scale, wz_fraction,
+    def get_supercell(cls, scale, fraction,
                       n_xy=None, nz=None, width=None, length=None):
         # can not guarantee unit smaller than `self` in random lattice
-        return cls(scale, wz_fraction, n_xy, nz, width, length)
+        return cls(scale, fraction, n_xy, nz, width, length)
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
@@ -631,12 +632,12 @@ class ZBRandomWZ(FCCRandomHex):
 
     def __init__(self,
                  scale: float,
-                 wz_fraction: float,
+                 fraction: float,
                  n_xy: int = None,
                  nz: int = None,
                  width: float = None,
                  length: float = None):
-        super().__init__(scale, wz_fraction, n_xy, nz, width, length)
+        super().__init__(scale, fraction, n_xy, nz, width, length)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -648,10 +649,10 @@ class DiamondRandomWZ(FCCRandomHex):
 
     def __init__(self,
                  scale: float,
-                 wz_fraction: float,
+                 fraction: float,
                  n_xy: int = None,
                  nz: int = None,
                  width: float = None,
                  length: float = None):
-        super().__init__(scale, wz_fraction, n_xy, nz, width, length)
+        super().__init__(scale, fraction, n_xy, nz, width, length)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
