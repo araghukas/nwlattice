@@ -12,8 +12,7 @@ def toggle_printing(b: bool):
 
 
 class Quaternion(object):
-    """ a basic quaternion object """
-
+    """a basic quaternion object"""
     def __init__(self, a, b, c, d):
         self._q = np.array([a, b, c, d], dtype=np.double)
         self._isZeroQuaternion = np.all(self._q == 0)
