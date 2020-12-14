@@ -268,6 +268,23 @@ class ANanowireLattice(IDataWriter):
         """returns number of planes from continuous length"""
         return int(length / scale / unit_dz)
 
+    @staticmethod
+    def get_cyclic_nz(nz, k, nearest=True):
+        """
+        returns int(s) `nlo` or(and) `nhi` multiple(s) of `k` nearest to `nz`
+        """
+        nlo = (nz // k) * k
+        nhi = ((nz + k) // k) * k
+        if nearest:
+            if nlo == 0:
+                return nhi
+            elif (nz - nlo) < (nhi - nz):
+                return nlo
+            else:
+                return nhi
+        else:
+            return nlo, nhi
+
     @property
     def basis(self):
         return self._basis
@@ -534,11 +551,6 @@ class ANanowireLatticePeriodic(ANanowireLattice):
     @staticmethod
     @abstractmethod
     def get_period(scale: float, p: int) -> float:
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def get_cyclic_nz(nz: int, k: int, nearest=True):
         raise NotImplementedError
 
     @property
