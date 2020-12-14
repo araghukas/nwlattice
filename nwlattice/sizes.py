@@ -115,6 +115,17 @@ class NanowireSize(PlaneSize):
         self._nz = nz
 
 
+class NanowireSizeRandom(NanowireSize):
+    def __init__(self, scale, unit_dz, fraction, n_xy=None, nz=None,
+                 width=None, length=None):
+        super().__init__(scale, unit_dz, n_xy, nz, width, length)
+        self._fraction = fraction
+
+    @property
+    def fraction(self):
+        return self._fraction
+
+
 class NanowireSizePeriodic(NanowireSize):
     """
     A size information handler for periodic nanowire lattices

@@ -559,28 +559,3 @@ class ANanowireLatticePeriodic(ANanowireLattice):
             q = self.size.q
             self._supercell = self.get_supercell(scale, n_xy, q)
         return self._supercell
-
-
-class ANanowireLatticeRandom(ANanowireLattice):
-    def __init__(self, size_obj, planes, vr):
-        super().__init__(size_obj, planes, vr)
-        self._fraction = None
-
-    @classmethod
-    @abstractmethod
-    def get_supercell(cls, *args):
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def get_n_xy(scale: float, width: float) -> int:
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def get_width(scale: float, n_xy) -> float:
-        raise NotImplementedError
-
-    @property
-    def fraction(self):
-        return self._fraction

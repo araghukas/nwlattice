@@ -1,5 +1,5 @@
 from nwlattice import base
-from nwlattice.sizes import NanowireSize, NanowireSizePeriodic
+from nwlattice import sizes
 from nwlattice.utilities import ROOT2, ROOT3, ROOT6
 from nwlattice.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
 
@@ -58,7 +58,7 @@ class FCCPristine111(base.ANanowireLattice):
         return FCCb.get_width(scale, n_xy)
 
     def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
-        size = NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
+        size = sizes.NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -114,7 +114,7 @@ class FCCPristine100(base.ANanowireLattice):
         return SqFCCa.get_width(scale, n_xy)
 
     def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
-        size = NanowireSize(scale, 0.5, n_xy, nz, width, length)
+        size = sizes.NanowireSize(scale, 0.5, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -204,7 +204,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
     def get_size(self, scale, n_xy=None, nz=None, q=None,
                  width=None, length=None, period=None):
-        size = NanowireSizePeriodic(
+        size = sizes.NanowireSizePeriodic(
             scale, 1 / ROOT3, n_xy, nz, q, width, length, period)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
@@ -305,7 +305,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
     def get_size(self, scale, n_xy=None, nz=None, q=None,
                  width=None, length=None, period=None):
-        size = NanowireSizePeriodic(
+        size = sizes.NanowireSizePeriodic(
             scale, 1 / ROOT3, n_xy, nz, q, width, length, period)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
@@ -366,7 +366,7 @@ class HexPristine0001(base.ANanowireLattice):
         return FCCb.get_width(scale, n_xy)
 
     def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
-        size = NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
+        size = sizes.NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -375,7 +375,7 @@ class HexPristine0001(base.ANanowireLattice):
         return size
 
 
-class FCCRandomHex(base.ANanowireLatticeRandom):
+class FCCRandomHex(base.ANanowireLattice):
     """
     Face-centered cubic nanowire with a specific fraction of hexagonal planes
     substituted in at random locations. Axis along [111].
@@ -389,7 +389,7 @@ class FCCRandomHex(base.ANanowireLatticeRandom):
                  width: float = None,
                  length: float = None):
 
-        size = self.get_size(scale, n_xy, nz, width, length)
+        size = self.get_size(scale, fraction, n_xy, nz, width, length)
         base_planes = [
             FCCa(1 / ROOT2, size.n_xy - 1),
             FCCb(1 / ROOT2, size.n_xy),
@@ -410,7 +410,6 @@ class FCCRandomHex(base.ANanowireLatticeRandom):
             j += 1
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
-        self._fraction = fraction
 
     @classmethod
     def get_supercell(cls, scale, fraction,
@@ -448,8 +447,10 @@ class FCCRandomHex(base.ANanowireLatticeRandom):
         # can not guarantee unit smaller than `self` in random lattice
         return self
 
-    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
-        size = NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
+    def get_size(self, scale, fraction, n_xy=None, nz=None,
+                 width=None, length=None):
+        size = sizes.NanowireSizeRandom(scale, 1 / ROOT3, fraction, n_xy, nz,
+                                        width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
