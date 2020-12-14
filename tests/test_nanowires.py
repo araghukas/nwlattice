@@ -2,6 +2,9 @@ import unittest
 import inspect
 from nwlattice import base, nw
 
+# from nwlattice import utilities
+# utilities.toggle_printing(True)
+
 
 class NanowireObjectsTest(unittest.TestCase):
     """convenient base class for every other test in this module"""
@@ -14,9 +17,9 @@ class NanowireObjectsTest(unittest.TestCase):
             'n_xy': None,
             'nz': None,
             'q': None,
-            'width': 50.0,
-            'period': 25.0,
-            'length': 100.0,
+            'width': 100.0,
+            'period': 50.0,
+            'length': 250.0,
             'force_cyclic': True,
             'hex_fraction': 0.5,
             'wz_fraction': 0.5
@@ -41,6 +44,39 @@ class NanowireObjectsTest(unittest.TestCase):
         return {
             obj: inspect.getfullargspec(obj) for obj in obj_list
         }
+
+    def get_default_wire(self, t):
+        t_args = self.argspecs[t].args[1:]
+        kwargs = {k: self.default_kwargs[k] for k in t_args}
+        return t(**kwargs)
+
+
+class OutputFilesTest(NanowireObjectsTest):
+    data_blank = "./outputs/{}.data"
+    map_blank = "./outputs/{}.map"
+
+    # TODO: write test to compare map file types against data types
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.data_files = {}
+        self.map_files = {}
+
+    def test_write_output_files(self):
+        for t in self.all_nw_types:
+            wire = self.get_default_wire(t)
+            tn = wire.type_name
+            wire.write_points(self.data_blank.format(tn))
+            wire.write_map(self.map_blank.format(tn))
+
+        # TODO: DiamondPristine111 ends up with width ~50
+        # TODO: DiamondRandomWZ width ~69
+        # TODO: DiamondTwin width ~69
+        # TODO: DiamondTwinFaceted width ~69
+        # TODO: FCCPristine111 width ~50
+        # TODO: FCCRandomHex width ~ 69
+        # TODO: FCCTwin width ~ 69
+        # TODO: THEY'RE ALL OUT OF WHACK EXCEPT THE '100' ONES
 
 
 class AnnotationsCompleteTest(NanowireObjectsTest):
@@ -124,10 +160,7 @@ class ForceCyclicTest(NanowireObjectsTest):
     def test_planes_length_is_unit_nz_multiple(self):
         msg = "wire type {} does not enforce correct periodicity"
         for t in self.all_nw_types:
-            t_args = self.argspecs[t].args[1:]
-            kwargs = {k: self.default_kwargs[k] for k in t_args}
-            wire = t(**kwargs)
-
+            wire = self.get_default_wire(t)
             n_unit = self.nz_unit_values[t]
             if n_unit is None:
                 print("SKIP: can't force periodicity for nw type {}"
