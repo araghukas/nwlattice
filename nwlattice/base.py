@@ -148,7 +148,7 @@ class APointPlane(IDataWriter):
             file_.write("\n")
             id_ = 1
             for pt in self.points:
-                file_.write("{} {:d} {} {} {} 0 0 0\n"
+                file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
                             .format(id_, 1, pt[0], pt[1], pt[2]))
                 id_ += 1
             t2 = time()
@@ -353,9 +353,9 @@ class ANanowireLattice(IDataWriter):
             xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims(wrap)
 
             # write simulation box
-            file_.write("{} {} xlo xhi\n".format(xlo, xhi))
-            file_.write("{} {} ylo yhi\n".format(ylo, yhi))
-            file_.write("{} {} zlo zhi\n".format(zlo, zhi))
+            file_.write("{:.6f} {:.6f} xlo xhi\n".format(xlo, xhi))
+            file_.write("{:.6f} {:.6f} ylo yhi\n".format(ylo, yhi))
+            file_.write("{:.6f} {:.6f} zlo zhi\n".format(zlo, zhi))
             file_.write("\n")
 
             # Atoms section
@@ -364,7 +364,7 @@ class ANanowireLattice(IDataWriter):
             id_ = 1
             for pt, typ in zip(atom_points, atom_types):
                 ptz = pt[2] % zhi if wrap else pt[2]
-                file_.write("{} {} {} {} {} 0 0 0\n"
+                file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
                             .format(id_, typ, pt[0], pt[1], ptz))
                 id_ += 1
             t2 = time()
@@ -435,7 +435,7 @@ class ANanowireLattice(IDataWriter):
         """
         n_supercell_planes = len(self.supercell.planes)
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        atom_pts = np.zeros((self.N * n_basis_atoms, 3))
+        atom_pts = np.zeros((self.N * n_basis_atoms, 3), dtype=float)
         n_ID = 0
         for i in range(self.size.nz):
             plane = self.supercell.planes[i % n_supercell_planes]

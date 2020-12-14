@@ -2,8 +2,8 @@ import unittest
 import inspect
 from nwlattice import base, nw
 
-from nwlattice import utilities
 
+# from nwlattice import utilities
 # utilities.toggle_printing(True)
 
 
@@ -78,12 +78,9 @@ class GetPointsTests(NanowireObjectsTest):
                   .format(wire.type_name, x_mean, y_mean))
 
 
-@unittest.skip("files writing OK right now")
 class OutputFilesTest(NanowireObjectsTest):
     data_blank = "./outputs/{}.data"
     map_blank = "./outputs/{}.map"
-
-    # TODO: write test to compare map file types against data types
 
     def setUp(self) -> None:
         super().setUp()
@@ -96,16 +93,7 @@ class OutputFilesTest(NanowireObjectsTest):
             tn = wire.type_name
             print(tn)
             wire.write_points(self.data_blank.format(tn))
-            # wire.write_map(self.map_blank.format(tn))
-
-        # TODO: DiamondPristine111 ends up with width ~50
-        # TODO: DiamondRandomWZ width ~69
-        # TODO: DiamondTwin width ~69
-        # TODO: DiamondTwinFaceted width ~69
-        # TODO: FCCPristine111 width ~50
-        # TODO: FCCRandomHex width ~ 69
-        # TODO: FCCTwin width ~ 69
-        # TODO: THEY'RE ALL OUT OF WHACK EXCEPT THE '100' ONES
+            wire.write_map(self.map_blank.format(tn))
 
 
 class InitAnnotationsCompleteTest(NanowireObjectsTest):
@@ -149,11 +137,7 @@ class InitAnnotationsCompleteTest(NanowireObjectsTest):
 
 @unittest.skip("not implemented yet")
 class MethodAnnotationsCompleteTest(NanowireObjectsTest):
-    def test_xy_COM_location(self):
-        for t in self.all_nw_types:
-            wire = self.get_default_wire(t)
-            points = wire.get_points()
-
+    pass
 
 
 class ClassDocstringsNonEmptyTest(NanowireObjectsTest):
