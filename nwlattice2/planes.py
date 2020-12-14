@@ -236,7 +236,7 @@ class TwFCC(base.APointPlane):
         size._width_func = self.get_width
         size._area_func = lambda s, n: self.get_area(s, n, m_xy)
         if not (0 <= m_xy < size.n_xy):
-            raise ValueError("index `m_xy = %d` is not compatible with "
+            raise ValueError("index `m_xy = %d` is not smaller than "
                              "`n_xy = %d`" % (m_xy, size.n_xy))
         self._m_xy = int(m_xy)
         vectors = self.get_vectors()
