@@ -1,7 +1,6 @@
 .DS_STORE
 __pycache__/
 .idea/
-*_tests*.py
-outputs*/
-_zb.py
-*.data
+
+_old/
+outputs/
