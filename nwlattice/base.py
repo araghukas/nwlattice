@@ -129,7 +129,7 @@ class APointPlane(IDataWriter):
         if file_path is None:
             file_path = "{}_structure.data".format(self.type_name)
 
-        N_atoms = self.N  # total number of atoms
+        N_atoms = self.N  # total number of atoms in plane
 
         t1 = time()
         file_path = expanduser(file_path)
@@ -431,9 +431,7 @@ class ANanowireLattice(IDataWriter):
 
     def get_points(self) -> np.ndarray:
         """
-        Return an array of all atom points of type `t`
-
-        :return: array of 3-points indicating all locations of type `t` atoms
+        Return an array of all atom points of  all types
         """
         n_supercell_planes = len(self.supercell.planes)
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
@@ -455,8 +453,6 @@ class ANanowireLattice(IDataWriter):
     def get_types(self) -> np.ndarray:
         """
         Return the integer type identifier for atoms identifier `ID`
-
-        :return: atom type
         """
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
         n_supercell_planes = len(self.supercell.planes)
