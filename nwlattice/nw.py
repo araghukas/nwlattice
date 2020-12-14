@@ -18,10 +18,8 @@ class FCCPristine111(base.ANanowireLattice):
                  width: float = None,
                  length: float = None,
                  force_cyclic: bool = True):
-        dz = 1 / ROOT3
-        size = self._assign_rules(
-            NanowireSize(scale, dz, n_xy, nz, width, length)
-        )
+
+        size = self.get_size(scale, n_xy, nz, width, length)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -59,7 +57,8 @@ class FCCPristine111(base.ANanowireLattice):
     def get_width(scale: float, n_xy: int) -> float:
         return FCCb.get_width(scale, n_xy)
 
-    def _assign_rules(self, size):
+    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+        size = NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -80,10 +79,8 @@ class FCCPristine100(base.ANanowireLattice):
                  width: float = None,
                  length: float = None,
                  force_cyclic: bool = True):
-        dz = 0.5
-        size = self._assign_rules(
-            NanowireSize(scale, dz, n_xy, nz, width, length)
-        )
+
+        size = self.get_size(scale, n_xy, nz, width, length)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -116,7 +113,8 @@ class FCCPristine100(base.ANanowireLattice):
     def get_width(scale: float, n_xy) -> float:
         return SqFCCa.get_width(scale, n_xy)
 
-    def _assign_rules(self, size):
+    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+        size = NanowireSize(scale, 0.5, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -140,10 +138,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
                  length: float = None,
                  period: float = None,
                  force_cyclic: bool = True):
-        dz = 1 / ROOT3
-        size = self._assign_rules(
-            NanowireSizePeriodic(scale, dz, n_xy, nz, q, width, length, period)
-        )
+        size = self.get_size(scale, n_xy, nz, q, width, length, period)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -207,7 +202,10 @@ class FCCTwin(base.ANanowireLatticePeriodic):
                 index.append(i)
         return set(index)
 
-    def _assign_rules(self, size):
+    def get_size(self, scale, n_xy=None, nz=None, q=None,
+                 width=None, length=None, period=None):
+        size = NanowireSizePeriodic(
+            scale, 1 / ROOT3, n_xy, nz, q, width, length, period)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -234,16 +232,12 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
                  period: float = None,
                  force_cyclic: bool = True):
 
-        dz = 1 / ROOT3
-        size = self._assign_rules(
-            NanowireSizePeriodic(scale, dz, n_xy, nz, q, width, length, period)
-        )
-
+        size = self.get_size(scale, n_xy, nz, q, width, length, period)
         if size.q >= size.n_xy:
             raise ValueError(
                 "period {:.2f} (q = {:d}) is too large for width "
-                "{:.2f} (n_xy = {:d})"
-                .format(size.period, size.q, size.width, size.n_xy)
+                "{:.2f} (n_xy = {:d})".format(size.period, size.q, size.width,
+                                              size.n_xy)
             )
 
         if force_cyclic:
@@ -309,7 +303,10 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
             count += 1
         return m_cycle
 
-    def _assign_rules(self, size):
+    def get_size(self, scale, n_xy=None, nz=None, q=None,
+                 width=None, length=None, period=None):
+        size = NanowireSizePeriodic(
+            scale, 1 / ROOT3, n_xy, nz, q, width, length, period)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -332,10 +329,7 @@ class HexPristine0001(base.ANanowireLattice):
                  width: float = None,
                  length: float = None,
                  force_cyclic: bool = True):
-        dz = 1 / ROOT3
-        size = self._assign_rules(
-            NanowireSize(scale, dz, n_xy, nz, width, length)
-        )
+        size = self.get_size(scale, n_xy, nz, width, length)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -371,7 +365,8 @@ class HexPristine0001(base.ANanowireLattice):
     def get_width(scale: float, n_xy: int) -> float:
         return FCCb.get_width(scale, n_xy)
 
-    def _assign_rules(self, size):
+    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+        size = NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width
@@ -394,10 +389,7 @@ class FCCRandomHex(base.ANanowireLatticeRandom):
                  width: float = None,
                  length: float = None):
 
-        dz = 1 / ROOT3
-        size = self._assign_rules(
-            NanowireSize(scale, dz, n_xy, nz, width, length)
-        )
+        size = self.get_size(scale, n_xy, nz, width, length)
         base_planes = [
             FCCa(1 / ROOT2, size.n_xy - 1),
             FCCb(1 / ROOT2, size.n_xy),
@@ -456,7 +448,8 @@ class FCCRandomHex(base.ANanowireLatticeRandom):
         # can not guarantee unit smaller than `self` in random lattice
         return self
 
-    def _assign_rules(self, size):
+    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+        size = NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
         size._width_func = self.get_width

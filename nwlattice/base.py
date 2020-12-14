@@ -254,10 +254,6 @@ class ANanowireLattice(IDataWriter):
         """returns continuous width from integer lattice width"""
         raise NotImplementedError
 
-    @abstractmethod
-    def _assign_rules(self, size):
-        raise NotImplementedError
-
     @staticmethod
     def get_length(scale: float, nz, unit_dz) -> float:
         """returns continuous length from number of planes"""
@@ -284,6 +280,10 @@ class ANanowireLattice(IDataWriter):
                 return nhi
         else:
             return nlo, nhi
+
+    @abstractmethod
+    def get_size(self, *args):
+        raise NotImplementedError
 
     @property
     def basis(self):

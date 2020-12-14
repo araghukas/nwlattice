@@ -108,8 +108,7 @@ class InitAnnotationsCompleteTest(NanowireObjectsTest):
             'length': float,
             'period': float,
             'theta': float,
-            'wz_fraction': float,
-            'hex_fraction': float,
+            'fraction': float,
             'force_cyclic': bool
         }
 
