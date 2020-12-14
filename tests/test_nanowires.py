@@ -5,9 +5,22 @@ from nwlattice2 import base, nw
 
 class NanowireObjectsTest(unittest.TestCase):
     """convenient base class for every other test in this module"""
+
     def setUp(self) -> None:
-        self.nw_types = self.get_all_nanowire_objects()
-        self.argspecs = self.get_argspecs(self.nw_types)
+        self.all_nw_types = self.get_all_nanowire_objects()
+        self.argspecs = self.get_argspecs(self.all_nw_types)
+        self.default_kwargs = {
+            'scale': 5.65,
+            'n_xy': None,
+            'nz': None,
+            'q': None,
+            'width': 50.0,
+            'period': 25.0,
+            'length': 100.0,
+            'force_cyclic': True,
+            'hex_fraction': 0.5,
+            'wz_fraction': 0.5
+        }
 
     @staticmethod
     def get_all_nanowire_objects():
@@ -44,11 +57,12 @@ class AnnotationsCompleteTest(NanowireObjectsTest):
             'period': float,
             'theta': float,
             'wz_fraction': float,
+            'hex_fraction': float,
             'force_cyclic': bool
         }
 
     def test_initializers_completely_annotated(self):
-        for t in self.nw_types:
+        for t in self.all_nw_types:
             a = self.argspecs[t]
 
             # check every arg is annotated
@@ -66,6 +80,65 @@ class AnnotationsCompleteTest(NanowireObjectsTest):
                 msg = ("\nargument '{}' in {} is annotated as type {}; "
                        "should be {}".format(arg, t, act, exp))
                 self.assertEqual(act, exp, msg=msg)
+
+
+class ClassDocstringsNonEmptyTest(NanowireObjectsTest):
+    def test_nonempty_class_docstrings(self):
+        for t in self.all_nw_types:
+            self.assertIsNotNone(t.__doc__,
+                                 msg="\nclass {} has an empty docstring"
+                                 .format(t))
+            # print("{}: {}".format(t, t.__doc__))
+
+
+class ForceCyclicTest(NanowireObjectsTest):
+    def setUp(self) -> None:
+        super().setUp()
+        self.nz_unit_values = {
+            nw.FCCPristine111: 3,
+            nw.FCCPristine100: 2,
+            nw.FCCTwin: -1,
+            nw.FCCTwinFaceted: -1,
+            nw.HexPristine0001: 2,
+            nw.FCCRandomHex: None,
+            nw.ZBPristine111: 3,
+            nw.DiamondPristine111: 3,
+            nw.ZBPristine100: 2,
+            nw.DiamondPristine100: 2,
+            nw.ZBTwin: -1,
+            nw.DiamondTwin: -1,
+            nw.ZBTwinFaceted: -1,
+            nw.DiamondTwinFaceted: -1,
+            nw.WZPristine0001: 2,
+            nw.ZBRandomWZ: None,
+            nw.DiamondRandomWZ: None
+        }
+
+        # check every type has a rule defined above
+        s1 = set(self.nz_unit_values.keys())
+        s2 = set(self.all_nw_types)
+        self.assertSetEqual(s1, s2,
+                            msg="no min_z_value for nw type(s) {}"
+                            .format(s2 - s1))
+
+    def test_planes_length_is_unit_nz_multiple(self):
+        msg = "wire type {} does not enforce correct periodicity"
+        for t in self.all_nw_types:
+            t_args = self.argspecs[t].args[1:]
+            kwargs = {k: self.default_kwargs[k] for k in t_args}
+            wire = t(**kwargs)
+
+            n_unit = self.nz_unit_values[t]
+            if n_unit is None:
+                print("SKIP: can't force periodicity for nw type {}"
+                      .format(t))
+            elif n_unit < 0:
+                n_unit = 2 * wire.size.q
+                self.assertEqual(wire.size.nz % n_unit, 0,
+                                 msg=msg.format(t))
+            else:
+                self.assertEqual(wire.size.nz % n_unit, 0,
+                                 msg=msg.format(t))
 
 
 if __name__ == "__main__":
