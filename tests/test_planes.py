@@ -2,7 +2,7 @@ import unittest
 import inspect
 import os
 from random import randint, uniform
-from nwlattice2 import planes, base
+from nwlattice import planes, base
 
 
 class PlaneObjectsTest(unittest.TestCase):

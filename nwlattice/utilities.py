@@ -7,7 +7,7 @@ ROOT6 = 2.449489742783178
 
 
 def toggle_printing(b: bool):
-    from nwlattice2.base import IDataWriter
+    from nwlattice.base import IDataWriter
     IDataWriter.WILL_PRINT = bool(b)
 
 

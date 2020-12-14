@@ -1,6 +1,6 @@
 import unittest
 import inspect
-from nwlattice2 import base, nw
+from nwlattice import base, nw
 
 
 class NanowireObjectsTest(unittest.TestCase):

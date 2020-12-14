@@ -3,7 +3,7 @@ from os.path import expanduser
 from time import time
 import numpy as np
 
-from nwlattice2.utilities import Quaternion as Qtr
+from nwlattice.utilities import Quaternion as Qtr
 
 
 class IDataWriter(ABC):

@@ -1,7 +1,7 @@
-from nwlattice2 import base
-from nwlattice2.sizes import NanowireSize, NanowireSizePeriodic
-from nwlattice2.utilities import ROOT2, ROOT3, ROOT6
-from nwlattice2.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
+from nwlattice import base
+from nwlattice.sizes import NanowireSize, NanowireSizePeriodic
+from nwlattice.utilities import ROOT2, ROOT3, ROOT6
+from nwlattice.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
 
 import numpy as np
 

@@ -1,8 +1,8 @@
 import numpy as np
 
-from nwlattice2.utilities import ROOT3
-from nwlattice2.sizes import PlaneSize
-import nwlattice2.base as base
+from nwlattice.utilities import ROOT3
+from nwlattice.sizes import PlaneSize
+import nwlattice.base as base
 
 
 class FCCa(base.APointPlane):
