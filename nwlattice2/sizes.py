@@ -111,6 +111,9 @@ class NanowireSize(PlaneSize):
     def length(self):
         return self._length_func(self.scale, self.nz, self.unit_dz)
 
+    def fix_nz(self, nz):
+        self._nz = nz
+
 
 class NanowireSizePeriodic(NanowireSize):
     """
@@ -138,9 +141,6 @@ class NanowireSizePeriodic(NanowireSize):
     @property
     def period(self):
         return self._period_func(self.scale, self.q)
-
-    def fix_nz(self, nz):
-        self._nz = nz
 
 
 if __name__ == "__main__":
