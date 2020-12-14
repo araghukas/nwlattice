@@ -53,11 +53,11 @@ class FCCPristine111(base.ANanowireLattice):
 
     @staticmethod
     def get_n_xy(scale, width):
-        return FCCb.get_n_xy(scale, width / ROOT2)
+        return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
     def get_width(scale, n_xy):
-        return FCCb.get_width(scale, n_xy) / ROOT2
+        return FCCb.get_width(scale, n_xy)
 
     def _assign_rules(self, size):
         size._n_xy_func = self.get_n_xy
@@ -172,6 +172,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
             vr[i] += (j % 3) * unit_vr
             j += 1
         super().__init__(size, planes, vr)
+        self._v_center_com = -unit_vr
 
     @classmethod
     def get_supercell(cls, scale, n_xy=None, q=None, width=None, period=None):
@@ -181,7 +182,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
-        return FCCb.get_n_xy(scale, width)
+        return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
@@ -269,7 +270,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
-        return FCCb.get_n_xy(scale, width)
+        return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
@@ -364,7 +365,7 @@ class HexPristine0001(base.ANanowireLattice):
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
-        return FCCb.get_n_xy(scale, width)
+        return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
@@ -426,7 +427,7 @@ class FCCRandomHex(base.ANanowireLattice):
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
-        return FCCb.get_n_xy(scale, width)
+        return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
@@ -508,6 +509,7 @@ class ZBPristine100(FCCPristine100):
                  length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(2, [0.25, 0.25, 0.25])
+        self._v_center_com = -0.125 * np.ones(3)
 
 
 class DiamondPristine100(FCCPristine100):
@@ -522,6 +524,7 @@ class DiamondPristine100(FCCPristine100):
                  length: float = None):
         super().__init__(scale, n_xy, nz, width, length)
         self.add_basis(1, [0.25, 0.25, 0.25])
+        self._v_center_com = -0.125 * np.ones(3)
 
 
 class ZBTwin(FCCTwin):

@@ -2,28 +2,30 @@ import unittest
 import inspect
 from nwlattice import base, nw
 
-# from nwlattice import utilities
+from nwlattice import utilities
+
 # utilities.toggle_printing(True)
 
 
 class NanowireObjectsTest(unittest.TestCase):
     """convenient base class for every other test in this module"""
 
+    DEFAULT_KWARGS = {
+        'scale': 5.65,
+        'n_xy': None,
+        'nz': None,
+        'q': None,
+        'width': 100.0,
+        'period': 50.0,
+        'length': 250.0,
+        'force_cyclic': True,
+        'hex_fraction': 0.5,
+        'wz_fraction': 0.5
+    }
+
     def setUp(self) -> None:
         self.all_nw_types = self.get_all_nanowire_objects()
         self.argspecs = self.get_argspecs(self.all_nw_types)
-        self.default_kwargs = {
-            'scale': 5.65,
-            'n_xy': None,
-            'nz': None,
-            'q': None,
-            'width': 100.0,
-            'period': 50.0,
-            'length': 250.0,
-            'force_cyclic': True,
-            'hex_fraction': 0.5,
-            'wz_fraction': 0.5
-        }
 
     @staticmethod
     def get_all_nanowire_objects():
@@ -47,10 +49,36 @@ class NanowireObjectsTest(unittest.TestCase):
 
     def get_default_wire(self, t):
         t_args = self.argspecs[t].args[1:]
-        kwargs = {k: self.default_kwargs[k] for k in t_args}
+        kwargs = {k: self.DEFAULT_KWARGS[k] for k in t_args}
         return t(**kwargs)
 
 
+class GetPointsTests(NanowireObjectsTest):
+    def test_xy_COM_location(self):
+        for t in self.all_nw_types:
+            wire = self.get_default_wire(t)
+            points = wire.get_points()
+            x_mean = 0.
+            y_mean = 0.
+            n_points = 0
+            for pt in points:
+                x_mean += pt[0]
+                y_mean += pt[1]
+                n_points += 1
+
+            x_mean /= n_points
+            y_mean /= n_points
+            self.assertAlmostEqual(x_mean, 0., delta=0.1, msg=(
+                "\n{} COM_x is offset".format(wire.type_name)
+            ))
+            self.assertAlmostEqual(y_mean, 0., delta=0.1, msg=(
+                "\n{} COM_y is offset".format(wire.type_name)
+            ))
+            print("wire type {} is COM_xy centered ({}, {})"
+                  .format(wire.type_name, x_mean, y_mean))
+
+
+@unittest.skip("files writing OK right now")
 class OutputFilesTest(NanowireObjectsTest):
     data_blank = "./outputs/{}.data"
     map_blank = "./outputs/{}.map"
@@ -66,8 +94,9 @@ class OutputFilesTest(NanowireObjectsTest):
         for t in self.all_nw_types:
             wire = self.get_default_wire(t)
             tn = wire.type_name
+            print(tn)
             wire.write_points(self.data_blank.format(tn))
-            wire.write_map(self.map_blank.format(tn))
+            # wire.write_map(self.map_blank.format(tn))
 
         # TODO: DiamondPristine111 ends up with width ~50
         # TODO: DiamondRandomWZ width ~69
@@ -79,7 +108,7 @@ class OutputFilesTest(NanowireObjectsTest):
         # TODO: THEY'RE ALL OUT OF WHACK EXCEPT THE '100' ONES
 
 
-class AnnotationsCompleteTest(NanowireObjectsTest):
+class InitAnnotationsCompleteTest(NanowireObjectsTest):
     def setUp(self) -> None:
         super().setUp()
         self.correct_annotations = {
@@ -116,6 +145,15 @@ class AnnotationsCompleteTest(NanowireObjectsTest):
                 msg = ("\nargument '{}' in {} is annotated as type {}; "
                        "should be {}".format(arg, t, act, exp))
                 self.assertEqual(act, exp, msg=msg)
+
+
+@unittest.skip("not implemented yet")
+class MethodAnnotationsCompleteTest(NanowireObjectsTest):
+    def test_xy_COM_location(self):
+        for t in self.all_nw_types:
+            wire = self.get_default_wire(t)
+            points = wire.get_points()
+
 
 
 class ClassDocstringsNonEmptyTest(NanowireObjectsTest):
