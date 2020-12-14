@@ -148,7 +148,7 @@ class APointPlane(IDataWriter):
             file_.write("\n")
             id_ = 1
             for pt in self.points:
-                file_.write("{} {} {} {} {} 0 0 0\n"
+                file_.write("{} {:d} {} {} {} 0 0 0\n"
                             .format(id_, 1, pt[0], pt[1], pt[2]))
                 id_ += 1
             t2 = time()
@@ -460,7 +460,7 @@ class ANanowireLattice(IDataWriter):
         """
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
         n_supercell_planes = len(self.supercell.planes)
-        types = np.zeros(self.N * n_basis_atoms)
+        types = np.zeros(self.N * n_basis_atoms, dtype=int)
         ID = 1
         for i in range(self.size.nz):
             plane = self.supercell.planes[i % n_supercell_planes]
