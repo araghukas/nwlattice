@@ -52,11 +52,11 @@ class FCCPristine111(base.ANanowireLattice):
         return cls(scale, n_xy=n_xy, width=width, nz=3)
 
     @staticmethod
-    def get_n_xy(scale, width):
+    def get_n_xy(scale: float, width: float) -> int:
         return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
-    def get_width(scale, n_xy):
+    def get_width(scale: float, n_xy: int) -> float:
         return FCCb.get_width(scale, n_xy)
 
     def _assign_rules(self, size):
@@ -368,7 +368,7 @@ class HexPristine0001(base.ANanowireLattice):
         return FCCb.get_n_xy(scale, width * ROOT2)
 
     @staticmethod
-    def get_width(scale: float, n_xy) -> float:
+    def get_width(scale: float, n_xy: int) -> float:
         return FCCb.get_width(scale, n_xy)
 
     def _assign_rules(self, size):
