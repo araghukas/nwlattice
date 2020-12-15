@@ -11,6 +11,23 @@ def toggle_printing(b: bool):
     IDataWriter.WILL_PRINT = bool(b)
 
 
+def get_all_nanowire_objects():
+    import inspect
+    import nwlattice.nw as nw
+    import nwlattice.base as base
+    obj_list = inspect.getmembers(nw)
+    nw_list = []
+    for o in obj_list:
+        if o[1] is base.ANanowireLattice:
+            continue
+        try:
+            if issubclass(o[1], base.ANanowireLattice):
+                nw_list.append(o[1])
+        except TypeError:
+            pass
+    return nw_list
+
+
 class Quaternion(object):
     """a basic quaternion object"""
     def __init__(self, a, b, c, d):
