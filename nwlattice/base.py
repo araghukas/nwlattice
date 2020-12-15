@@ -236,6 +236,18 @@ class ANanowireLattice(IDataWriter):
 
         self.print("\n".join(str(self.size).split("\n")[1:]))
 
+    def __str__(self):
+        s = "<{} nanowire: ".format(self.type_name)
+        s_args = []
+        for arg in ['scale', 'width', 'length', 'period', 'fraction']:
+            if hasattr(self.size, arg):
+                s_args.append("{:.2f}".format(self.size.__getattribute__(arg)))
+
+        s += "(" + ", ".join(s_args) + ") "
+        s += "[" + hex(id(self)) + "]"
+        s += ">"
+        return s
+
     @classmethod
     @abstractmethod
     def get_supercell(cls, *args, **kwargs):
