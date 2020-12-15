@@ -238,7 +238,7 @@ class ANanowireLattice(IDataWriter):
 
     @classmethod
     @abstractmethod
-    def get_supercell(cls, *args):
+    def get_supercell(cls, *args, **kwargs):
         # subclass-specific method
         raise NotImplementedError
 
@@ -321,7 +321,7 @@ class ANanowireLattice(IDataWriter):
         if self._supercell is self:
             scale = self.size.scale
             n_xy = self.size.n_xy
-            self._supercell = self.get_supercell(scale, n_xy)
+            self._supercell = self.get_supercell(scale, n_xy=n_xy)
         return self._supercell
 
     def write_points(self, file_path: str = None, wrap=True):
@@ -526,7 +526,7 @@ class ANanowireLattice(IDataWriter):
 class ANanowireLatticePeriodic(ANanowireLattice):
     @classmethod
     @abstractmethod
-    def get_supercell(cls, *args):
+    def get_supercell(cls, *args, **kwargs):
         raise NotImplementedError
 
     @staticmethod
@@ -557,5 +557,5 @@ class ANanowireLatticePeriodic(ANanowireLattice):
             scale = self.size.scale
             n_xy = self.size.n_xy
             q = self.size.q
-            self._supercell = self.get_supercell(scale, n_xy, q)
+            self._supercell = self.get_supercell(scale, n_xy=n_xy, q=q)
         return self._supercell

@@ -12,14 +12,14 @@ class NanowireObjectsTest(unittest.TestCase):
 
     DEFAULT_KWARGS = {
         'scale': 5.65,
+        'width': 100.0,
+        'length': 250.0,
+        'period': 50.0,
+        'fraction': 0.5,
         'n_xy': None,
         'nz': None,
         'q': None,
-        'width': 100.0,
-        'period': 50.0,
-        'length': 250.0,
         'force_cyclic': True,
-        'fraction': 0.5,
     }
 
     def setUp(self) -> None:
@@ -90,9 +90,9 @@ class OutputFilesTest(NanowireObjectsTest):
         for t in self.all_nw_types:
             wire = self.get_default_wire(t)
             tn = wire.type_name
-            print(tn)
             wire.write_points(self.data_blank.format(tn))
             wire.write_map(self.map_blank.format(tn))
+            print("write successful: {}".format(wire.type_name))
 
 
 class InitAnnotationsCompleteTest(NanowireObjectsTest):

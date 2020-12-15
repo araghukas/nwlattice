@@ -11,15 +11,10 @@ class FCCPristine111(base.ANanowireLattice):
     Pristine face-centered cubic nanowire with axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None,
-                 force_cyclic: bool = True):
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
 
-        size = self.get_size(scale, n_xy, nz, width, length)
+        size = self.get_size(scale, width, length, n_xy, nz)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -46,8 +41,8 @@ class FCCPristine111(base.ANanowireLattice):
         self._v_center_com = -unit_vr
 
     @classmethod
-    def get_supercell(cls, scale, n_xy=None, width=None):
-        return cls(scale, n_xy=n_xy, width=width, nz=3)
+    def get_supercell(cls, scale, width=None, n_xy=None):
+        return cls(scale, width=width, n_xy=n_xy, nz=3)
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
@@ -57,7 +52,7 @@ class FCCPristine111(base.ANanowireLattice):
     def get_width(scale: float, n_xy: int) -> float:
         return FCCb.get_width(scale, n_xy)
 
-    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+    def get_size(self, scale, width=None, length=None, n_xy=None, nz=None):
         size = sizes.NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
@@ -72,15 +67,10 @@ class FCCPristine100(base.ANanowireLattice):
     Pristine face-centered cubic nanowire with axis along [100].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None,
-                 force_cyclic: bool = True):
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
 
-        size = self.get_size(scale, n_xy, nz, width, length)
+        size = self.get_size(scale, width, length, n_xy, nz)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -102,8 +92,8 @@ class FCCPristine100(base.ANanowireLattice):
         super().__init__(size, planes, vr)
 
     @classmethod
-    def get_supercell(cls, scale, n_xy=None, width=None):
-        return cls(scale, n_xy=n_xy, width=width, nz=2)
+    def get_supercell(cls, scale, width=None, n_xy=None):
+        return cls(scale, width=width, n_xy=n_xy, nz=2)
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
@@ -113,7 +103,7 @@ class FCCPristine100(base.ANanowireLattice):
     def get_width(scale: float, n_xy) -> float:
         return SqFCCa.get_width(scale, n_xy)
 
-    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+    def get_size(self, scale, width=None, length=None, n_xy=None, nz=None):
         size = sizes.NanowireSize(scale, 0.5, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
@@ -129,16 +119,10 @@ class FCCTwin(base.ANanowireLatticePeriodic):
     along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 q: int = None,
-                 width: float = None,
-                 length: float = None,
-                 period: float = None,
-                 force_cyclic: bool = True):
-        size = self.get_size(scale, n_xy, nz, q, width, length, period)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 period: float = None, n_xy: int = None, nz: int = None,
+                 q: int = None, force_cyclic: bool = True):
+        size = self.get_size(scale, width, length, period, n_xy, nz, q)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -170,9 +154,9 @@ class FCCTwin(base.ANanowireLatticePeriodic):
         self._v_center_com = -unit_vr
 
     @classmethod
-    def get_supercell(cls, scale, n_xy=None, q=None, width=None, period=None):
+    def get_supercell(cls, scale, width=None, period=None, n_xy=None, q=None):
         nz = cls.get_cyclic_nz(0, 2 * q)
-        return cls(scale, n_xy=n_xy, q=q, width=width, period=period, nz=nz,
+        return cls(scale, width=width, period=period, n_xy=n_xy, nz=nz, q=q,
                    force_cyclic=False)  # already cyclic by definition
 
     @staticmethod
@@ -202,8 +186,8 @@ class FCCTwin(base.ANanowireLatticePeriodic):
                 index.append(i)
         return set(index)
 
-    def get_size(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None):
+    def get_size(self, scale, width=None, length=None, period=None,
+                 n_xy=None, nz=None, q=None):
         size = sizes.NanowireSizePeriodic(
             scale, 1 / ROOT3, n_xy, nz, q, width, length, period)
         size._n_xy_func = self.get_n_xy
@@ -222,17 +206,11 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
     Each twin sister is a section of a non-primitive octahedral unit cell.
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 q: int = None,
-                 width: float = None,
-                 length: float = None,
-                 period: float = None,
-                 force_cyclic: bool = True):
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 period: float = None, n_xy: int = None, nz: int = None,
+                 q: int = None, force_cyclic: bool = True):
 
-        size = self.get_size(scale, n_xy, nz, q, width, length, period)
+        size = self.get_size(scale, width, length, period, n_xy, nz, q)
         if size.q >= size.n_xy:
             raise ValueError(
                 "period {:.2f} (q = {:d}) is too large for width "
@@ -257,9 +235,9 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         super().__init__(size, planes, vr)
 
     @classmethod
-    def get_supercell(cls, scale, n_xy=None, q=None, width=None, period=None):
+    def get_supercell(cls, scale, width=None, period=None, n_xy=None, q=None):
         nz = cls.get_cyclic_nz(0, 2 * q)
-        return cls(scale, n_xy=n_xy, q=q, width=width, period=period, nz=nz,
+        return cls(scale, width=width, period=period, n_xy=n_xy, nz=nz, q=q,
                    force_cyclic=False)  # already cyclic by definition
 
     @staticmethod
@@ -303,8 +281,8 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
             count += 1
         return m_cycle
 
-    def get_size(self, scale, n_xy=None, nz=None, q=None,
-                 width=None, length=None, period=None):
+    def get_size(self, scale, width=None, length=None, period=None,
+                 n_xy=None, nz=None, q=None):
         size = sizes.NanowireSizePeriodic(
             scale, 1 / ROOT3, n_xy, nz, q, width, length, period)
         size._n_xy_func = self.get_n_xy
@@ -322,14 +300,9 @@ class HexPristine0001(base.ANanowireLattice):
     Pristine hexagonal nanowire with axis along [0001].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None,
-                 force_cyclic: bool = True):
-        size = self.get_size(scale, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        size = self.get_size(scale, width, length, n_xy, nz)
         if force_cyclic:
             old_nz = size.nz
             old_length = size.length
@@ -354,8 +327,8 @@ class HexPristine0001(base.ANanowireLattice):
         self._v_center_com = -unit_vr
 
     @classmethod
-    def get_supercell(cls, scale, n_xy=None, width=None):
-        return cls(scale, n_xy=n_xy, width=width, nz=2)
+    def get_supercell(cls, scale, width=None, n_xy=None):
+        return cls(scale, width=width, n_xy=n_xy, nz=2)
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
@@ -365,7 +338,7 @@ class HexPristine0001(base.ANanowireLattice):
     def get_width(scale: float, n_xy: int) -> float:
         return FCCb.get_width(scale, n_xy)
 
-    def get_size(self, scale, n_xy=None, nz=None, width=None, length=None):
+    def get_size(self, scale, width=None, length=None, n_xy=None, nz=None):
         size = sizes.NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
         size._n_xy_func = self.get_n_xy
         size._nz_func = self.get_nz
@@ -381,15 +354,10 @@ class FCCRandomHex(base.ANanowireLattice):
     substituted in at random locations. Axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 fraction: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 fraction: float = 0.5, n_xy: int = None, nz: int = None):
 
-        size = self.get_size(scale, fraction, n_xy, nz, width, length)
+        size = self.get_size(scale, width, length, fraction, n_xy, nz)
         base_planes = [
             FCCa(1 / ROOT2, size.n_xy - 1),
             FCCb(1 / ROOT2, size.n_xy),
@@ -412,10 +380,10 @@ class FCCRandomHex(base.ANanowireLattice):
         self._v_center_com = -unit_vr
 
     @classmethod
-    def get_supercell(cls, scale, fraction,
-                      n_xy=None, nz=None, width=None, length=None):
+    def get_supercell(cls, scale, width=None, length=None, fraction=0.5,
+                      n_xy=None, nz=None):
         # can not guarantee unit smaller than `self` in random lattice
-        return cls(scale, fraction, n_xy, nz, width, length)
+        return cls(scale, width, length, fraction, n_xy, nz)
 
     @staticmethod
     def get_n_xy(scale: float, width: float) -> int:
@@ -447,8 +415,8 @@ class FCCRandomHex(base.ANanowireLattice):
         # can not guarantee unit smaller than `self` in random lattice
         return self
 
-    def get_size(self, scale, fraction, n_xy=None, nz=None,
-                 width=None, length=None):
+    def get_size(self, scale, width=None, length=None, fraction=0.5,
+                 n_xy=None, nz=None):
         size = sizes.NanowireSizeRandom(scale, 1 / ROOT3, fraction, n_xy, nz,
                                         width, length)
         size._n_xy_func = self.get_n_xy
@@ -466,13 +434,9 @@ class ZBPristine111(FCCPristine111):
     Pristine zincblende nanowire with axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, n_xy, nz)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -481,13 +445,9 @@ class DiamondPristine111(FCCPristine111):
     Pristine diamond nanowire with axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, n_xy, nz)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -496,13 +456,9 @@ class ZBPristine100(FCCPristine100):
     Pristine zincblende nanowire with axis along [100].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, n_xy, nz)
         self.add_basis(2, [0.25, 0.25, 0.25])
         self._v_center_com = -0.125 * np.ones(3)
 
@@ -512,12 +468,9 @@ class DiamondPristine100(FCCPristine100):
     Pristine diamond nanowire with axis along [100].
     """
 
-    def __init__(self, scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, n_xy, nz)
         self.add_basis(1, [0.25, 0.25, 0.25])
         self._v_center_com = -0.125 * np.ones(3)
 
@@ -528,18 +481,11 @@ class ZBTwin(FCCTwin):
     [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 q: int = None,
-                 width: float = None,
-                 length: float = None,
-                 period: float = None,
-                 force_cyclic: bool = True):
-        super().__init__(scale, n_xy=n_xy, nz=nz, q=q,
-                         width=width, length=length, period=period,
-                         force_cyclic=force_cyclic)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 period: float = None, n_xy: int = None, nz: int = None,
+                 q: int = None, force_cyclic: bool = True):
+        super().__init__(scale, width, length, period, n_xy, nz, q,
+                         force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -548,18 +494,11 @@ class DiamondTwin(FCCTwin):
     Constant-width periodically twinning diamond nanowire with axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 q: int = None,
-                 width: float = None,
-                 length: float = None,
-                 period: float = None,
-                 force_cyclic: bool = True):
-        super().__init__(scale, n_xy=n_xy, nz=nz, q=q,
-                         width=width, length=length, period=period,
-                         force_cyclic=force_cyclic)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 period: float = None, n_xy: int = None, nz: int = None,
+                 q: int = None, force_cyclic: bool = True):
+        super().__init__(scale, width, length, period, n_xy, nz, q,
+                         force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -569,16 +508,10 @@ class ZBTwinFaceted(FCCTwinFaceted):
     Each twin sister is a section of a non-primitive octahedral unit cell.
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 q: int = None,
-                 width: float = None,
-                 length: float = None,
-                 period: float = None,
-                 force_cyclic: bool = True):
-        super().__init__(scale, n_xy, nz, q, width, length, period,
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 period: float = None, n_xy: int = None, nz: int = None,
+                 q: int = None, force_cyclic: bool = True):
+        super().__init__(scale, width, length, period, n_xy, nz, q,
                          force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
@@ -589,16 +522,10 @@ class DiamondTwinFaceted(FCCTwinFaceted):
     Each twin sister is a section of a non-primitive octahedral unit cell.
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 q: int = None,
-                 width: float = None,
-                 length: float = None,
-                 period: float = None,
-                 force_cyclic: bool = True):
-        super().__init__(scale, n_xy, nz, q, width, length, period,
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 period: float = None, n_xy: int = None, nz: int = None,
+                 q: int = None, force_cyclic: bool = True):
+        super().__init__(scale, width, length, period, n_xy, nz, q,
                          force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
 
@@ -608,13 +535,9 @@ class WZPristine0001(HexPristine0001):
     Pristine wurtzite nanowire with axis along [0001].
     """
 
-    def __init__(self,
-                 scale: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, n_xy, nz)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -624,14 +547,9 @@ class ZBRandomWZ(FCCRandomHex):
     substituted in at random locations. Axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 fraction: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, fraction, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 fraction: float = 0.5, n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, fraction, n_xy, nz)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -641,12 +559,7 @@ class DiamondRandomWZ(FCCRandomHex):
     substituted in at random locations. Axis along [111].
     """
 
-    def __init__(self,
-                 scale: float,
-                 fraction: float,
-                 n_xy: int = None,
-                 nz: int = None,
-                 width: float = None,
-                 length: float = None):
-        super().__init__(scale, fraction, n_xy, nz, width, length)
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 fraction: float = 0.5, n_xy: int = None, nz: int = None):
+        super().__init__(scale, width, length, fraction, n_xy, nz)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
