@@ -244,7 +244,7 @@ class ANanowireLattice(IDataWriter):
                 s_args.append("{:.2f}".format(self.size.__getattribute__(arg)))
 
         s += "(" + ", ".join(s_args) + ") "
-        s += "[" + hex(id(self)) + "]"
+        s += "[" + hex(hash(self)) + "]"
         s += ">"
         return s
 
