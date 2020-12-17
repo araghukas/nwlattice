@@ -152,7 +152,3 @@ class NanowireSizePeriodic(NanowireSize):
     @property
     def period(self):
         return self._period_func(self.scale, self.q)
-
-
-if __name__ == "__main__":
-    size = NanowireSizePeriodic(1.0, unit_dz=0.5, width=15, length=50, q=13)
