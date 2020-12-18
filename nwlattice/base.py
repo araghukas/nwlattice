@@ -225,7 +225,7 @@ class ANanowireLattice(IDataWriter):
 
         self._vz = np.zeros((self.size.nz, 3))  # plane z positions
         for i in range(self.size.nz):
-            self._vz[i][2] = i * size_obj.unit_dz
+            self._vz[i][2] = i * self.size.unit_dz
         self._vr = np.reshape(vr, (self.size.nz, 3))  # plane xy positions
 
         self._N = None  # number of lattice points
@@ -536,6 +536,10 @@ class ANanowireLattice(IDataWriter):
 
 
 class ANanowireLatticePeriodic(ANanowireLattice):
+    """
+    Base class for periodic nanowire lattice objects
+    """
+
     @classmethod
     @abstractmethod
     def get_supercell(cls, *args, **kwargs):
@@ -553,7 +557,7 @@ class ANanowireLatticePeriodic(ANanowireLattice):
 
     @staticmethod
     @abstractmethod
-    def get_p(scale: float, period: float) -> int:
+    def get_q(scale: float, period: float) -> int:
         raise NotImplementedError
 
     @staticmethod
@@ -571,3 +575,41 @@ class ANanowireLatticePeriodic(ANanowireLattice):
             q = self.size.q
             self._supercell = self.get_supercell(scale, n_xy=n_xy, q=q)
         return self._supercell
+
+
+class ACompoundNanowireLattice(ANanowireLattice):
+    """
+    Base class for nanowire lattice objects where planes in the stack are
+    sampled from list of nanowire instances according to a specified mapping
+    """
+
+    def __init__(self, nw_list, nw_index, size_obj):
+        nz = len(nw_index)  # number of planes
+        k = len(nw_list)  # number of wire sampled from
+        vr = np.zeros((nz, 3))
+        counts = [0] * k
+        planes = []
+        for i in range(nz):
+            idx = nw_index[i]
+            nw = nw_list[idx]
+            vr[i] = nw.vr[counts[idx]]
+            planes.append(nw.planes[counts[idx]])
+            counts[idx] += 1
+
+        size_obj.fix_nz(nz)
+        super().__init__(size_obj, planes, vr)
+
+    @classmethod
+    @abstractmethod
+    def get_supercell(cls, *args, **kwargs):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_width(scale: float, n_xy) -> float:
+        raise NotImplementedError
