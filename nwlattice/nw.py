@@ -168,8 +168,8 @@ class FCCTwin(base.ANanowireLatticePeriodic):
         return FCCb.get_width(scale, n_xy)
 
     @staticmethod
-    def get_p(scale: float, period: float) -> int:
-        return round(ROOT3 * period / 2 / scale)
+    def get_q(scale: float, period: float) -> int:
+        return round(ROOT3 * period / 2 / scale) // 2
 
     @staticmethod
     def get_period(scale: float, q: int) -> float:
@@ -195,9 +195,88 @@ class FCCTwin(base.ANanowireLatticePeriodic):
         size._width_func = self.get_width
         size._length_func = self.get_length
         size._area_func = self.get_area
-        size._q_func = self.get_p
+        size._q_func = self.get_q
         size._period_func = self.get_period
         return size
+
+
+class BinnedFCCTwin(base.ACompoundNanowireLattice):
+    """
+    A compound nanowire with X-Y-X-Y-X structure, where
+        X ~ FCCPristine111
+        Y ~ FCCTwin
+    """
+
+    def __init__(self, scale: float, width: float = None, lengths: list = None,
+                 period: float = None, n_xy: int = None, nzs: list = None,
+                 q: int = None):
+
+        if lengths is None:
+            lengths = [None, None]
+        elif len(lengths) != 2:
+            raise ValueError("must specify 2 lengths for this type of wire")
+
+        if nzs is None:
+            nzs = [None, None]
+        elif len(nzs) != 2:
+            raise ValueError("must specify 2 nz's for this type of wire")
+
+        nw_list = [
+            FCCPristine111(scale, width, lengths[0], n_xy, nzs[0], True),
+            FCCTwin(scale, width, lengths[1], period, n_xy, nzs[1], q, True),
+            FCCPristine111(scale, width, lengths[0], n_xy, nzs[0], True),
+            FCCTwin(scale, width, lengths[1], period, n_xy, nzs[1], q, True),
+            FCCPristine111(scale, width, lengths[0], n_xy, nzs[0], True)
+        ]
+
+        # construct `nw_index` parameter
+        nz_bin = nw_list[0].size.nz
+        nz_mid = nw_list[1].size.nz
+        nz = 3 * nz_bin + 2 * nz_mid  # i.e. X-Y-X-Y-X
+
+        n1 = nz_bin
+        n2 = n1 + nz_mid
+        n3 = n2 + nz_bin
+        n4 = n3 + nz_mid
+        n5 = n4 + nz_bin
+
+        nw_index = []
+        for i in range(nz):
+            # append index of corresponding source lattice in `nw_list`
+            if 0 <= i < n1:
+                nw_index.append(0)  # first bin
+            elif n1 <= i < n2:
+                nw_index.append(1)  # first wire
+            elif n2 <= i < n3:
+                nw_index.append(2)  # middle bin
+            elif n3 <= i < n4:
+                nw_index.append(3)  # second wire
+            elif n4 <= i < n5:
+                nw_index.append(4)  # final bin
+            else:
+                raise IndexError("exceeded nz-bounds of compound structure")
+        super().__init__(nw_list, nw_index, nw_list[1]._size_obj)
+
+    @property
+    def supercell(self):
+        return self
+
+    @classmethod
+    def get_supercell(cls, *args, **kwargs):
+        # dummy class method; can not guarantee supercell in general
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        return FCCTwin.get_n_xy(scale, width)
+
+    @staticmethod
+    def get_width(scale: float, n_xy) -> float:
+        return FCCTwin.get_width(scale, n_xy)
+
+    def get_size(self, *args):
+        # dummy method: `self.size` set by superclass
+        return self.size
 
 
 class FCCTwinFaceted(base.ANanowireLatticePeriodic):
@@ -208,7 +287,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
-                 q: int = None, force_cyclic: bool = True):
+                 m0: int = 0, q: int = None, force_cyclic: bool = True):
 
         size = self.get_size(scale, width, length, period, n_xy, nz, q)
         if size.q >= size.n_xy:
@@ -229,7 +308,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
         # main structural logic:
         # -[A-B-C]- stacking, planes cycle through constant-perimeter variants
-        m_cycle = self.get_m_cycle(size.nz, 0, size.q)
+        m_cycle = self.get_m_cycle(size.nz, m0, size.q)
         planes = [TwFCC(1 / ROOT2, size.n_xy, m) for m in m_cycle]
         vr = np.zeros((size.nz, 3))
         super().__init__(size, planes, vr)
@@ -249,8 +328,8 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         return FCCb.get_width(scale, n_xy)
 
     @staticmethod
-    def get_p(scale: float, period: float) -> int:
-        return round(ROOT3 * period / 2 / scale)
+    def get_q(scale: float, period: float) -> int:
+        return round(ROOT3 * period / 2 / scale) // 2
 
     @staticmethod
     def get_period(scale: float, q: int) -> float:
@@ -290,9 +369,90 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         size._width_func = self.get_width
         size._length_func = self.get_length
         size._area_func = self.get_area
-        size._q_func = self.get_p
+        size._q_func = self.get_q
         size._period_func = self.get_period
         return size
+
+
+class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
+    """
+    A compound nanowire with X-Y-X-Y-X structure, where
+        X ~ FCCPristine111
+        Y ~ FCCTwinFaceted
+    """
+
+    # TODO: add q0 parameter back into FCCTwinFaceted so smoother transitions
+    def __init__(self, scale: float, width: float = None, lengths: list = None,
+                 period: float = None, n_xy: int = None, nzs: list = None,
+                 q: int = None):
+
+        if lengths is None:
+            lengths = [None, None]
+        elif len(lengths) != 2:
+            raise ValueError("must specify 2 lengths for this type of wire")
+
+        if nzs is None:
+            nzs = [None, None]
+        elif len(nzs) != 2:
+            raise ValueError("must specify 2 nz's for this type of wire")
+
+        nw1 = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
+                             0, q, True)
+        nw0 = FCCPristine111(scale, length=lengths[0], n_xy=nw1.size.n_xy + 1,
+                             nz=nzs[0], force_cyclic=True)
+        nw3 = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
+                             nw1.size.q - 1, q, True)
+
+        nw_list = [nw0, nw1, nw0, nw3, nw0]
+
+        # construct `nw_index` parameter
+        nz_bin = nw_list[0].size.nz
+        nz_mid = nw_list[1].size.nz
+        nz = 3 * nz_bin + 2 * nz_mid  # i.e. X-Y-X-Y-X
+
+        n1 = nz_bin
+        n2 = n1 + nz_mid
+        n3 = n2 + nz_bin
+        n4 = n3 + nz_mid
+        n5 = n4 + nz_bin
+
+        nw_index = []
+        for i in range(nz):
+            # append index of corresponding source lattice in `nw_list`
+            if 0 <= i < n1:
+                nw_index.append(0)  # first bin
+            elif n1 <= i < n2:
+                nw_index.append(1)  # first wire
+            elif n2 <= i < n3:
+                nw_index.append(2)  # middle bin
+            elif n3 <= i < n4:
+                nw_index.append(3)  # second wire
+            elif n4 <= i < n5:
+                nw_index.append(4)  # final bin
+            else:
+                raise IndexError("exceeded nz-bounds of compound structure")
+        super().__init__(nw_list, nw_index, nw_list[1]._size_obj)
+
+    @property
+    def supercell(self):
+        return self
+
+    @classmethod
+    def get_supercell(cls, *args, **kwargs):
+        # dummy class method; can not guarantee supercell in general
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        return FCCTwinFaceted.get_n_xy(scale, width)
+
+    @staticmethod
+    def get_width(scale: float, n_xy) -> float:
+        return FCCTwinFaceted.get_width(scale, n_xy)
+
+    def get_size(self, *args):
+        # dummy method: `self.size` set by superclass
+        return self.size
 
 
 class HexPristine0001(base.ANanowireLattice):
@@ -489,6 +649,20 @@ class ZBTwin(FCCTwin):
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
+class BinnedZBTwin(BinnedFCCTwin):
+    """
+    A compound nanowire with X-Y-X-Y-X structure, where
+        X ~ ZBPristine111
+        Y ~ ZBTwin
+    """
+
+    def __init__(self, scale: float, width: float = None, lengths: list = None,
+                 period: float = None, n_xy: int = None, nzs: int = None,
+                 q: int = None):
+        super().__init__(scale, width, lengths, period, n_xy, nzs, q)
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
+
+
 class DiamondTwin(FCCTwin):
     """
     Constant-width periodically twinning diamond nanowire with axis along [111].
@@ -513,6 +687,20 @@ class ZBTwinFaceted(FCCTwinFaceted):
                  q: int = None, force_cyclic: bool = True):
         super().__init__(scale, width, length, period, n_xy, nz, q,
                          force_cyclic)
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
+
+
+class BinnedZBTwinFaceted(BinnedFCCTwinFaceted):
+    """
+    A compound nanowire with X-Y-X-Y-X structure, where
+        X ~ ZBPristine111
+        Y ~ ZBTwin
+    """
+
+    def __init__(self, scale: float, width: float = None, lengths: list = None,
+                 period: float = None, n_xy: int = None, nzs: int = None,
+                 q: int = None):
+        super().__init__(scale, width, lengths, period, n_xy, nzs, q)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
