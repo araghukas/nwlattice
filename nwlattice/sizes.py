@@ -82,16 +82,18 @@ class NanowireSize(PlaneSize):
         self._length_func = None
 
     def __str__(self):
-        return (self.__repr__() + "\n"
-                                  "scale : {:<20}\n"
-                                  "n_xy  : {:<20}\n"
-                                  "width : {:<20}\n"
-                                  "nz    : {:<20}\n"
-                                  "length: {:<20}\n"
-                                  "area  : {:<20}\n"
-                ).format(self.scale, self.n_xy, self.width, self.nz,
-                         self.length,
-                         self.area)
+        s = "<NanowireSize instance: " + "[" + hex(hash(self)) + "]>\n"
+        s_args = []
+        for arg in ['scale', 'width', 'length', 'period', 'area']:
+            if hasattr(self, arg):
+                s_args.append("<\t{:<10}: {:<15,.2f}>"
+                              .format(arg, self.__getattribute__(arg)))
+        for arg in ['n_xy', 'nz', 'q']:
+            if hasattr(self, arg):
+                s_args.append("<\t{:<10}: {:<15,d}>"
+                              .format(arg, self.__getattribute__(arg)))
+        s += "\n".join(s_args)
+        return s
 
     @property
     def area(self):
@@ -135,7 +137,7 @@ class NanowireSizePeriodic(NanowireSize):
                  width=None, length=None, period=None):
         super().__init__(scale, unit_dz, n_xy, nz, width, length)
         if not (q or period):
-            raise ValueError("must specify either `p` or `period`")
+            raise ValueError("must specify either `q` or `period`")
 
         self._q = q
         self._q_func = None
