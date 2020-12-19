@@ -651,6 +651,9 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         Y ~ FCCTwinFaceted
     """
 
+    # TODO: how to construct bin?
+    # TODO: might have to use FCCa/FCCc or a new alternating TwinPlane structure
+
     def __init__(self, scale: float, width: float = None, lengths: list = None,
                  period: float = None, n_xy: int = None, nzs: list = None,
                  q: int = None):
