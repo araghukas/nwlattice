@@ -336,6 +336,35 @@ class ANanowireLattice(IDataWriter):
             self._supercell = self.get_supercell(scale, n_xy=n_xy)
         return self._supercell
 
+    def add_basis(self, t: int, pt):
+        """
+        Add a basis point of type `t` at 3-point `pt`
+
+        :param t: integer atom type ID
+        :param pt: 3-point indicating basis point relative to lattice point
+        :return: None
+        """
+        t = int(t)
+        if t <= 0:
+            raise ValueError("only positive integers should be used for "
+                             "atom type identifiers")
+
+        pt = np.asarray(pt)
+        if len(pt) != 3:
+            raise ValueError("basis point must be 3-dimensional")
+
+        if t in self._basis:
+            self._basis[t].append(pt)
+        else:
+            self._basis[t] = [pt]
+
+    def invert(self):
+        self._vz = self._vz[::-1]
+
+    def cycle_z(self, n):
+        self._planes = self._planes[-n:] + self._planes[:-n]
+        self._vr = np.concatenate((self._vr[-n:], self._vr[:-n]))
+
     def write_points(self, file_path: str = None, wrap=True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
@@ -418,28 +447,6 @@ class ANanowireLattice(IDataWriter):
         t2 = time()
         self.print("wrote %d atoms to data file '%s' in %f seconds"
                    % (n_atoms_cell * n_cells, file_path, t2 - t1))
-
-    def add_basis(self, t: int, pt):
-        """
-        Add a basis point of type `t` at 3-point `pt`
-
-        :param t: integer atom type ID
-        :param pt: 3-point indicating basis point relative to lattice point
-        :return: None
-        """
-        t = int(t)
-        if t <= 0:
-            raise ValueError("only positive integers should be used for "
-                             "atom type identifiers")
-
-        pt = np.asarray(pt)
-        if len(pt) != 3:
-            raise ValueError("basis point must be 3-dimensional")
-
-        if t in self._basis:
-            self._basis[t].append(pt)
-        else:
-            self._basis[t] = [pt]
 
     def get_points(self) -> np.ndarray:
         """
