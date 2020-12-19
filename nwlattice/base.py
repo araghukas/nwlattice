@@ -361,7 +361,7 @@ class ANanowireLattice(IDataWriter):
     def invert(self):
         self._vz = self._vz[::-1]
 
-    def cycle_z(self, n):
+    def rotate_vz(self, n):
         self._planes = self._planes[-n:] + self._planes[:-n]
         self._vr = np.concatenate((self._vr[-n:], self._vr[:-n]))
 
