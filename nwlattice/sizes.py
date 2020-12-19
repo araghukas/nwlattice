@@ -10,7 +10,7 @@ class PlaneSize(object):
         :param width: width in sase units as `a0`
         """
         if not (width or n_xy):
-            raise ValueError("must specify wither `n_xy` or `width`")
+            raise ValueError("must specify either `n_xy` or `width`")
 
         if scale <= 0:
             raise ValueError("`scale` must be a positive number")
