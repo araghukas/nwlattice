@@ -65,6 +65,7 @@ class APointPlane(IDataWriter):
         self._N = None  # number of lattice points
         self._com = None  # points centre of mass
         self._points = None  # array of points in this PlaneLattice
+        self._v_offset = np.zeros(3)  # translation vector
 
     @staticmethod
     @abstractmethod
@@ -110,12 +111,12 @@ class APointPlane(IDataWriter):
 
     @property
     def points(self):
-        if self._points is None:
-            self._points = self.get_points()
-            if self.theta is not None:
-                axis = [0, 0, 1]
-                self._points = Qtr.qrotate(self._points, axis, self.theta)
-        return self.size.scale * self._points
+        if self.theta is None:
+            points = self.get_points()
+        else:
+            axis = [0, 0, 1]
+            points = Qtr.qrotate(self.get_points(), axis, self.theta)
+        return points * self.size.scale
 
     @property
     def theta(self):
@@ -233,6 +234,7 @@ class ANanowireLattice(IDataWriter):
         self._basis = {1: [np.zeros(3)]}  # points tacked onto lattice points
         self._area = None  # average cross sectional area among planes
         self._v_center_com = np.zeros(3)  # vector to center the structure
+        self._v_offset = np.zeros(3)
 
         self.print("\n".join(str(self.size).split("\n")[1:]))
 
@@ -365,6 +367,12 @@ class ANanowireLattice(IDataWriter):
         self._planes = self._planes[-n:] + self._planes[:-n]
         self._vr = np.concatenate((self._vr[-n:], self._vr[:-n]))
 
+    def add_offset(self, v):
+        """
+        add offset vector to be applied to get_points() output
+        """
+        self._v_offset += v
+
     def write_points(self, file_path: str = None, wrap=True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
@@ -466,7 +474,8 @@ class ANanowireLattice(IDataWriter):
                             + bpt
                     )
                     n_ID += plane.N
-        return self.size.scale * (atom_pts + self._v_center_com)
+        scale = self.size.scale
+        return scale * (atom_pts + self._v_center_com) + self._v_offset
 
     def get_types(self) -> np.ndarray:
         """

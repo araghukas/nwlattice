@@ -590,8 +590,10 @@ class BinnedFCCTwin(base.ACompoundNanowireLattice):
         elif len(nzs) != 2:
             raise ValueError("must specify 2 nz's for this type of wire")
 
-        nw_bin = HexPristine0001(scale, width, lengths[0], n_xy, nzs[0])
-        nw_mid = FCCTwin(scale, width, lengths[1], period, n_xy, nzs[1], q)
+        L0, L1 = lengths
+        nz0, nz1 = nzs
+        nw_bin = HexPristine0001(scale, width, L0, n_xy, nz0)
+        nw_mid = FCCTwin(scale, width, L0, period, n_xy, nz1, q)
         nw_list = [nw_bin, nw_mid, nw_bin, nw_mid, nw_bin]
 
         # construct `nw_index` parameter
@@ -651,9 +653,6 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         Y ~ FCCTwinFaceted
     """
 
-    # TODO: how to construct bin?
-    # TODO: might have to use FCCa/FCCc or a new alternating TwinPlane structure
-
     def __init__(self, scale: float, width: float = None, lengths: list = None,
                  period: float = None, n_xy: int = None, nzs: list = None,
                  q: int = None):
@@ -668,9 +667,18 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         elif len(nzs) != 2:
             raise ValueError("must specify 2 nz's for this type of wire")
 
-        nw_bin = HexPristine0001(scale, width, lengths[0], n_xy, nzs[0])
-        nw_mid = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
-                                m0=0, q=q)
+        L0, L1 = lengths
+        nz0, nz1 = nzs
+        nw_mid = FCCTwinFaceted(scale, width, L1, period, n_xy, nz1, m0=0, q=q)
+        nw_mid = FCCTwinFaceted(scale, width, nz=nw_mid.size.nz + 1,
+                                period=period, q=q, force_cyclic=False)
+
+        nw_bin = FCCPristine111(scale, width, L0, n_xy, nz=nz0)
+        nw_bin = FCCPristine111(scale, n_xy=nw_bin.size.n_xy + 1,
+                                nz=nw_bin.size.nz - 1)
+        nw_bin.rotate_vz(1)
+        nw_bin.add_offset(10 * nw_mid._v_center_com)
+
         nw_list = [nw_bin, nw_mid, nw_bin, nw_mid, nw_bin]
 
         # construct `nw_index` parameter
