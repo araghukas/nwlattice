@@ -452,12 +452,11 @@ class ANanowireLattice(IDataWriter):
         """
         Return an array of all atom points of  all types
         """
-        n_supercell_planes = len(self.supercell.planes)
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
         atom_pts = np.zeros((self.N * n_basis_atoms, 3), dtype=float)
         n_ID = 0
         for i in range(self.size.nz):
-            plane = self.supercell.planes[i % n_supercell_planes]
+            plane = self.planes[i]
             for t in self.basis:
                 for bpt in self.basis[t]:
                     atom_pts[n_ID:(n_ID + plane.N)] = (
@@ -474,11 +473,10 @@ class ANanowireLattice(IDataWriter):
         Return the integer type identifier for atoms identifier `ID`
         """
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        n_supercell_planes = len(self.supercell.planes)
         types = np.zeros(self.N * n_basis_atoms, dtype=int)
         ID = 1
         for i in range(self.size.nz):
-            plane = self.supercell.planes[i % n_supercell_planes]
+            plane = self.planes[i]
             for t in self.basis:
                 for _ in self.basis[t]:
                     types[(ID - 1):(ID - 1) + plane.N] = t
