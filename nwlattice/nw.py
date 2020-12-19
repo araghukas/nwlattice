@@ -381,7 +381,7 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         Y ~ FCCTwinFaceted
     """
 
-    # TODO: add q0 parameter back into FCCTwinFaceted so smoother transitions
+    # TODO: how to get smooth transition from faceted for pristine and back?
     def __init__(self, scale: float, width: float = None, lengths: list = None,
                  period: float = None, n_xy: int = None, nzs: list = None,
                  q: int = None):
@@ -398,10 +398,11 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
 
         nw1 = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
                              0, q, True)
-        nw0 = FCCPristine111(scale, length=lengths[0], n_xy=nw1.size.n_xy + 1,
+        nw0 = FCCPristine111(scale, length=lengths[0], n_xy=nw1.size.n_xy - 1,
                              nz=nzs[0], force_cyclic=True)
         nw3 = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
-                             nw1.size.q - 1, q, True)
+                             0, q, True)
+        nw3.cycle_z(nw3.size.q)
 
         nw_list = [nw0, nw1, nw0, nw3, nw0]
 
