@@ -572,7 +572,7 @@ class DiamondRandomWZ(FCCRandomHex):
 class BinnedFCCTwin(base.ACompoundNanowireLattice):
     """
     A compound nanowire with X-Y-X-Y-X structure, where
-        X ~ FCCPristine111
+        X ~ HexPristine0001
         Y ~ FCCTwin
     """
 
@@ -590,17 +590,13 @@ class BinnedFCCTwin(base.ACompoundNanowireLattice):
         elif len(nzs) != 2:
             raise ValueError("must specify 2 nz's for this type of wire")
 
-        nw_list = [
-            FCCPristine111(scale, width, lengths[0], n_xy, nzs[0], True),
-            FCCTwin(scale, width, lengths[1], period, n_xy, nzs[1], q, True),
-            FCCPristine111(scale, width, lengths[0], n_xy, nzs[0], True),
-            FCCTwin(scale, width, lengths[1], period, n_xy, nzs[1], q, True),
-            FCCPristine111(scale, width, lengths[0], n_xy, nzs[0], True)
-        ]
+        nw_bin = HexPristine0001(scale, width, lengths[0], n_xy, nzs[0])
+        nw_mid = FCCTwin(scale, width, lengths[1], period, n_xy, nzs[1], q)
+        nw_list = [nw_bin, nw_mid, nw_bin, nw_mid, nw_bin]
 
         # construct `nw_index` parameter
-        nz_bin = nw_list[0].size.nz
-        nz_mid = nw_list[1].size.nz
+        nz_bin = nw_bin.size.nz
+        nz_mid = nw_mid.size.nz
         nz = 3 * nz_bin + 2 * nz_mid  # i.e. X-Y-X-Y-X
 
         n1 = nz_bin
@@ -655,7 +651,6 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         Y ~ FCCTwinFaceted
     """
 
-    # TODO: how to get smooth transition from faceted for pristine and back?
     def __init__(self, scale: float, width: float = None, lengths: list = None,
                  period: float = None, n_xy: int = None, nzs: list = None,
                  q: int = None):
@@ -670,19 +665,14 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         elif len(nzs) != 2:
             raise ValueError("must specify 2 nz's for this type of wire")
 
-        nw1 = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
-                             0, q, True)
-        nw0 = FCCPristine111(scale, length=lengths[0], n_xy=nw1.size.n_xy - 1,
-                             nz=nzs[0], force_cyclic=True)
-        nw3 = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
-                             0, q, True)
-        nw3.cycle_z(nw3.size.q)
-
-        nw_list = [nw0, nw1, nw0, nw3, nw0]
+        nw_bin = HexPristine0001(scale, width, lengths[0], n_xy, nzs[0])
+        nw_mid = FCCTwinFaceted(scale, width, lengths[1], period, n_xy, nzs[1],
+                                m0=0, q=q)
+        nw_list = [nw_bin, nw_mid, nw_bin, nw_mid, nw_bin]
 
         # construct `nw_index` parameter
-        nz_bin = nw_list[0].size.nz
-        nz_mid = nw_list[1].size.nz
+        nz_bin = nw_bin.size.nz
+        nz_mid = nw_mid.size.nz
         nz = 3 * nz_bin + 2 * nz_mid  # i.e. X-Y-X-Y-X
 
         n1 = nz_bin
@@ -734,7 +724,7 @@ class BinnedZBTwin(BinnedFCCTwin):
     """
     A compound nanowire with X-Y-X-Y-X structure, where
         X ~ ZBPristine111
-        Y ~ ZBTwin
+        Y ~ WZPristine0001
     """
 
     def __init__(self, scale: float, width: float = None, lengths: list = None,
