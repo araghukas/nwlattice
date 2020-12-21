@@ -673,6 +673,8 @@ class BinnedFCCTwinFaceted(base.ACompoundNanowireLattice):
         nw_mid = FCCTwinFaceted(scale, width, nz=nw_mid.size.nz + 1,
                                 period=period, q=q, force_cyclic=False)
 
+        # TODO: maybe make WZ from TwinFaceted
+        # TODO: although persistent add_offset would be nice
         nw_bin = FCCPristine111(scale, width, L0, n_xy, nz=nz0)
         nw_bin = FCCPristine111(scale, n_xy=nw_bin.size.n_xy + 1,
                                 nz=nw_bin.size.nz - 1)
