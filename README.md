@@ -11,8 +11,8 @@ Navigate to the `nwlattice` directory, which contains `setup.py`, then
 
     pip install .
     
-## Tutorial
-See the `example` directory. For available structure classes, see `nwlattice/stacks.py`.
+## Usage
+
 
 ## Disclaimer
 Please note that this project is a work in progress. Use at your own risk.
