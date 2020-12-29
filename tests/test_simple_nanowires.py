@@ -4,9 +4,13 @@ import os
 import numpy as np
 from nwlattice import base, nw
 
-
 # from nwlattice import utilities
 # utilities.toggle_printing(True)
+
+# create outputs directory if it doesn't exist
+if not os.path.isdir("./outputs"):
+    os.mkdir("./outputs")
+
 
 # ------------------------------------------------------------------------------
 class NanowireObjectsTest(unittest.TestCase):
@@ -53,6 +57,8 @@ class NanowireObjectsTest(unittest.TestCase):
         t_args = self.argspecs[t].args[1:]
         kwargs = {k: self.DEFAULT_KWARGS[k] for k in t_args}
         return t(**kwargs)
+
+
 # ------------------------------------------------------------------------------
 
 
