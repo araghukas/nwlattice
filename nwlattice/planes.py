@@ -316,8 +316,3 @@ class TwFCC(base.APointPlane):
             pts -= self.com
             self._points = pts
         return self._points
-
-
-if __name__ == "__main__":
-    p = FCCa(scale=1.0, n_xy=1)
-    p.write_points()
