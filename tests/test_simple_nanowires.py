@@ -38,8 +38,7 @@ class NanowireObjectsTest(unittest.TestCase):
                 continue
             try:
                 if issubclass(o[1], base.ANanowireLattice):
-                    if not issubclass(o[1], base.ACompoundNanowireLattice):
-                        nw_list.append(o[1])
+                    nw_list.append(o[1])
             except TypeError:
                 pass
         return nw_list
