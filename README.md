@@ -37,7 +37,7 @@ If you're after a data file representing, say, atoms in a GaAs nanowire that is 
     wire.write_points("~/Desktop/my_GaAs_nanowire.data")
     
 **Keep in mind that** the number of atoms in the nanowire scales with the **square** of the width, so the output files (being uncompressed text) can quickly become several GB in size. 
-However file sizes should be manageable sizes suitable to MD.
+However file sizes should be manageable for dimensions suitable to MD.
 
 The argument set `scale`, `width`, and `length` is enough to instantiate the simplest nanowire classes. Other classes may additionally require `period` or `fraction` to be specified, if applicable. For example, a *faceted* twinning nanowire can be instantiated using
 
