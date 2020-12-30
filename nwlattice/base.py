@@ -123,6 +123,7 @@ class APointPlane(IDataWriter):
         return self._theta
 
     def write_points(self, file_path: str = None):
+        # TODO: reduce file size and write time
         """
         Write LAMMPS/OVITO compatible data file of all atom points
         :param file_path: string indicating target file (created/overwritten)
