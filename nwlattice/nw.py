@@ -10,11 +10,20 @@ import numpy as np
 # ------------------------------------------------------------------------------
 class FCCPristine111(base.ANanowireLattice):
     """
-    Pristine face-centered cubic nanowire with axis along [111].
+    Pristine face-centered cubic nanowire with axis along [111]. Cross-section
+    is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell 
+        """
 
         size = self.get_size(scale, width, length, n_xy, nz)
         if force_cyclic:
@@ -66,11 +75,20 @@ class FCCPristine111(base.ANanowireLattice):
 
 class FCCPristine100(base.ANanowireLattice):
     """
-    Pristine face-centered cubic nanowire with axis along [100].
+    Pristine face-centered cubic nanowire with axis along [100]. Cross-section
+    is square.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell 
+        """
 
         size = self.get_size(scale, width, length, n_xy, nz)
         if force_cyclic:
@@ -118,12 +136,22 @@ class FCCPristine100(base.ANanowireLattice):
 class FCCTwin(base.ANanowireLatticePeriodic):
     """
     Constant-width periodically twinning face-centered cubic nanowire with axis
-    along [111].
+    along [111]. Cross-section is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
                  q: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell 
+        :param width: approximated width
+        :param length: approximated length
+        :param period: approximated twinning period
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param q: (overrides `period`) number of planes in a half-period
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         size = self.get_size(scale, width, length, period, n_xy, nz, q)
         if force_cyclic:
             old_nz = size.nz
@@ -206,12 +234,24 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
     """
     Faceted twinning face-centered cubic nanowire with axis along [111].
     Each twin sister is a section of a non-primitive octahedral unit cell.
+    Cross-section is constant-perimeter hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
                  m0: int = 0, q: int = None, force_cyclic: bool = True):
-
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param period: approximated twinning period
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param m0: second index of first `TwFCC` plane in vertical stack,
+                   `m0=0` corresponds to a regular hexagonal `TwFCC` plane
+        :param q: (overrides `period`) number of planes in a half-period
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         size = self.get_size(scale, width, length, period, n_xy, nz, q)
         if size.q >= size.n_xy:
             raise ValueError(
@@ -299,11 +339,20 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
 class HexPristine0001(base.ANanowireLattice):
     """
-    Pristine hexagonal nanowire with axis along [0001].
+    Pristine hexagonal nanowire with axis along [0001]. Cross-section is
+    hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         size = self.get_size(scale, width, length, n_xy, nz)
         if force_cyclic:
             old_nz = size.nz
@@ -353,12 +402,21 @@ class HexPristine0001(base.ANanowireLattice):
 class FCCRandomHex(base.ANanowireLattice):
     """
     Face-centered cubic nanowire with a specific fraction of hexagonal planes
-    substituted in at random locations. Axis along [111].
+    substituted in at random locations. Axis along [111]. Cross-section is
+    hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  fraction: float = 0.5, n_xy: int = None, nz: int = None):
-
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param fraction: between 0 and 1, the fraction random of hexagonal
+                         stacking faults
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        """
         size = self.get_size(scale, width, length, fraction, n_xy, nz)
         base_planes = [
             FCCa(1 / ROOT2, size.n_xy - 1),
@@ -433,34 +491,62 @@ class FCCRandomHex(base.ANanowireLattice):
 # ------------------------------------------------------------------------------
 class ZBPristine111(FCCPristine111):
     """
-    Pristine zincblende nanowire with axis along [111].
+    Pristine zincblende nanowire with axis along [111]. Cross-section is
+    hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 n_xy: int = None, nz: int = None):
-        super().__init__(scale, width, length, n_xy, nz)
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
+        super().__init__(scale, width, length, n_xy, nz,
+                         force_cyclic=force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class DiamondPristine111(FCCPristine111):
     """
-    Pristine diamond nanowire with axis along [111].
+    Pristine diamond nanowire with axis along [111]. Cross-section is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 n_xy: int = None, nz: int = None):
-        super().__init__(scale, width, length, n_xy, nz)
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
+        super().__init__(scale, width, length, n_xy, nz,
+                         force_cyclic=force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
 
 
 class ZBPristine100(FCCPristine100):
     """
-    Pristine zincblende nanowire with axis along [100].
+    Pristine zincblende nanowire with axis along [100]. Cross-section is square.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 n_xy: int = None, nz: int = None):
-        super().__init__(scale, width, length, n_xy, nz)
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
+        super().__init__(scale, width, length, n_xy, nz,
+                         force_cyclic=force_cyclic)
         self.add_basis(2, [0.25, 0.25, 0.25])
         self._v_center_com = -0.125 * np.ones(3)
 
@@ -471,8 +557,18 @@ class DiamondPristine100(FCCPristine100):
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 n_xy: int = None, nz: int = None):
-        super().__init__(scale, width, length, n_xy, nz)
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+
+        """
+        super().__init__(scale, width, length, n_xy, nz,
+                         force_cyclic=force_cyclic)
         self.add_basis(1, [0.25, 0.25, 0.25])
         self._v_center_com = -0.125 * np.ones(3)
 
@@ -480,12 +576,22 @@ class DiamondPristine100(FCCPristine100):
 class ZBTwin(FCCTwin):
     """
     Constant-width periodically twinning zincblende nanowire with axis along
-    [111].
+    [111]. Cross-section is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
                  q: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param period: approximated twinning period
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param q: (overrides `period`) number of planes in a half-period
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         super().__init__(scale, width, length, period, n_xy, nz, q,
                          force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
@@ -494,11 +600,22 @@ class ZBTwin(FCCTwin):
 class DiamondTwin(FCCTwin):
     """
     Constant-width periodically twinning diamond nanowire with axis along [111].
+    Cross-section is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
                  q: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param period: approximated twinning period
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param q: (overrides `period`) number of planes in a half-period
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         super().__init__(scale, width, length, period, n_xy, nz, q,
                          force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
@@ -508,11 +625,24 @@ class ZBTwinFaceted(FCCTwinFaceted):
     """
     Faceted twinning zincblende nanowire with axis along [111].
     Each twin sister is a section of a non-primitive octahedral unit cell.
+    Cross-section is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
                  m0: int = 0, q: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param period: approximated twinning period
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param m0: second index of first `TwFCC` plane in vertical stack,
+                   `m0=0` corresponds to a regular hexagonal `TwFCC` plane
+        :param q: (overrides `period`) number of planes in a half-period
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         super().__init__(scale, width, length, period, n_xy, nz, m0, q,
                          force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
@@ -522,11 +652,24 @@ class DiamondTwinFaceted(FCCTwinFaceted):
     """
     Faceted twinning diamond nanowire with axis along [111].
     Each twin sister is a section of a non-primitive octahedral unit cell.
+    Cross-section is hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  period: float = None, n_xy: int = None, nz: int = None,
                  m0: int = 0, q: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param period: approximated twinning period
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param m0: second index of first `TwFCC` plane in vertical stack,
+                   `m0=0` corresponds to a regular hexagonal `TwFCC` plane
+        :param q: (overrides `period`) number of planes in a half-period
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
         super().__init__(scale, width, length, period, n_xy, nz, m0, q,
                          force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
@@ -534,23 +677,43 @@ class DiamondTwinFaceted(FCCTwinFaceted):
 
 class WZPristine0001(HexPristine0001):
     """
-    Pristine wurtzite nanowire with axis along [0001].
+    Pristine wurtzite nanowire with axis along [0001]. Cross-section is
+    hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 n_xy: int = None, nz: int = None):
-        super().__init__(scale, width, length, n_xy, nz)
+                 n_xy: int = None, nz: int = None, force_cyclic: bool = True):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
+        """
+        super().__init__(scale, width, length, n_xy, nz,
+                         force_cyclic=force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
 class ZBRandomWZ(FCCRandomHex):
     """
     Zincblende nanowire with a specific fraction of wurtzite planes
-    substituted in at random locations. Axis along [111].
+    substituted in at random locations. Axis along [111]. Cross-section is
+    hexagonal.
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  fraction: float = 0.5, n_xy: int = None, nz: int = None):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param fraction: between 0 and 1, the fraction random of hexagonal
+                         stacking faults
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        """
         super().__init__(scale, width, length, fraction, n_xy, nz)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
@@ -563,5 +726,14 @@ class DiamondRandomWZ(FCCRandomHex):
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  fraction: float = 0.5, n_xy: int = None, nz: int = None):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param fraction: between 0 and 1, the fraction random of hexagonal
+                         stacking faults
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        """
         super().__init__(scale, width, length, fraction, n_xy, nz)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
