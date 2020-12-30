@@ -36,13 +36,16 @@ If you're after a data file representing, say, atoms in a GaAs nanowire that is 
     wire = ZBPristine111(scale, width=10, length=300)
     wire.write_points("~/Desktop/my_GaAs_nanowire.data")
     
-The argument set `scale`, `width`, and `length` is enough to instanciate the simplest nanowire classes. Other classes may additionally require `period` or `fraction` to be specified, if applicable. For example, a *faceted* twinning nanowire can be instantiated using
+**Keep in mind that** the number of atoms in the nanowire scales with the **square** of the width, so the output files (being uncompressed text) can quickly become several GB in size. 
+However file sizes should be manageable sizes suitable to MD.
+
+The argument set `scale`, `width`, and `length` is enough to instantiate the simplest nanowire classes. Other classes may additionally require `period` or `fraction` to be specified, if applicable. For example, a *faceted* twinning nanowire can be instantiated using
 
     wire = ZBTwinFaceted(0.56531, 10, 300, 20)
     
 where the arguments specify `scale`, `width`, `length`, and `period`, respectively.
 
-See the class docstrings in `nwlattice/nw.py` or use the `get_info` method mentioned above for instructions on instatiating with integer atom-wise dimension parameters. 
+See the class docstrings in `nwlattice/nw.py` or use the `get_info` method mentioned above for instructions on instantiating with integer atom-wise dimension parameters. 
 
 ### extracting actual wire dimensions
 Note that because the lattice is discrete, input dimensions such as width, length, and period will be approximated in general. The actual resulting dimensions are stored in the `size` attribute of each instance.
