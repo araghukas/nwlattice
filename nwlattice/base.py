@@ -6,7 +6,7 @@ import numpy as np
 from nwlattice.utilities import Quaternion as Qtr
 
 
-# TODO: reduce data file size and write times
+# TODO: reduce data file size and write times; compressed output?
 class IDataWriter(ABC):
     """
     The interface for writing the LAMMPS/phana atom data and map files
