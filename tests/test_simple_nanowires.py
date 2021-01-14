@@ -62,7 +62,7 @@ class NanowireObjectsTest(unittest.TestCase):
 # ------------------------------------------------------------------------------
 
 
-class GetPointsTests(NanowireObjectsTest):
+class PointsTests(NanowireObjectsTest):
     def test_xy_COM_location(self):
         """
         checks that COM is at [0,0,0]
@@ -88,6 +88,23 @@ class GetPointsTests(NanowireObjectsTest):
             ))
             print("wire type {} is COM_xy centered ({}, {})"
                   .format(wire.type_name, x_mean, y_mean))
+
+    def test_no_duplicate_atoms(self):
+        """
+        check that data file has no duplicate atoms
+        """
+        for t in self.all_nw_types:
+            wire = self.get_default_wire(t)
+            points = wire.get_points()
+            d = dict()
+            for pt in points:
+                t = tuple(pt)
+                if t in d:
+                    raise ValueError("Encountered duplicate point: {} "
+                                     "for wire type {}"
+                                     .format(pt, wire.type_name))
+                d[t] = 1
+            print("No duplicate points in ", wire)
 
 
 class OutputFilesTest(NanowireObjectsTest):
