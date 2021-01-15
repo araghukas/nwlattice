@@ -44,7 +44,7 @@ class FCCPristine111(base.ANanowireLattice):
         # main structural logic: periodic -[A-B-C]- stacking of planes
         planes = []
         vr = np.zeros((size.nz, 3))
-        unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
+        unit_vr = np.array([ROOT2 / 4, ROOT6 / 12, 0.])
         for i in range(size.nz):
             planes.append(base_planes[i % 3])
             vr[i] += (i % 3) * unit_vr
