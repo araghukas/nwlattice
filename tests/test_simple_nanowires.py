@@ -60,6 +60,18 @@ class NanowireObjectsTest(unittest.TestCase):
 
 
 # ------------------------------------------------------------------------------
+class SizeTest(NanowireObjectsTest):
+    def test_size_attributes(self):
+        for t in self.all_nw_types:
+            wire = self.get_default_wire(t)
+            for attr in ['width', 'length', 'period']:
+                if hasattr(wire.size, attr):
+                    print("checking '%s' for: %s" % (attr, wire.type_name))
+                    attr_size = wire.size.__getattribute__(attr)
+                    attr_nominal = self.DEFAULT_KWARGS[attr]
+                    delta = wire.size.scale
+                    self.assertAlmostEqual(attr_size, attr_nominal, delta=delta)
+                    print("\tgood: %f approx %f" % (attr_size, attr_nominal))
 
 
 class PointsTests(NanowireObjectsTest):
