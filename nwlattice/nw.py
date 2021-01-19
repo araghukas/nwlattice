@@ -61,7 +61,7 @@ class FCCPristine111(base.ANanowireLattice):
 
     @staticmethod
     def get_width(scale: float, n_xy: int) -> float:
-        return FCCb.get_width(scale, n_xy)
+        return FCCb.get_width(scale, n_xy) / ROOT2
 
     def get_size(self, scale, width=None, length=None, n_xy=None, nz=None):
         size = sizes.NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
@@ -195,7 +195,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
-        return FCCb.get_width(scale, n_xy)
+        return FCCb.get_width(scale, n_xy) / ROOT2
 
     @staticmethod
     def get_q(scale: float, period: float) -> int:
@@ -203,7 +203,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_period(scale: float, q: int) -> float:
-        return scale * 2 * q / ROOT3
+        return 2 * scale * 2 * q / ROOT3
 
     @staticmethod
     def get_plane_index(nz: int, q: int) -> set:
@@ -288,7 +288,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
-        return FCCb.get_width(scale, n_xy)
+        return FCCb.get_width(scale, n_xy) / ROOT2
 
     @staticmethod
     def get_q(scale: float, period: float) -> int:
@@ -296,7 +296,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_period(scale: float, q: int) -> float:
-        return scale * 2 * q / ROOT3
+        return 2 * scale * 2 * q / ROOT3
 
     @staticmethod
     def get_m_cycle(nz, m0, q):
@@ -387,7 +387,7 @@ class HexPristine0001(base.ANanowireLattice):
 
     @staticmethod
     def get_width(scale: float, n_xy: int) -> float:
-        return FCCb.get_width(scale, n_xy)
+        return FCCb.get_width(scale, n_xy) / ROOT2
 
     def get_size(self, scale, width=None, length=None, n_xy=None, nz=None):
         size = sizes.NanowireSize(scale, 1 / ROOT3, n_xy, nz, width, length)
@@ -451,7 +451,7 @@ class FCCRandomHex(base.ANanowireLattice):
 
     @staticmethod
     def get_width(scale: float, n_xy) -> float:
-        return FCCb.get_width(scale, n_xy)
+        return FCCb.get_width(scale, n_xy) / ROOT2
 
     @staticmethod
     def get_plane_index(nz: int, fraction: float) -> set:
