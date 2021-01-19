@@ -30,11 +30,11 @@ class NanowireObjectsTest(unittest.TestCase):
     }
 
     def setUp(self) -> None:
-        self.all_nw_types = self.get_all_simple_nanowire_objects()
+        self.all_nw_types = self.get_all_simple_nanowire_classes()
         self.argspecs = self.get_argspecs(self.all_nw_types)
 
     @staticmethod
-    def get_all_simple_nanowire_objects():
+    def get_all_simple_nanowire_classes():
         obj_list = inspect.getmembers(nw)
         nw_list = []
         for o in obj_list:
