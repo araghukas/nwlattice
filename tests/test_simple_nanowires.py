@@ -73,6 +73,7 @@ class SizeTest(NanowireObjectsTest):
                     delta = wire.size.scale
                     self.assertAlmostEqual(attr_size, attr_nominal, delta=delta)
                     print("\tgood: %f approx %f" % (attr_size, attr_nominal))
+            print()
 
     def test_indices_agree_with_measurements(self):
         for t in self.all_nw_types:
@@ -92,6 +93,7 @@ class SizeTest(NanowireObjectsTest):
                     attr_val2 = wire2.size.__getattribute__(meas)
                     self.assertEqual(attr_val1, attr_val2)
                     print("\tgood: %s1 == %s2 == %f" % (meas, meas, attr_val1))
+            print()
 
 
 class PointsTests(NanowireObjectsTest):

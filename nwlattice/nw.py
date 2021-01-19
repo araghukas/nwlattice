@@ -199,11 +199,11 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_q(scale: float, period: float) -> int:
-        return round(ROOT3 * period / 2 / scale) // 2
+        return round(ROOT3 * period / 2 / scale)
 
     @staticmethod
     def get_period(scale: float, q: int) -> float:
-        return 2 * scale * 2 * q / ROOT3
+        return scale * 2 * q / ROOT3
 
     @staticmethod
     def get_plane_index(nz: int, q: int) -> set:
@@ -292,11 +292,11 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_q(scale: float, period: float) -> int:
-        return round(ROOT3 * period / 2 / scale) // 2
+        return round(ROOT3 * period / 2 / scale)
 
     @staticmethod
     def get_period(scale: float, q: int) -> float:
-        return 2 * scale * 2 * q / ROOT3
+        return scale * 2 * q / ROOT3
 
     @staticmethod
     def get_m_cycle(nz, m0, q):
