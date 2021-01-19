@@ -17,7 +17,7 @@ class NanowireObjectsTest(unittest.TestCase):
     """convenient base class for every other test in this module"""
 
     DEFAULT_KWARGS = {
-        'scale': 5.65,
+        'scale': 5.65315,
         'width': 100.0,
         'length': 250.0,
         'period': 50.0,
@@ -61,10 +61,11 @@ class NanowireObjectsTest(unittest.TestCase):
 
 # ------------------------------------------------------------------------------
 class SizeTest(NanowireObjectsTest):
-    def test_size_attributes(self):
+    def test_size_attributes_width_period(self):
+        # NOTE: length is more complicated if forcing periodicity
         for t in self.all_nw_types:
             wire = self.get_default_wire(t)
-            for attr in ['width', 'length', 'period']:
+            for attr in ['width', 'period']:
                 if hasattr(wire.size, attr):
                     print("checking '%s' for: %s" % (attr, wire.type_name))
                     attr_size = wire.size.__getattribute__(attr)
@@ -72,6 +73,25 @@ class SizeTest(NanowireObjectsTest):
                     delta = wire.size.scale
                     self.assertAlmostEqual(attr_size, attr_nominal, delta=delta)
                     print("\tgood: %f approx %f" % (attr_size, attr_nominal))
+
+    def test_indices_agree_with_measurements(self):
+        for t in self.all_nw_types:
+            wire1 = self.get_default_wire(t)
+            index_kwargs = {}
+            for idx in ['n_xy', 'nz', 'q']:
+                if hasattr(wire1.size, idx):
+                    index_kwargs[idx] = wire1.size.__getattribute__(idx)
+
+            wire2 = t(scale=self.DEFAULT_KWARGS['scale'], **index_kwargs)
+
+            print("checking index and measurement agreement for: %s"
+                  % wire1.type_name)
+            for meas in ['width', 'length', 'period']:
+                if hasattr(wire2.size, meas):
+                    attr_val1 = wire1.size.__getattribute__(meas)
+                    attr_val2 = wire2.size.__getattribute__(meas)
+                    self.assertEqual(attr_val1, attr_val2)
+                    print("\tgood: %s1 == %s2 == %f" % (meas, meas, attr_val1))
 
 
 class PointsTests(NanowireObjectsTest):
