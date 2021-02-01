@@ -507,7 +507,8 @@ class ZBPristine111(FCCPristine111):
         """
         super().__init__(scale, width, length, n_xy, nz,
                          force_cyclic=force_cyclic)
-        v2 = np.array([1 / 2 / ROOT2, -1 / 2 / ROOT6, -1 / 4 / ROOT3])
+        # v2 = np.array([1 / 2 / ROOT2, -1 / 2 / ROOT6, -1 / 4 / ROOT3])
+        v2 = np.array([0., 0., ROOT3 / 4])
         self.add_basis(2, v2)
 
 
