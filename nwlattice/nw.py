@@ -178,7 +178,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
             if i in plane_index:
                 j += 1  # skip upcoming `base_plane` item (mod 3)
             planes.append(base_planes[j % 3])
-            vr[i] += (j % 3) * unit_vr
+            vr[i] = (j % 3) * unit_vr
             j += 1
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
