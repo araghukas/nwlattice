@@ -46,13 +46,19 @@ class FCCTwinChirped(base.ANanowireLatticePeriodic):
         planes = []
         vr = np.zeros((size.nz, 3))
         unit_vr = np.array([ROOT2 / 4, ROOT6 / 12, 0.])
-        j = 0
-        for i in range(size.nz):
+
+        i = 0  # array index
+        j = 0  # base planes index
+        d = 1  # base planes index offset
+        while i < size.nz:
+            print("{:>4} {:>4} {:>4}".format(i, j, j % 3))
             if i in plane_index:
-                j += 1  # skip upcoming `base_plane` item (mod 3)
+                d = d + 1 if d % 3 != 2 else 1
             planes.append(base_planes[j % 3])
             vr[i] = (j % 3) * unit_vr
-            j += 1
+            j += d
+            i += 1
+
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
 
@@ -80,14 +86,7 @@ class FCCTwinChirped(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_plane_index(nz: int, q: int) -> set:
-        index = []
-        include = True
-        for i in range(nz):
-            if i % q == 0:
-                include = not include
-            if include:
-                index.append(i)
-        return set(index)
+        return {4,9, 14, 19, 100}
 
     def get_size(self, scale, width=None, length=None, period=None,
                  n_xy=None, nz=None, q=None):

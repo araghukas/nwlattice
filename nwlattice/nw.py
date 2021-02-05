@@ -459,7 +459,7 @@ class FCCRandomHex(base.ANanowireLattice):
         if abs(fraction) > 1.:
             fraction = 1.
         if fraction < 0.:
-            fraction = 1. + fraction
+            fraction += 1.
         assert 0 <= fraction <= 1
 
         k = int(nz * fraction)
