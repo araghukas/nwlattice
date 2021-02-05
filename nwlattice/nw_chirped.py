@@ -86,7 +86,15 @@ class FCCTwinChirped(base.ANanowireLatticePeriodic):
 
     @staticmethod
     def get_plane_index(nz: int, q: int) -> set:
-        return {4,9, 14, 19, 100}
+        top = 0
+        index = [0]
+        while q > 0:
+            for i in range(2):
+                index.append(top + q)
+                top += q
+            q -= 1
+
+        return set(index)
 
     def get_size(self, scale, width=None, length=None, period=None,
                  n_xy=None, nz=None, q=None):
