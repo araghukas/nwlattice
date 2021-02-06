@@ -206,7 +206,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
         return scale * 2 * q / ROOT3
 
     @staticmethod
-    def get_plane_index(nz: int, q: int) -> set:
+    def get_plane_index(nz: int, q: int) -> list:
         index = []
         include = True
         for i in range(nz):
@@ -214,7 +214,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
                 include = not include
             if include:
                 index.append(i)
-        return set(index)
+        return index
 
     def get_size(self, scale, width=None, length=None, period=None,
                  n_xy=None, nz=None, q=None):
@@ -454,7 +454,7 @@ class FCCRandomHex(base.ANanowireLattice):
         return FCCb.get_width(scale, n_xy) / ROOT2
 
     @staticmethod
-    def get_plane_index(nz: int, fraction: float) -> set:
+    def get_plane_index(nz: int, fraction: float) -> list:
         from random import sample
         if abs(fraction) > 1.:
             fraction = 1.
@@ -468,7 +468,7 @@ class FCCRandomHex(base.ANanowireLattice):
 
         # `k` random integers between 0 and `nz`
         index = sample([i for i in range(nz)], k)
-        return set(index)
+        return index
 
     @property
     def supercell(self):
