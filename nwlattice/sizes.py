@@ -154,3 +154,26 @@ class NanowireSizePeriodic(NanowireSize):
     @property
     def period(self):
         return self._period_func(self.scale, self.q)
+
+
+class NanowireSizeArbitrary(NanowireSize):
+    """
+    A size information handler for arbitrary nanowire lattices
+    """
+    def __init__(self, scale, unit_dz, n_xy=None, nz=None,
+                 width=None, length=None):
+        super().__init__(scale, unit_dz, n_xy, nz, width, length)
+        self._index = None
+        self._indexer = None
+
+    @property
+    def index(self):
+        if self._index is None:
+            new_nz, self._index = self._indexer(self.nz)
+            if new_nz:  # option to bypass forcing nz change
+                self._nz = new_nz
+        return self._index
+
+    @property
+    def indexer(self):
+        return self._indexer

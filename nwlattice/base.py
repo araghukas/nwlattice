@@ -231,7 +231,7 @@ class ANanowireLattice(IDataWriter):
         self._vr = np.reshape(vr, (self.size.nz, 3))  # plane xy positions
 
         self._N = None  # number of lattice points
-        self._supercell = self  # a minimum length instance of the same class
+        self._supercell = self  # a minimum-length instance of the same class
         self._basis = {1: [np.zeros(3)]}  # points tacked onto lattice points
         self._area = None  # average cross sectional area among planes
         self._v_center_com = np.zeros(3)  # vector to center the structure
@@ -551,7 +551,7 @@ class ANanowireLattice(IDataWriter):
 
 class ANanowireLatticePeriodic(ANanowireLattice):
     """
-    Base class for periodic nanowire lattice objects
+    Base class for periodic twinning nanowire lattice objects
     """
 
     @classmethod
@@ -589,3 +589,24 @@ class ANanowireLatticePeriodic(ANanowireLattice):
             q = self.size.q
             self._supercell = self.get_supercell(scale, n_xy=n_xy, q=q)
         return self._supercell
+
+
+class ANanowireLatticeArbitrary(ANanowireLattice):
+    """
+    Base class for arbitrarily twinning nanowire lattice objects
+    """
+
+    @classmethod
+    def get_supercell(cls, *args, **kwargs):
+        """dummy method: not applicable in general"""
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    @abstractmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def get_width(scale: float, n_xy) -> float:
+        raise NotImplementedError

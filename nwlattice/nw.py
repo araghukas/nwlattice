@@ -1,5 +1,6 @@
 from nwlattice import base
 from nwlattice import sizes
+from nwlattice import indices
 from nwlattice.utilities import ROOT2, ROOT3, ROOT6
 from nwlattice.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
 
@@ -227,6 +228,74 @@ class FCCTwin(base.ANanowireLatticePeriodic):
         size._area_func = self.get_area
         size._q_func = self.get_q
         size._period_func = self.get_period
+        return size
+
+
+class FCCTwinA(base.ANanowireLatticeArbitrary):
+    DEFAULT_INDEXER = indices.LinearDecrease(1)
+
+    """
+       Constant-width arbitrarily twinning face-centered cubic nanowire with axis
+       along [111]. Cross-section is hexagonal.
+    """
+
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None, indexer: callable = None):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param indexer: a function int -> (int, list) that returns nz and twin point indices
+        """
+        if indexer is None:
+            indexer = FCCTwinA.DEFAULT_INDEXER
+
+        size = self.get_size(indexer, scale, width, length, n_xy, nz)
+
+        base_planes = [
+            FCCa(1 / ROOT2, size.n_xy - 1),
+            FCCb(1 / ROOT2, size.n_xy),
+            FCCc(1 / ROOT2, size.n_xy - 1)
+        ]
+
+        plane_index = size.index
+        planes = []
+        vr = np.zeros((size.nz, 3))
+        unit_vr = np.array([ROOT2 / 4, ROOT6 / 12, 0.])
+
+        # lattice twins at each `i` in `plane_index`
+        i = 0  # array index
+        j = 0  # base planes index
+        d = 1  # base planes index offset
+        while i < size.nz:
+            if i in plane_index:
+                d = d + 1 if d % 3 != 2 else 1
+            planes.append(base_planes[j % 3])
+            vr[i] = (j % 3) * unit_vr
+            j += d
+            i += 1
+
+        super().__init__(size, planes, vr)
+        self._v_center_com = -unit_vr
+
+    @staticmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        return FCCb.get_n_xy(scale, width * ROOT2)
+
+    @staticmethod
+    def get_width(scale: float, n_xy) -> float:
+        return FCCb.get_width(scale, n_xy) / ROOT2
+
+    def get_size(self, indexer: callable, scale, width=None, length=None, n_xy=None, nz=None):
+        size = sizes.NanowireSizeArbitrary(scale, 1 / ROOT3, n_xy, nz, width, length)
+        size._indexer = indexer
+        size._n_xy_func = self.get_n_xy
+        size._nz_func = self.get_nz
+        size._width_func = self.get_width
+        size._length_func = self.get_length
+        size._area_func = self.get_area
         return size
 
 
