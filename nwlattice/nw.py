@@ -381,15 +381,18 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         :param q: the number of planes in one twin segment
         :return: list of `m_xy` indices for TcFCC planes
         """
-        m_cycle = [m0]
+
         step = 1
-        count = 0
-        while count < nz - 1:
+        i = 0
+        next_q = m0 + step
+        m_cycle = [next_q]
+
+        while i < nz - 1:
             next_q = m_cycle[-1] + step
             m_cycle.append(next_q)
             if next_q == q or next_q == 0:
                 step *= -1
-            count += 1
+            i += 1
         return m_cycle
 
     def get_size(self, scale, width=None, length=None, period=None,
