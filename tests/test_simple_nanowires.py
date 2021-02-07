@@ -13,6 +13,7 @@ if not os.path.isdir("./outputs"):
 
 
 # ------------------------------------------------------------------------------
+# BASE CLASS FOR CONVENIENCE NOT A REAL TEST
 class NanowireObjectsTest(unittest.TestCase):
     """convenient base class for every other test in this module"""
 
@@ -89,6 +90,9 @@ class SizeTest(NanowireObjectsTest):
             print("checking index and measurement agreement for: %s"
                   % wire1.type_name)
             for meas in ['width', 'length', 'period']:
+                if meas == 'length' and wire1.type_name.endswith("FacetedA"):
+                    print("\tskip: length test for %s" % wire1.type_name)
+                    continue
                 if hasattr(wire2.size, meas):
                     attr_val1 = wire1.size.__getattribute__(meas)
                     attr_val2 = wire2.size.__getattribute__(meas)
@@ -185,7 +189,8 @@ class InitAnnotationsCompleteTest(NanowireObjectsTest):
             'theta': float,
             'fraction': float,
             'force_cyclic': bool,
-            'indexer': callable
+            'indexer': callable,
+            'index_r': int,
         }
 
     def test_initializers_completely_annotated(self):
@@ -233,6 +238,7 @@ class ForceCyclicTest(NanowireObjectsTest):
             nw.FCCTwin: -1,
             nw.FCCTwinA: None,
             nw.FCCTwinFaceted: -1,
+            nw.FCCTwinFacetedA: None,
             nw.HexPristine0001: 2,
             nw.FCCRandomHex: None,
             nw.ZBPristine111: 3,
@@ -243,6 +249,7 @@ class ForceCyclicTest(NanowireObjectsTest):
             nw.ZBTwinA: None,
             nw.DiamondTwin: -1,
             nw.ZBTwinFaceted: -1,
+            nw.ZBTwinFacetedA: None,
             nw.DiamondTwinFaceted: -1,
             nw.WZPristine0001: 2,
             nw.ZBRandomWZ: None,
