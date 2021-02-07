@@ -596,6 +596,10 @@ class ANanowireLatticeArbitrary(ANanowireLattice):
     Base class for arbitrarily twinning nanowire lattice objects
     """
 
+    @property
+    def supercell(self):
+        return self
+
     @classmethod
     def get_supercell(cls, *args, **kwargs):
         """dummy method: not applicable in general"""

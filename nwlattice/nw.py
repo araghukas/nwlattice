@@ -232,12 +232,12 @@ class FCCTwin(base.ANanowireLatticePeriodic):
 
 
 class FCCTwinA(base.ANanowireLatticeArbitrary):
-    DEFAULT_INDEXER = indices.LinearDecrease(1)
-
     """
        Constant-width arbitrarily twinning face-centered cubic nanowire with axis
        along [111]. Cross-section is hexagonal.
     """
+
+    DEFAULT_INDEXER = indices.LinearDecrease(1)
 
     def __init__(self, scale: float, width: float = None, length: float = None,
                  n_xy: int = None, nz: int = None, indexer: callable = None):
@@ -665,6 +665,26 @@ class ZBTwin(FCCTwin):
         """
         super().__init__(scale, width, length, period, n_xy, nz, q,
                          force_cyclic)
+        self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
+
+
+class ZBTwinA(FCCTwinA):
+    """
+       Constant-width arbitrarily twinning zincblende nanowire with axis
+       along [111]. Cross-section is hexagonal.
+    """
+
+    def __init__(self, scale: float, width: float = None, length: float = None,
+                 n_xy: int = None, nz: int = None, indexer: callable = None):
+        """
+        :param scale: side length of cubic unit cell
+        :param width: approximated width
+        :param length: approximated length
+        :param n_xy: (overrides `width`) number of atoms in radial direction
+        :param nz: (overrides `length`) number of base planes stacked vertically
+        :param indexer: a function int -> (int, list) that returns nz and twin point indices
+        """
+        super().__init__(scale, width, length, n_xy, nz, indexer)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 

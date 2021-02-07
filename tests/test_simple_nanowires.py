@@ -2,7 +2,7 @@ import unittest
 import inspect
 import os
 import numpy as np
-from nwlattice import base, nw
+from nwlattice import base, nw, indices
 
 # from nwlattice import utilities
 # utilities.toggle_printing(True)
@@ -27,6 +27,7 @@ class NanowireObjectsTest(unittest.TestCase):
         'nz': None,
         'q': None,
         'force_cyclic': True,
+        'indexer': indices.LinearDecrease(1)
     }
 
     def setUp(self) -> None:
@@ -183,7 +184,8 @@ class InitAnnotationsCompleteTest(NanowireObjectsTest):
             'period': float,
             'theta': float,
             'fraction': float,
-            'force_cyclic': bool
+            'force_cyclic': bool,
+            'indexer': callable
         }
 
     def test_initializers_completely_annotated(self):
@@ -229,6 +231,7 @@ class ForceCyclicTest(NanowireObjectsTest):
             nw.FCCPristine111: 3,
             nw.FCCPristine100: 2,
             nw.FCCTwin: -1,
+            nw.FCCTwinA: None,
             nw.FCCTwinFaceted: -1,
             nw.HexPristine0001: 2,
             nw.FCCRandomHex: None,
@@ -237,6 +240,7 @@ class ForceCyclicTest(NanowireObjectsTest):
             nw.ZBPristine100: 2,
             nw.DiamondPristine100: 2,
             nw.ZBTwin: -1,
+            nw.ZBTwinA: None,
             nw.DiamondTwin: -1,
             nw.ZBTwinFaceted: -1,
             nw.DiamondTwinFaceted: -1,
