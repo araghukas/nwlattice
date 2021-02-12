@@ -15,7 +15,7 @@ class ATwinPlanesIndex(ABC):
         self.nz_prev = None
 
     @abstractmethod
-    def __call__(self, **kwrgs) -> (int, list):
+    def __call__(self, **kwargs) -> (int, list):
         """return new nz and index; wire size unaffected in bool(nz) is False"""
         return 0, []
 
@@ -41,31 +41,7 @@ class Manual(ATwinPlanesIndex):
 
 class LinearDecrease(ATwinPlanesIndex):
     """
-    Consider a general case of the sum of integers 1 to n:
-
-        1 + 2 + 3 + ... + n  =  n(n + 1)/2
-
-    where we ascend in steps of m:
-
-        1 + (1 + m) + (1 + 2(m)) + ... + (1 + (k - 1)m)  =  k + mk(k - 1)/2
-
-    Twice the sum of the first sequence is the number of monolayers
-    in a nanowire structure where the twinning period decreases by
-    one monolayer after each cycle.
-
-    Similarly, twice the sum--because there are two copies of each twin segment--
-    of the second sequence is the number of monolayers (nz) in a nanowire
-    structure where the twinning period decreases by m after each cycle.
-
-    There are n terms in the first sum and k terms in the second
-
-    Inverting the RHS of the second expression allows you to determine the
-    starting (maximum) value of the twin length (q), such that a length decrease of m
-    after each cycle results in exactly nz segments upon reaching the smallest
-    possible twin segment length (1).
-
-    Exactness is not possible at arbitrary nz_,
-    but we can take the nearest working nz.
+    Index a wire where the twin length decreases end to end
     """
 
     def __init__(self, m: int, r: int = None, q_min: int = None, q_max: int = None):
@@ -87,6 +63,34 @@ class LinearDecrease(ATwinPlanesIndex):
         self.r = r if r else 1
 
     def approximate(self, nz_) -> (int, int):
+        """
+        Consider a general case of the sum of integers 1 to n:
+
+            1 + 2 + 3 + ... + n  =  n(n + 1)/2
+
+        where we ascend in steps of m:
+
+            1 + (1 + m) + (1 + 2(m)) + ... + (1 + (k - 1)m)  =  k + mk(k - 1)/2
+
+        Twice the sum of the first sequence is the number of monolayers
+        in a nanowire structure where the twinning period decreases by
+        one monolayer after each cycle.
+
+        Similarly, twice the sum--because there are two copies of each twin segment--
+        of the second sequence is the number of monolayers (nz) in a nanowire
+        structure where the twinning period decreases by m after each cycle.
+
+        There are n terms in the first sum and k terms in the second
+
+        Inverting the RHS of the second expression allows you to determine the
+        starting (maximum) value of the twin length (q), such that a length decrease of m
+        after each cycle results in exactly nz segments upon reaching the smallest
+        possible twin segment length (1).
+
+        Exactness is not possible at arbitrary nz_,
+        but we can take the nearest working nz.
+        """
+
         # solve nz_ = 2 * (k + mk(k - 1)/2) for number of twin segments
         # determine largest (first) twin length q and total number of planes nz
         if self.q_max:
