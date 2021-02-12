@@ -88,7 +88,7 @@ class LinearDecrease(ATwinPlanesIndex):
 
     def approximate(self, nz_) -> (int, int):
         # solve nz_ = 2 * (k + mk(k - 1)/2) for number of twin segments
-        # determine q and nz
+        # determine largest (first) twin length q and total number of planes nz
         if self.q_max:
             k_ = (self.q_max - 1) / self.m + 1
         else:
