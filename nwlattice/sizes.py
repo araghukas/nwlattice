@@ -1,3 +1,52 @@
+SIZE_PROPERTIES = [
+    "scale",
+    "width",
+    "length",
+    "unit_dz",
+    "period",
+    "fraction",
+    "area",
+    "n_xy",
+    "nz",
+    "q",
+    "indexer"
+]
+
+
+class NanowireSizeCompound:
+    """
+    A size container that combines one or more NanowireSize objects
+    """
+
+    def __init__(self, **kwargs):
+        for k in kwargs:
+            if k in SIZE_PROPERTIES:
+                self.__setattr__(k, kwargs[k])
+
+    def __str__(self):
+        s = "<NanowireSize instance>\n"
+        s_args = []
+        props = self.props()
+        for prop, val in props.items():
+            try:
+                if int(val) == val:
+                    s_args.append("<\t{:<10}: {:<15,d}>".format(prop, val))
+                else:
+                    s_args.append("<\t{:<10}: {:<15,.2f}>".format(prop, val))
+            except TypeError:
+                s_args.append("<\t{:<10}: {}>".format(prop, val))
+
+        s += "\n".join(s_args)
+        return s
+
+    def props(self):
+        p_dict = {}
+        for prop in SIZE_PROPERTIES:
+            if hasattr(self, prop):
+                p_dict[prop] = self.__getattribute__(prop)
+        return p_dict
+
+
 class PlaneSize(object):
     """
     A size information handler for planar lattices
@@ -82,18 +131,27 @@ class NanowireSize(PlaneSize):
         self._length_func = None
 
     def __str__(self):
-        s = "<NanowireSize instance: " + "[" + hex(hash(self)) + "]>\n"
+        s = "<NanowireSize instance>\n"
         s_args = []
-        for arg in ['scale', 'width', 'length', 'period', 'area']:
-            if hasattr(self, arg):
-                s_args.append("<\t{:<10}: {:<15,.2f}>"
-                              .format(arg, self.__getattribute__(arg)))
-        for arg in ['n_xy', 'nz', 'q']:
-            if hasattr(self, arg):
-                s_args.append("<\t{:<10}: {:<15,d}>"
-                              .format(arg, self.__getattribute__(arg)))
+        props = self.props()
+        for prop, val in props.items():
+            try:
+                if int(val) == val:
+                    s_args.append("<\t{:<10}: {:<15,d}>".format(prop, val))
+                else:
+                    s_args.append("<\t{:<10}: {:<15,.2f}>".format(prop, val))
+            except TypeError:
+                s_args.append("<\t{:<10}: {}>".format(prop, val))
+
         s += "\n".join(s_args)
         return s
+
+    def props(self):
+        p_dict = {}
+        for prop in SIZE_PROPERTIES:
+            if hasattr(self, prop):
+                p_dict[prop] = self.__getattribute__(prop)
+        return p_dict
 
     @property
     def area(self):
@@ -160,6 +218,7 @@ class NanowireSizeArbitrary(NanowireSize):
     """
     A size information handler for arbitrary nanowire lattices
     """
+
     def __init__(self, scale, unit_dz, n_xy=None, nz=None,
                  width=None, length=None):
         super().__init__(scale, unit_dz, n_xy, nz, width, length)

@@ -4,6 +4,7 @@ from time import time
 import numpy as np
 
 from nwlattice.utilities import Quaternion as Qtr
+from nwlattice.sizes import NanowireSizeCompound
 
 
 # TODO: reduce data file size and write times; compressed output?
@@ -238,6 +239,54 @@ class ANanowireLattice(IDataWriter):
         self._v_offset = np.zeros(3)
 
         self.print("\n".join(str(self.size).split("\n")[1:]))
+
+    def __add__(self, other):
+        t = type(self)
+        if type(other) is not t:
+            raise TypeError("can not add incompatible types %s to %s"
+                            % (t, type(other)))
+
+        s1 = self.size
+        s2 = other.size
+
+        if s1.scale != s2.scale:
+            raise ValueError("nanowire sizes have unequal scales %f and %f"
+                             % (s1.scale, s2.scale))
+
+        if s1.n_xy != s2.n_xy:
+            raise ValueError("nanowire sizes have unequal n_xy %d and %d"
+                             % (s1.n_xy, s2.n_xy))
+
+        if s1.unit_dz != s2.unit_dz:
+            raise ValueError("nanowire sizes have unequal unit_dz %f and %f"
+                             % (s1.unit_dz, s2.unit_dz))
+
+        ps1 = s1.props()
+        ps2 = s2.props()
+
+        for p in ps1:
+            if p not in ps2:
+                raise ValueError("nanowire size property sets are unequal")
+        if len(ps1) != len(ps2):
+            raise ValueError("nanowire size property sets are unequal")
+
+        ps = ps1.copy()
+        for p in ps2:
+            if ps[p] != ps2[p]:
+                ps[p] = (ps[p], ps2[p])
+
+        ps["nz"] = s1.nz + s2.nz
+        ps["length"] = s1.length + s2.length
+        size = NanowireSizeCompound(**ps)
+
+        planes = self.planes + other.planes
+        vr = np.concatenate((self.vr, other.vr))
+
+        print(self.basis, other.basis)
+
+        sum_wire = CompoundNanowire(size, planes, vr)
+        sum_wire._basis = self.basis.copy()
+        return sum_wire
 
     def __str__(self):
         s = "<{} nanowire: ".format(self.type_name)
@@ -547,6 +596,27 @@ class ANanowireLattice(IDataWriter):
         else:
             zhi += basis_z_max
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
+
+
+class CompoundNanowire(ANanowireLattice):
+    def __init__(self, size_obj, planes, vr):
+        super().__init__(size_obj, planes, vr)
+
+    @classmethod
+    def get_supercell(cls, *args, **kwargs):
+        """dummy method: not applicable in general"""
+        return cls(*args, **kwargs)
+
+    @staticmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        raise NotImplementedError
+
+    @staticmethod
+    def get_width(scale: float, n_xy) -> float:
+        raise NotImplementedError
+
+    def get_size(self, *args):
+        raise NotImplementedError
 
 
 class ANanowireLatticePeriodic(ANanowireLattice):
