@@ -6,6 +6,9 @@ import nwlattice.base as base
 
 
 class FCCa(base.APointPlane):
+    def fits(self, other) -> bool:
+        return type(other) in [FCCb, FCCc]
+
     def __init__(self, scale: float, n_xy: int = None, width: float = None,
                  theta: float = None):
         size = PlaneSize(scale, n_xy, width)
@@ -78,6 +81,9 @@ class FCCa(base.APointPlane):
 
 
 class FCCb(FCCa):
+    def fits(self, other) -> bool:
+        return type(other) in [FCCa, FCCc]
+
     @staticmethod
     def get_n_xy(scale, width):
         return round(width / ROOT3 / scale + 1)
@@ -132,11 +138,16 @@ class FCCb(FCCa):
 
 
 class FCCc(FCCa):
+    def fits(self, other) -> bool:
+        return type(other) in [FCCa, FCCb]
+
     def __init__(self, scale: float, n_xy: int = None, width: float = None):
         super().__init__(scale, n_xy, width, theta=np.pi)
 
 
 class SqFCCa(base.APointPlane):
+    def fits(self, other) -> bool:
+        return type(other) is SqFCCb
 
     def __init__(self, scale: float, n_xy: int = None, width: float = None):
         size = PlaneSize(scale, n_xy, width)
@@ -199,6 +210,9 @@ class SqFCCa(base.APointPlane):
 
 
 class SqFCCb(SqFCCa):
+    def fits(self, other) -> bool:
+        return type(other) is SqFCCa
+
     @property
     def N(self):
         if self._N is None:
@@ -229,6 +243,9 @@ class SqFCCb(SqFCCa):
 
 
 class TwFCC(base.APointPlane):
+    def fits(self, other) -> bool:
+        return abs(self.m_xy - other.m_xy) == 1
+
     def __init__(self, scale: float, n_xy: int = None, m_xy: int = 0,
                  width: float = None):
         size = PlaneSize(scale, n_xy, width)

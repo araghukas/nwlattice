@@ -93,6 +93,10 @@ class APointPlane(IDataWriter):
         """returns the translation vectors for the given plane class"""
         raise NotImplementedError
 
+    @abstractmethod
+    def fits(self, other) -> bool:
+        raise NotImplementedError
+
     @property
     def N(self):
         # subclass-specific method
@@ -242,9 +246,11 @@ class ANanowireLattice(IDataWriter):
 
     def __add__(self, other):
         t = type(self)
-        if type(other) is not t:
+        t_o = type(other)
+
+        if t_o is not t and t is not CompoundNanowire:
             raise TypeError("can not add incompatible types %s to %s"
-                            % (t, type(other)))
+                            % (t, t_o))
 
         s1 = self.size
         s2 = other.size
@@ -277,12 +283,18 @@ class ANanowireLattice(IDataWriter):
 
         ps["nz"] = s1.nz + s2.nz
         ps["length"] = s1.length + s2.length
+
+        if self.planes[-1].fits(other.planes[0]):
+            planes = self.planes + other.planes
+            vr = np.concatenate((self.vr, other.vr))
+        elif self.planes[-1].fits(other.planes[1]):
+            planes = self.planes + other.planes[1:]
+            vr = np.concatenate((self.vr, other.vr[1:]))
+            ps["nz"] -= 1
+        else:
+            raise ValueError("could not fit constituent planes")
+
         size = NanowireSizeCompound(**ps)
-
-        planes = self.planes + other.planes
-        vr = np.concatenate((self.vr, other.vr))
-
-        print(self.basis, other.basis)
 
         sum_wire = CompoundNanowire(size, planes, vr)
         sum_wire._basis = self.basis.copy()
@@ -409,8 +421,9 @@ class ANanowireLattice(IDataWriter):
         else:
             self._basis[t] = [pt]
 
-    def invert(self):
-        self._vz = self._vz[::-1]
+    def invert(self) -> None:
+        self._planes = self._planes[::-1]
+        self._vr = self._vr[::-1]
 
     def rotate_vz(self, n):
         self._planes = self._planes[-n:] + self._planes[:-n]
