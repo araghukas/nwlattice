@@ -282,7 +282,6 @@ class ANanowireLattice(IDataWriter):
                 ps[p] = (ps[p], ps2[p])
 
         ps["nz"] = s1.nz + s2.nz
-        ps["length"] = s1.length + s2.length
 
         if self.planes[-1].fits(other.planes[0]):
             planes = self.planes + other.planes
@@ -294,6 +293,7 @@ class ANanowireLattice(IDataWriter):
         else:
             raise ValueError("could not fit constituent planes")
 
+        ps["length"] = s1.scale * s1.unit_dz * (ps["nz"] - 1)
         size = NanowireSizeCompound(**ps)
 
         sum_wire = CompoundNanowire(size, planes, vr)
