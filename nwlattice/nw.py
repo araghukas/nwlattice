@@ -383,10 +383,8 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         """
 
         step = 1
+        m_cycle = [m0]
         i = 0
-        next_q = m0 + step
-        m_cycle = [next_q]
-
         while i < nz - 1:
             next_q = m_cycle[-1] + step
             m_cycle.append(next_q)
