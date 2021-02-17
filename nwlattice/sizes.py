@@ -30,7 +30,7 @@ class NanowireSizeCompound:
         for prop, val in props.items():
             try:
                 if int(val) == val:
-                    s_args.append("<\t{:<10}: {:<15,d}>".format(prop, val))
+                    s_args.append("<\t{:<10}: {:<15,d}>".format(prop, int(val)))
                 else:
                     s_args.append("<\t{:<10}: {:<15,.2f}>".format(prop, val))
             except TypeError:
