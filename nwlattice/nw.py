@@ -545,7 +545,8 @@ class FCCRandomHex(base.ANanowireLattice):
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 fraction: float = 0.5, n_xy: int = None, nz: int = None):
+                 fraction: float = 0.5, n_xy: int = None, nz: int = None,
+                 force_cyclic: bool = True):
         """
         :param scale: side length of cubic unit cell
         :param width: approximated width
@@ -554,6 +555,7 @@ class FCCRandomHex(base.ANanowireLattice):
                          stacking faults
         :param n_xy: (overrides `width`) number of atoms in radial direction
         :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
         """
         size = self.get_size(scale, width, length, fraction, n_xy, nz)
         base_planes = [
@@ -574,6 +576,16 @@ class FCCRandomHex(base.ANanowireLattice):
             planes.append(base_planes[j % 3])
             vr[i] += (j % 3) * unit_vr
             j += 1
+
+        if force_cyclic:
+            trunc = 0
+            while not planes[0].fits(planes[-1]):
+                if trunc > 3:
+                    raise ValueError("could not force cyclic structure")
+                planes = planes[:-1]
+                trunc += 1
+            self.print("truncated planes list by %d to fit end planes" % trunc)
+
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
 
@@ -886,7 +898,8 @@ class ZBRandomWZ(FCCRandomHex):
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 fraction: float = 0.5, n_xy: int = None, nz: int = None):
+                 fraction: float = 0.5, n_xy: int = None, nz: int = None,
+                 force_cyclic: bool = True):
         """
         :param scale: side length of cubic unit cell
         :param width: approximated width
@@ -895,8 +908,9 @@ class ZBRandomWZ(FCCRandomHex):
                          stacking faults
         :param n_xy: (overrides `width`) number of atoms in radial direction
         :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
         """
-        super().__init__(scale, width, length, fraction, n_xy, nz)
+        super().__init__(scale, width, length, fraction, n_xy, nz, force_cyclic)
         self.add_basis(2, np.array([0., 0., ROOT3 / 4]))
 
 
@@ -907,7 +921,8 @@ class DiamondRandomWZ(FCCRandomHex):
     """
 
     def __init__(self, scale: float, width: float = None, length: float = None,
-                 fraction: float = 0.5, n_xy: int = None, nz: int = None):
+                 fraction: float = 0.5, n_xy: int = None, nz: int = None,
+                 force_cyclic: bool = True):
         """
         :param scale: side length of cubic unit cell
         :param width: approximated width
@@ -916,6 +931,7 @@ class DiamondRandomWZ(FCCRandomHex):
                          stacking faults
         :param n_xy: (overrides `width`) number of atoms in radial direction
         :param nz: (overrides `length`) number of base planes stacked vertically
+        :param force_cyclic: adjust nz (length) to nearest multiple of supercell
         """
-        super().__init__(scale, width, length, fraction, n_xy, nz)
+        super().__init__(scale, width, length, fraction, n_xy, nz, force_cyclic)
         self.add_basis(1, np.array([0., 0., ROOT3 / 4]))
