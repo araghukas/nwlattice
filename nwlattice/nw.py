@@ -9,7 +9,7 @@ import numpy as np
 
 # Simple nanowires
 # ------------------------------------------------------------------------------
-class FCCPristine111(base.ANanowireLattice):
+class FCCPristine111(base.NanowireLattice):
     """
     Pristine face-centered cubic nanowire with axis along [111]. Cross-section
     is hexagonal.
@@ -74,7 +74,7 @@ class FCCPristine111(base.ANanowireLattice):
         return size
 
 
-class FCCPristine100(base.ANanowireLattice):
+class FCCPristine100(base.NanowireLattice):
     """
     Pristine face-centered cubic nanowire with axis along [100]. Cross-section
     is square.
@@ -134,7 +134,7 @@ class FCCPristine100(base.ANanowireLattice):
         return size
 
 
-class FCCTwin(base.ANanowireLatticePeriodic):
+class FCCTwin(base.NanowireLatticePeriodic):
     """
     Constant-width periodically twinning face-centered cubic nanowire with axis
     along [111]. Cross-section is hexagonal.
@@ -231,7 +231,7 @@ class FCCTwin(base.ANanowireLatticePeriodic):
         return size
 
 
-class FCCTwinA(base.ANanowireLatticeArbitrary):
+class FCCTwinA(base.NanowireLatticeArbitrary):
     """
        Constant-width arbitrarily twinning face-centered cubic nanowire with axis
        along [111]. Cross-section is hexagonal.
@@ -299,7 +299,7 @@ class FCCTwinA(base.ANanowireLatticeArbitrary):
         return size
 
 
-class FCCTwinFaceted(base.ANanowireLatticePeriodic):
+class FCCTwinFaceted(base.NanowireLatticePeriodic):
     """
     Faceted twinning face-centered cubic nanowire with axis along [111].
     Each twin sister is a section of a non-primitive octahedral unit cell.
@@ -407,7 +407,7 @@ class FCCTwinFaceted(base.ANanowireLatticePeriodic):
         return size
 
 
-class FCCTwinFacetedA(base.ANanowireLatticeArbitrary):
+class FCCTwinFacetedA(base.NanowireLatticeArbitrary):
     """
     Faceted twinning face-centered cubic nanowire with axis along [111].
     Each twin sister is a section of a non-primitive octahedral unit cell.
@@ -475,7 +475,7 @@ class FCCTwinFacetedA(base.ANanowireLatticeArbitrary):
         return size
 
 
-class HexPristine0001(base.ANanowireLattice):
+class HexPristine0001(base.NanowireLattice):
     """
     Pristine hexagonal nanowire with axis along [0001]. Cross-section is
     hexagonal.
@@ -537,7 +537,7 @@ class HexPristine0001(base.ANanowireLattice):
         return size
 
 
-class FCCRandomHex(base.ANanowireLattice):
+class FCCRandomHex(base.NanowireLattice):
     """
     Face-centered cubic nanowire with a specific fraction of hexagonal planes
     substituted in at random locations. Axis along [111]. Cross-section is

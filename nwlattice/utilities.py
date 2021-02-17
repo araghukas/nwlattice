@@ -18,10 +18,10 @@ def get_all_nanowire_objects():
     obj_list = inspect.getmembers(nw)
     nw_list = []
     for o in obj_list:
-        if o[1] is base.ANanowireLattice:
+        if o[1] is base.NanowireLattice:
             continue
         try:
-            if issubclass(o[1], base.ANanowireLattice):
+            if issubclass(o[1], base.NanowireLattice):
                 nw_list.append(o[1])
         except TypeError:
             pass

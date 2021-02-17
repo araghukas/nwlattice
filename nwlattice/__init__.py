@@ -13,10 +13,10 @@ def get_info(type_name: str = None) -> None:
 
     nw_class_list = []
     for o in obj_list:
-        if o[1] is base.ANanowireLattice:
+        if o[1] is base.NanowireLattice:
             continue
         try:
-            if issubclass(o[1], base.ANanowireLattice):
+            if issubclass(o[1], base.NanowireLattice):
                 nw_class_list.append(o[1])
         except TypeError:
             pass

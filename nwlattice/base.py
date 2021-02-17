@@ -218,10 +218,28 @@ class APointPlane(IDataWriter):
         return rows
 
 
-class ANanowireLattice(IDataWriter):
+class NanowireLattice(IDataWriter):
     """
     Base class for nanowire lattice objects (planes stacked along z-axis)
     """
+
+    def get_size(self, *args):
+        raise NotImplementedError
+
+    @classmethod
+    def get_supercell(cls, *args, **kwargs):
+        # subclass-specific method
+        raise NotImplementedError
+
+    @staticmethod
+    def get_n_xy(scale: float, width: float) -> int:
+        """returns nearest integer lattice width from continuous width"""
+        raise NotImplementedError
+
+    @staticmethod
+    def get_width(scale: float, n_xy) -> float:
+        """returns continuous width from integer lattice width"""
+        raise NotImplementedError
 
     def __init__(self, size_obj, planes, vr):
         super().__init__()
@@ -245,12 +263,12 @@ class ANanowireLattice(IDataWriter):
         self.print("\n".join(str(self.size).split("\n")[1:]))
 
     def __add__(self, other):
-        t = type(self)
-        t_o = type(other)
+        types = (type(self), type(other))
 
-        if t_o is not t and t is not CompoundNanowire:
-            raise TypeError("can not add incompatible types %s to %s"
-                            % (t, t_o))
+        if types[1] is not types[0]:
+            if not (CompoundNanowire in types or NanowireLattice in types):
+                raise TypeError("can not add incompatible types %s to %s"
+                                % (types[0], types[1]))
 
         s1 = self.size
         s2 = other.size
@@ -311,24 +329,6 @@ class ANanowireLattice(IDataWriter):
         s += ">"
         return s
 
-    @classmethod
-    @abstractmethod
-    def get_supercell(cls, *args, **kwargs):
-        # subclass-specific method
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def get_n_xy(scale: float, width: float) -> int:
-        """returns nearest integer lattice width from continuous width"""
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def get_width(scale: float, n_xy) -> float:
-        """returns continuous width from integer lattice width"""
-        raise NotImplementedError
-
     @staticmethod
     def get_length(scale: float, nz, unit_dz) -> float:
         """returns continuous length from number of planes"""
@@ -355,10 +355,6 @@ class ANanowireLattice(IDataWriter):
                 return nhi
         else:
             return nlo, nhi
-
-    @abstractmethod
-    def get_size(self, *args):
-        raise NotImplementedError
 
     @property
     def basis(self):
@@ -424,6 +420,9 @@ class ANanowireLattice(IDataWriter):
     def invert(self) -> None:
         self._planes = self._planes[::-1]
         self._vr = self._vr[::-1]
+
+    def inverted(self):
+        return NanowireLattice(self.size, self._planes[::-1], self._vr[::-1])
 
     def rotate_vz(self, n):
         self._planes = self._planes[-n:] + self._planes[:-n]
@@ -611,7 +610,7 @@ class ANanowireLattice(IDataWriter):
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
 
 
-class CompoundNanowire(ANanowireLattice):
+class CompoundNanowire(NanowireLattice):
     def __init__(self, size_obj, planes, vr):
         super().__init__(size_obj, planes, vr)
 
@@ -632,7 +631,7 @@ class CompoundNanowire(ANanowireLattice):
         raise NotImplementedError
 
 
-class ANanowireLatticePeriodic(ANanowireLattice):
+class NanowireLatticePeriodic(NanowireLattice):
     """
     Base class for periodic twinning nanowire lattice objects
     """
@@ -674,7 +673,7 @@ class ANanowireLatticePeriodic(ANanowireLattice):
         return self._supercell
 
 
-class ANanowireLatticeArbitrary(ANanowireLattice):
+class NanowireLatticeArbitrary(NanowireLattice):
     """
     Base class for arbitrarily twinning nanowire lattice objects
     """
