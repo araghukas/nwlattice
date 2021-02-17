@@ -194,8 +194,12 @@ class NanowireSizePeriodic(NanowireSize):
     def __init__(self, scale, unit_dz, n_xy=None, nz=None, q=None,
                  width=None, length=None, period=None):
         super().__init__(scale, unit_dz, n_xy, nz, width, length)
-        if not (q or period):
+        if q is None and period is None:
             raise ValueError("must specify either `q` or `period`")
+        elif q == 0:
+            raise ValueError("`q` set to zero")
+        elif period == 0:
+            raise ValueError("`period` set to zero")
 
         self._q = q
         self._q_func = None
