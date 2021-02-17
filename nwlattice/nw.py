@@ -583,8 +583,10 @@ class FCCRandomHex(base.NanowireLattice):
                 if trunc > 3:
                     raise ValueError("could not force cyclic structure")
                 planes = planes[:-1]
+                vr = vr[:-1]
                 trunc += 1
-            self.print("truncated planes list by %d to fit end planes" % trunc)
+                size.fix_nz(size.nz - 1)
+            self.print("truncated planes list by %d to force cyclic" % trunc)
 
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
