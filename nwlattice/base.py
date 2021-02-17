@@ -260,8 +260,6 @@ class NanowireLattice(IDataWriter):
         self._v_center_com = np.zeros(3)  # vector to center the structure
         self._v_offset = np.zeros(3)
 
-        self.print("\n".join(str(self.size).split("\n")[1:]))
-
     def __add__(self, other):
         types = (type(self), type(other))
 
