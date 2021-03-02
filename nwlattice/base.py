@@ -265,7 +265,7 @@ class NanowireLattice(IDataWriter):
 
         if types[1] is not types[0]:
             if not (CompoundNanowire in types or NanowireLattice in types):
-                raise TypeError("can not add incompatible types %s to %s"
+                raise TypeError("can not add incompatible types %s and %s"
                                 % (types[0], types[1]))
 
         s1 = self.size
@@ -303,6 +303,7 @@ class NanowireLattice(IDataWriter):
             planes = self.planes + other.planes
             vr = np.concatenate((self.vr, other.vr))
         elif self.planes[-1].fits(other.planes[1]):
+            # truncate by 1 plane if that'll make it fit
             planes = self.planes + other.planes[1:]
             vr = np.concatenate((self.vr, other.vr[1:]))
             ps["nz"] -= 1
@@ -420,7 +421,11 @@ class NanowireLattice(IDataWriter):
         self._vr = self._vr[::-1]
 
     def inverted(self):
+        """returns a new instance with the planes stacked backwards"""
         return NanowireLattice(self.size, self._planes[::-1], self._vr[::-1])
+
+    def mirrored(self):
+        return self + self.inverted()
 
     def rotate_vz(self, n):
         self._planes = self._planes[-n:] + self._planes[:-n]
