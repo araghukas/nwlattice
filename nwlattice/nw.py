@@ -500,18 +500,19 @@ class HexPristine0001(base.NanowireLattice):
                        "(nz: %d -> %d) "
                        "(length: %.2f -> %.2f)"
                        % (2, old_nz, size.nz, old_length, size.length))
+
         base_planes = [
-            FCCa(1 / ROOT2, size.n_xy - 1),
-            FCCb(1 / ROOT2, size.n_xy),
+            FCCa(1 / ROOT2, size.n_xy),
+            FCCc(1 / ROOT2, size.n_xy)
         ]
 
-        # main structural logic: periodic -[A-B-C]- stacking of planes
+        # main structural logic: periodic -[A-C]- stacking of planes
         planes = []
         vr = np.zeros((size.nz, 3))
-        unit_vr = np.array([ROOT2 / 4, ROOT2 * ROOT3 / 12, 0.])
+        unit_vr = np.array([ROOT2 / 4, ROOT6 / 12, 0.])
         for i in range(size.nz):
             planes.append(base_planes[i % 2])
-            vr[i] += (i % 2) * unit_vr
+            vr[i] += (i % 2) * 2 * unit_vr
         super().__init__(size, planes, vr)
         self._v_center_com = -unit_vr
 
