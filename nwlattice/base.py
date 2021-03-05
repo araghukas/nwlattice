@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from os.path import expanduser
 from time import time
+import warnings
 import numpy as np
 
 from nwlattice.utilities import Quaternion as Qtr
@@ -15,6 +16,9 @@ class IDataWriter(ABC):
 
     # globally toggles runtime printing of feedback
     WILL_PRINT = False
+
+    # globally toggles runtime warning
+    WILL_WARN = False
 
     @property
     def type_name(self) -> str:
@@ -51,6 +55,12 @@ class IDataWriter(ABC):
         """prints the string `s` if `WILL_PRINT` is True"""
         if IDataWriter.WILL_PRINT:
             print(s)
+
+    @staticmethod
+    def warn(s: str):
+        """warns with message `s` if `WILL_WARN` is True"""
+        if IDataWriter.WILL_WARN:
+            warnings.warn(s)
 
 
 class APointPlane(IDataWriter):
@@ -299,6 +309,7 @@ class NanowireLattice(IDataWriter):
 
         ps["nz"] = s1.nz + s2.nz
 
+        # make sure planes fit at point of joining
         if self.planes[-1].fits(other.planes[0]):
             planes = self.planes + other.planes
             vr = np.concatenate((self.vr, other.vr))
@@ -307,8 +318,20 @@ class NanowireLattice(IDataWriter):
             planes = self.planes + other.planes[1:]
             vr = np.concatenate((self.vr, other.vr[1:]))
             ps["nz"] -= 1
+            self.warn("truncated top planes by 1 to force fit")
         else:
             raise ValueError("could not fit constituent planes")
+
+        # try to establish z-periodicity
+        if planes[0].fits(planes[-1]):
+            pass
+        elif planes[0].fits(planes[-2]):
+            self.warn("truncating top planes by 1 to force z-continuity")
+            planes = planes[:-1]
+            vr = vr[:-1]
+            ps["nz"] -= 1
+        else:
+            raise ValueError("could not establish z-periodicity")
 
         ps["length"] = s1.scale * s1.unit_dz * (ps["nz"] - 1)
         size = NanowireSizeCompound(**ps)
@@ -425,6 +448,11 @@ class NanowireLattice(IDataWriter):
         return NanowireLattice(self.size, self._planes[::-1], self._vr[::-1])
 
     def mirrored(self):
+        """
+        Returns a new instance made of this wire plus an inverted copy appended on top.
+        Note that at least 2 planes must/will be cut away: to ensure continuity at the junction,
+        and to force lattice periodicity in z.
+        """
         return self + self.inverted()
 
     def rotate_vz(self, n):
