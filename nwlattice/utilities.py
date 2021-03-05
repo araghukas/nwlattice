@@ -11,6 +11,11 @@ def toggle_printing(b: bool):
     IDataWriter.WILL_PRINT = bool(b)
 
 
+def toggle_warning(b: bool):
+    from nwlattice.base import IDataWriter
+    IDataWriter.WILL_WARN = bool(b)
+
+
 def get_all_nanowire_objects():
     import inspect
     import nwlattice.nw as nw
