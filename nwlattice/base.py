@@ -445,7 +445,11 @@ class NanowireLattice(IDataWriter):
 
     def inverted(self):
         """returns a new instance with the planes stacked backwards"""
-        return NanowireLattice(self.size, self._planes[::-1], self._vr[::-1])
+        inv_wire = NanowireLattice(self.size, self._planes[::-1], self._vr[::-1])
+        for t, pts in self.basis.items():
+            for pt in pts:
+                inv_wire.add_basis(t, pt)
+        return inv_wire
 
     def mirrored(self):
         """
