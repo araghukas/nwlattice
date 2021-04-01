@@ -62,15 +62,13 @@ def plot_index(wire: NanowireLattice, save_name: str = None, mirror: str = None,
     ax.text(margins[0], 0.64, r"m = %s | r = %s | $q_\mathrm{min}$ = %s | $q_\mathrm{max}$ = %s"
             % indexer.params, transform=ax.transAxes)
 
-    ax.text(1 - margins[0], 0.62, "{:.2f}".format(wire.size.length),
-            ha="right", transform=ax.transAxes)
+    ax.text(margins[0], 0.05, "scale = %f" % wire.size.scale, transform=ax.transAxes,
+            fontsize=10)
     ax.text(1 - margins[0] + 0.005, 0.5, "{:.2f}".format(wire.size.width),
             va="center", rotation="vertical", transform=ax.transAxes)
 
     ax.text(margins[0], 0.3, lengths_range[:10], transform=ax.transAxes)
     ax.text(1 - margins[0], 0.3, lengths_range[-10:], ha="right", transform=ax.transAxes)
-    ax.text(margins[0], 0.05, "scale = %f" % wire.size.scale, transform=ax.transAxes,
-            fontsize=10)
 
     if show:
         plt.show()
