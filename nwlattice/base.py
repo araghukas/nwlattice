@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 
 from nwlattice.utilities import Quaternion as Qtr
-from nwlattice.sizes import NanowireSizeCompound
+from nwlattice.sizes import NanowireSizeCompound, NanowireSizeArbitrary
 
 
 # TODO: reduce data file size and write times; compressed output?
@@ -449,6 +449,10 @@ class NanowireLattice(IDataWriter):
         for t, pts in self.basis.items():
             for pt in pts:
                 inv_wire.add_basis(t, pt)
+
+        if isinstance(self.size, NanowireSizeArbitrary):
+            inv_wire.size.invert_index()
+
         return inv_wire
 
     def mirrored(self):

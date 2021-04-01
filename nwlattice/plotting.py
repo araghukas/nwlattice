@@ -4,7 +4,7 @@ from nwlattice.base import NanowireLattice
 
 
 def plot_index(wire: NanowireLattice, save_name: str = None, mirror: str = None,
-               margins=(0.03, 2.0), show=True, save=False) -> None:
+               margins=(0.03, 2.0), show=False, save=True) -> None:
     index = wire.size.index
     indexer = wire.size.indexer
 

@@ -240,3 +240,6 @@ class NanowireSizeArbitrary(NanowireSize):
     @property
     def indexer(self):
         return self._indexer
+
+    def invert_index(self):
+        self._index = [self.nz - idx for idx in self._index][::-1]
