@@ -55,4 +55,4 @@ def get_info(type_name: str = None) -> None:
         return
 
 
-__version__ = "31March2021"
+__version__ = "1April2021"
