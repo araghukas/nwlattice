@@ -62,6 +62,13 @@ class LinearDecrease(ATwinPlanesIndex):
             raise ValueError("parameter `r` less than 1; can't repeat less than once")
         self.r = r if r else 1
 
+    def __str__(self):
+        return "LinearDecrease({:d},{:d},{},{})".format(*self.params)
+
+    @property
+    def params(self):
+        return self.m, self.r, self.q_min, self.q_max
+
     def approximate(self, nz_) -> (int, int):
         """
         Consider a general case of the sum of integers 1 to n:
