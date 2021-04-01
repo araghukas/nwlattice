@@ -64,6 +64,9 @@ def plot_index(wire: NanowireLattice, save_name: str = None, mirror: str = None,
 
     ax.text(margins[0], 0.05, "scale = %f" % wire.size.scale, transform=ax.transAxes,
             fontsize=10)
+    ax.text(1 - margins[0], 0.62, "~{:.2f}"
+            .format(wire.size.length if mirror is None else 2 * wire.size.length),
+            ha="right", transform=ax.transAxes)
     ax.text(1 - margins[0] + 0.005, 0.5, "{:.2f}".format(wire.size.width),
             va="center", rotation="vertical", transform=ax.transAxes)
 
