@@ -4,12 +4,11 @@ from nwlattice.base import NanowireLattice
 
 
 def plot_index(wire: NanowireLattice, save_name: str = None, mirror: str = None,
-               margins=(0.03, 2.0), show=True, save=True) -> None:
-    nz = wire.size.nz
+               margins=(0.03, 2.0), show=True, save=False) -> None:
+    index = wire.size.index
     indexer = wire.size.indexer
 
-    index = indexer(nz)[1]
-    lengths = [index[0]]
+    lengths = []
     for i in range(len(index) - 1):
         lengths.append(index[i + 1] - index[i])
 
@@ -63,27 +62,17 @@ def plot_index(wire: NanowireLattice, save_name: str = None, mirror: str = None,
     ax.text(margins[0], 0.64, r"m = %s | r = %s | $q_\mathrm{min}$ = %s | $q_\mathrm{max}$ = %s"
             % indexer.params, transform=ax.transAxes)
 
-    ax.text(1-margins[0], 0.62, "{:.2f}".format(wire.size.length),
+    ax.text(1 - margins[0], 0.62, "{:.2f}".format(wire.size.length),
             ha="right", transform=ax.transAxes)
-    ax.text(1-margins[0] + 0.005, 0.5, "{:.2f}".format(wire.size.width),
+    ax.text(1 - margins[0] + 0.005, 0.5, "{:.2f}".format(wire.size.width),
             va="center", rotation="vertical", transform=ax.transAxes)
 
     ax.text(margins[0], 0.3, lengths_range[:10], transform=ax.transAxes)
-    ax.text(1-margins[0], 0.3, lengths_range[-10:], ha="right", transform=ax.transAxes)
+    ax.text(1 - margins[0], 0.3, lengths_range[-10:], ha="right", transform=ax.transAxes)
+    ax.text(margins[0], 0.05, "scale = %f" % wire.size.scale, transform=ax.transAxes,
+            fontsize=10)
 
     if show:
         plt.show()
     if save:
         fig.savefig(save_name)
-
-if __name__ == "__main__":
-    from nwlattice import nw
-    from nwlattice import indices
-
-    # wire = nw.ZBTwinFacetedA(5.65315, 50, 1750, indexer=indices.LinearDecrease(1, r=1)).inverted().mirrored()
-    wire = nw.ZBTwinFacetedA(5.65315, 50, 1750, indexer=indices.LinearDecrease(5, r=2)).inverted()
-
-    # wire.write_points("~/Desktop/ZBTA_production.data")
-    # plot_index(wire, save=False, mirror="left")
-    # plot_index(wire, save=False, mirror="right")
-    plot_index(wire, save=True)
