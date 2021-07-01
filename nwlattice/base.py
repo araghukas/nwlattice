@@ -593,7 +593,7 @@ class NanowireLattice(IDataWriter):
         return types
 
     def get_map_rows(self) -> list:
-        """return `phana` map row for every atom"""
+        """return `fix phonon` map row for every atom"""
         # rows = [l1, l2, l3, k, ID]
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
         rows = []
