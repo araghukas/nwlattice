@@ -483,7 +483,7 @@ class NanowireLattice(IDataWriter):
             file_.write("\n")
 
             # decide simulation box dimensions
-            xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims(wrap)
+            xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims()
             dx = xlo if first_quad else 0.0
             dy = ylo if first_quad else 0.0
 
@@ -498,9 +498,8 @@ class NanowireLattice(IDataWriter):
             file_.write("\n")
             id_ = 1
             for pt, typ in zip(atom_points, atom_types):
-                ptz = pt[2] % zhi if wrap else pt[2]
                 file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
-                            .format(id_, typ, pt[0] - dx, pt[1] - dy, ptz))
+                            .format(id_, typ, pt[0] - dx, pt[1] - dy, pt[2]))
                 id_ += 1
             t2 = time()
             self.print("wrote %d atoms to data file '%s' in %f seconds"
@@ -578,11 +577,12 @@ class NanowireLattice(IDataWriter):
             self._area = sum_area / n * self.size.scale**2
         return self._area
 
-    def _get_points_box_dims(self, wrap: bool) -> tuple:
+    def _get_points_box_dims(self) -> tuple:
         """returns simulation box dimensions for write_points() method"""
         x = y = 2 * self.size.width  # keep atoms' (x,y) in box
         n_atom_types = len(self._basis)
-        basis_z_min = basis_z_max = 0.
+        basis_z_min = np.inf
+        basis_z_max = -np.inf
         if n_atom_types > 1:
             for t in self._basis:
                 for bpt in self._basis[t]:
@@ -590,12 +590,14 @@ class NanowireLattice(IDataWriter):
                         basis_z_min = bpt[2] * self.size.scale
                     elif bpt[2] > basis_z_max:
                         basis_z_max = bpt[2] * self.size.scale
-        zlo = 0. if wrap else basis_z_min
-        zhi = self.size.length
-        if wrap:
-            zhi += self.size.scale * self.size.unit_dz
-        else:
-            zhi += basis_z_max
+        zlo = basis_z_min
+        zhi = zlo + self.size.length + self.size.scale * self.size.unit_dz
+        z_space = (zhi - zlo) - (self.size.length + basis_z_max)
+        if z_space < 0.0:
+            warnings.warn("atoms may be outsize the z-boundary of your cell (z_space < 0.0)")
+
+        zlo = zlo - z_space / 2
+        zhi = zhi - z_space / 2
         return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
 
 
