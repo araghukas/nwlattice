@@ -563,17 +563,16 @@ class NanowireLattice(IDataWriter):
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
         atom_pts = np.zeros((self.N * n_basis_atoms, 3), dtype=float)
         n_ID = 0
-        for i in range(self.size.nz):
-            plane = self.planes[i]
-            for t in self.basis:
-                for bpt in self.basis[t]:
+
+        for t in self.basis:
+            for bpt in self.basis[t]:
+                for i in range(self.size.nz):
+                    plane = self.planes[i]
                     atom_pts[n_ID:(n_ID + plane.N)] = (
-                            plane.points
-                            + self.vr[i]
-                            + self.vz[i]
-                            + bpt
+                            plane.points + bpt + self.vr[i] + self.vz[i]
                     )
                     n_ID += plane.N
+
         scale = self.size.scale
         return scale * (atom_pts + self._v_center_com) + self._v_offset
 
@@ -584,12 +583,14 @@ class NanowireLattice(IDataWriter):
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
         types = np.zeros(self.N * n_basis_atoms, dtype=int)
         ID = 1
-        for i in range(self.size.nz):
-            plane = self.planes[i]
-            for t in self.basis:
-                for _ in self.basis[t]:
+
+        for t in self.basis:
+            for _ in self.basis[t]:
+                for i in range(self.size.nz):
+                    plane = self.planes[i]
                     types[(ID - 1):(ID - 1) + plane.N] = t
                     ID += plane.N
+
         return types
 
     def get_map_rows(self) -> list:
