@@ -41,7 +41,7 @@ class IDataWriter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def write_points(self, file_path: str):
+    def write_points(self, file_path: str, first_quad: bool):
         """writes the LAMMPS data file readable via the `read_data` command"""
         raise NotImplementedError
 
@@ -138,10 +138,11 @@ class APointPlane(IDataWriter):
     def theta(self):
         return self._theta
 
-    def write_points(self, file_path: str = None):
+    def write_points(self, file_path: str = None, first_quad: bool = False):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
         :param file_path: string indicating target file (created/overwritten)
+        :param first_quad: translate points into first quadrant
         """
         if file_path is None:
             file_path = "{}_structure.data".format(self.type_name)
@@ -160,13 +161,24 @@ class APointPlane(IDataWriter):
             file_.write("1 atom types\n")
             file_.write("\n")
 
+            # simulation box
+            xlo, xhi, ylo, yhi = self._get_points_box_dims()
+            dx = xlo if first_quad else 0.0
+            dy = ylo if first_quad else 0.0
+
+            # write simulation box
+            file_.write("{:.6f} {:.6f} xlo xhi\n".format(xlo - dx, xhi - dx))
+            file_.write("{:.6f} {:.6f} ylo yhi\n".format(ylo - dy, yhi - dy))
+            file_.write("\n")
+
             # Atoms section
             file_.write("Atoms # atomic\n")
             file_.write("\n")
             id_ = 1
+
             for pt in self.points:
                 file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
-                            .format(id_, 1, pt[0], pt[1], pt[2]))
+                            .format(id_, 1, pt[0] - dx, pt[1] - dy, pt[2]))
                 id_ += 1
             t2 = time()
             self.print("wrote %d atoms to map file '%s' in %f seconds"
@@ -226,6 +238,11 @@ class APointPlane(IDataWriter):
             ID += 1
 
         return rows
+
+    def _get_points_box_dims(self):
+        """return simulation box dimensions for write_points() method"""
+        x = y = 2 * self.size.width  # keep atoms' (x,y) in box
+        return -x / 2, x / 2, -y / 2, y / 2
 
 
 class NanowireLattice(IDataWriter):
@@ -473,12 +490,14 @@ class NanowireLattice(IDataWriter):
         """
         self._v_offset += v
 
-    def write_points(self, file_path: str = None, wrap=True):
+    def write_points(self, file_path: str = None,
+                     first_quad: bool = False, wrap: bool = True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
 
         :param file_path: string indicating target file (created/overwritten)
         :param wrap: toggle taking (z_coord % zhi) when writing atoms to file
+        :param first_quad: translate points into first quadrant
         :return: None
         """
         if file_path is None:
@@ -500,10 +519,12 @@ class NanowireLattice(IDataWriter):
 
             # decide simulation box dimensions
             xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims(wrap)
+            dx = xlo if first_quad else 0.0
+            dy = ylo if first_quad else 0.0
 
             # write simulation box
-            file_.write("{:.6f} {:.6f} xlo xhi\n".format(xlo, xhi))
-            file_.write("{:.6f} {:.6f} ylo yhi\n".format(ylo, yhi))
+            file_.write("{:.6f} {:.6f} xlo xhi\n".format(xlo - dx, xhi - dx))
+            file_.write("{:.6f} {:.6f} ylo yhi\n".format(ylo - dy, yhi - dy))
             file_.write("{:.6f} {:.6f} zlo zhi\n".format(zlo, zhi))
             file_.write("\n")
 
@@ -514,7 +535,7 @@ class NanowireLattice(IDataWriter):
             for pt, typ in zip(atom_points, atom_types):
                 ptz = pt[2] % zhi if wrap else pt[2]
                 file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
-                            .format(id_, typ, pt[0], pt[1], ptz))
+                            .format(id_, typ, pt[0] - dx, pt[1] - dy, ptz))
                 id_ += 1
             t2 = time()
             self.print("wrote %d atoms to data file '%s' in %f seconds"
@@ -630,8 +651,7 @@ class NanowireLattice(IDataWriter):
 
     def _get_points_box_dims(self, wrap: bool) -> tuple:
         """returns simulation box dimensions for write_points() method"""
-        x = 2 * self.size.width  # keep atoms' (x,y) in box
-        y = x
+        x = y = 2 * self.size.width  # keep atoms' (x,y) in box
         n_atom_types = len(self._basis)
         basis_z_min = basis_z_max = 0.
         if n_atom_types > 1:
