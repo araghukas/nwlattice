@@ -455,16 +455,21 @@ class NanowireLattice(IDataWriter):
         """
         self._v_offset += v
 
-    def write_points(self, file_path: str = None,
-                     first_quad: bool = True, wrap: bool = True):
+    def write_points(self,
+                     file_path: str = None,
+                     first_quad: bool = True,
+                     xy_space: float = None):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
 
         :param file_path: string indicating target file (created/overwritten)
-        :param wrap: toggle taking (z_coord % zhi) when writing atoms to file
         :param first_quad: translate points into first quadrant
+        :param xy_space: minimum perpendicular distance from nanowire edge to box wall
         :return: None
         """
+        if xy_space is None:
+            xy_space = self.size.width
+
         if file_path is None:
             file_path = "{}_structure.data".format(self.type_name)
         t1 = time()
@@ -483,7 +488,7 @@ class NanowireLattice(IDataWriter):
             file_.write("\n")
 
             # decide simulation box dimensions
-            xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims()
+            xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims(xy_space)
             dx = xlo if first_quad else 0.0
             dy = ylo if first_quad else 0.0
 
@@ -577,9 +582,9 @@ class NanowireLattice(IDataWriter):
             self._area = sum_area / n * self.size.scale**2
         return self._area
 
-    def _get_points_box_dims(self) -> tuple:
+    def _get_points_box_dims(self, xy_space: float) -> tuple:
         """returns simulation box dimensions for write_points() method"""
-        x = y = 2 * self.size.width  # keep atoms' (x,y) in box
+        x = y = self.size.width + 2 * xy_space  # x and y sizes of the box
         n_atom_types = len(self._basis)
         basis_z_min = np.inf
         basis_z_max = -np.inf
