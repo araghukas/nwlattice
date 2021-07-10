@@ -456,7 +456,7 @@ class NanowireLattice(IDataWriter):
         self._v_offset += v
 
     def write_points(self, file_path: str = None,
-                     first_quad: bool = False, wrap: bool = True):
+                     first_quad: bool = True, wrap: bool = True):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
 
