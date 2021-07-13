@@ -457,25 +457,40 @@ class NanowireLattice(IDataWriter):
 
     def write_points(self,
                      file_path: str = None,
-                     first_quad: bool = True,
-                     xy_space: float = None):
+                     xy_space: float = None,
+                     cell_type: str = "vector",
+                     origin=None):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
 
         :param file_path: string indicating target file (created/overwritten)
-        :param first_quad: translate points into first quadrant
         :param xy_space: minimum perpendicular distance from nanowire edge to box wall
+        :param cell_type: simulation cell shape, either 'ortho', or parallel to 'vector's
+        :param origin: origin of the simulation cell; default [0, 0, 0]
         :return: None
         """
         if xy_space is None:
             xy_space = self.size.width
 
+        if cell_type == "vector":
+            (xx, yy, zz, xy, xz, yz) = self._get_vector_box_dims(xy_space)
+        elif cell_type == "ortho":
+            (xx, yy, zz, xy, xz, yz) = self._get_ortho_box_dims(xy_space)
+        else:
+            raise ValueError("invalid cell type; must be one of 'ortho' or 'vectors'")
+
+        if origin is None:
+            origin = np.array([0., 0., 0.])
+
         if file_path is None:
             file_path = "{}_structure.data".format(self.type_name)
+
         t1 = time()
+        v_cell_center = .5 * np.array([xx + xy, yy, (zz - self.size.length) / 4.])
+        v_cell_center += origin
         file_path = expanduser(file_path)
-        atom_points = self.get_points()
         atom_types = self.get_types()
+        atom_points = self.get_points() + v_cell_center
         N_atoms = len(atom_points)
         with open(file_path, "w") as file_:
             # header (ignored)
@@ -487,15 +502,11 @@ class NanowireLattice(IDataWriter):
             file_.write("%d atom types\n" % len(self.basis))
             file_.write("\n")
 
-            # decide simulation box dimensions
-            xlo, xhi, ylo, yhi, zlo, zhi = self._get_points_box_dims(xy_space)
-            dx = xlo if first_quad else 0.0
-            dy = ylo if first_quad else 0.0
-
             # write simulation box
-            file_.write("{:.6f} {:.6f} xlo xhi\n".format(xlo - dx, xhi - dx))
-            file_.write("{:.6f} {:.6f} ylo yhi\n".format(ylo - dy, yhi - dy))
-            file_.write("{:.6f} {:.6f} zlo zhi\n".format(zlo, zhi))
+            file_.write("{:.6f} {:.6f} xlo xhi\n".format(origin[0], xx + origin[0]))
+            file_.write("{:.6f} {:.6f} ylo yhi\n".format(origin[1], yy + origin[1]))
+            file_.write("{:.6f} {:.6f} zlo zhi\n".format(origin[2], zz + origin[2]))
+            file_.write("{:.6f} {:.6f} {:.6f} xy xz yz\n".format(xy, xz, yz))
             file_.write("\n")
 
             # Atoms section
@@ -504,7 +515,7 @@ class NanowireLattice(IDataWriter):
             id_ = 1
             for pt, typ in zip(atom_points, atom_types):
                 file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
-                            .format(id_, typ, pt[0] - dx, pt[1] - dy, pt[2]))
+                            .format(id_, typ, pt[0], pt[1], pt[2]))
                 id_ += 1
             t2 = time()
             self.print("wrote %d atoms to data file '%s' in %f seconds"
@@ -582,28 +593,28 @@ class NanowireLattice(IDataWriter):
             self._area = sum_area / n * self.size.scale**2
         return self._area
 
-    def _get_points_box_dims(self, xy_space: float) -> tuple:
+    def _get_ortho_box_dims(self, xy_space: float) -> tuple:
         """returns simulation box dimensions for write_points() method"""
-        x = y = self.size.width + 2 * xy_space  # x and y sizes of the box
-        n_atom_types = len(self._basis)
-        basis_z_min = np.inf
-        basis_z_max = -np.inf
-        if n_atom_types > 1:
-            for t in self._basis:
-                for bpt in self._basis[t]:
-                    if bpt[2] < basis_z_min:
-                        basis_z_min = bpt[2] * self.size.scale
-                    elif bpt[2] > basis_z_max:
-                        basis_z_max = bpt[2] * self.size.scale
-        zlo = basis_z_min
-        zhi = zlo + self.size.length + self.size.scale * self.size.unit_dz
-        z_space = (zhi - zlo) - (self.size.length + basis_z_max)
-        if z_space < 0.0:
-            warnings.warn("atoms may be outsize the z-boundary of your cell (z_space < 0.0)")
+        xx = yy = self.size.width + 2 * xy_space  # x and y sizes of the box
+        zz = self.size.length + self.size.scale * self.size.unit_dz
+        return xx, yy, zz, 0., 0., 0.
 
-        zlo = zlo - z_space / 2
-        zhi = zhi - z_space / 2
-        return -x / 2, x / 2, -y / 2, y / 2, zlo, zhi
+    def _get_vector_box_dims(self, xy_space: float) -> tuple:
+        u1, u2 = self.planes[0].get_vectors()
+        theta = np.arccos(np.dot(u1, u2)
+                          / (np.linalg.norm(u1) * np.linalg.norm(u2)))
+        v_mag = (self.size.width + 2 * xy_space) / np.sin(theta)
+        v1 = v_mag * u1
+        v2 = v_mag * u2
+
+        xx = v1[0]
+        yy = v2[1]
+        zz = self.size.length + self.size.scale * self.size.unit_dz
+        xy = v2[0]
+        xz = 0.0
+        yz = 0.0
+
+        return xx, yy, zz, xy, xz, yz
 
 
 class CompoundNanowire(NanowireLattice):
