@@ -459,6 +459,8 @@ class NanowireLattice(IDataWriter):
                      file_path: str = None,
                      xy_space: float = None,
                      cell_type: str = "vector",
+                     center_points: bool = True,
+                     wrap_points: bool = False,
                      origin=None):
         """
         Write LAMMPS/OVITO compatible data file of all atom points
@@ -467,6 +469,8 @@ class NanowireLattice(IDataWriter):
         :param xy_space: minimum perpendicular distance from nanowire edge to box wall
         :param cell_type: simulation cell shape, either 'ortho', or parallel to 'vector's
         :param origin: origin of the simulation cell; default [0, 0, 0]
+        :param center_points: translate points to the centre of the cell
+        :param wrap_points: wrap points at periodic boundaries
         :return: None
         """
         if xy_space is None:
@@ -486,11 +490,23 @@ class NanowireLattice(IDataWriter):
             file_path = "{}_structure.data".format(self.type_name)
 
         t1 = time()
-        v_cell_center = .5 * np.array([xx + xy, yy, (zz - self.size.length) / 4.])
-        v_cell_center += origin
+
         file_path = expanduser(file_path)
         atom_types = self.get_types()
-        atom_points = self.get_points() + v_cell_center
+        atom_points = self.get_points()
+        if center_points:
+            atom_points += .5 * np.array([xx + xy, yy, (zz - self.size.length) / 4.])
+
+        if wrap_points:
+            M = np.array([[xx, xy, xz],
+                          [0., yy, yz],
+                          [0., 0., zz]])
+            M_inv = np.linalg.inv(M)
+            x = np.dot(atom_points, M_inv.T)
+            x %= 1
+            atom_points = np.dot(x, M.T)
+
+        atom_points += origin
         N_atoms = len(atom_points)
         with open(file_path, "w") as file_:
             # header (ignored)
