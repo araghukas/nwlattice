@@ -11,7 +11,7 @@ from nwlattice.sizes import NanowireSizeCompound, NanowireSizeArbitrary
 # TODO: reduce data file size and write times; compressed output?
 class IDataWriter(ABC):
     """
-    The interface for writing the LAMMPS/phana atom data and map files
+    The interface for writing the LAMMPS/phana atom data
     """
 
     # globally toggles runtime printing of feedback
@@ -33,11 +33,6 @@ class IDataWriter(ABC):
     @abstractmethod
     def get_types(self) -> np.ndarray:
         """returns an N x 1 array containing all atom types"""
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_map_rows(self) -> list:
-        """returns a list of tuples representing `phana` map file rows"""
         raise NotImplementedError
 
     @abstractmethod
@@ -176,8 +171,7 @@ class APointPlane(IDataWriter):
                             .format(id_, 1, pt[0] - dx, pt[1] - dy, pt[2]))
                 id_ += 1
             t2 = time()
-            self.print("wrote %d atoms to map file '%s' in %f seconds"
-                       % (N_atoms, file_path, t2 - t1))
+            self.print("wrote %d atoms in %f seconds" % (N_atoms, t2 - t1))
 
     def get_points(self) -> np.ndarray:
         # subclass-specific method
@@ -189,20 +183,6 @@ class APointPlane(IDataWriter):
         :return: array of atom types
         """
         return np.ones(self.N)
-
-    def get_map_rows(self) -> list:
-        """return `phana` map row for every atom"""
-        rows = []
-        l1 = l2 = l3 = 0
-        k = 0
-        ID = 1
-
-        for i in range(self.N):
-            rows.append((l1, l2, l3, k, ID))
-            k += 1
-            ID += 1
-
-        return rows
 
     def _get_points_box_dims(self):
         """return simulation box dimensions for write_points() method"""
@@ -573,30 +553,6 @@ class NanowireLattice(IDataWriter):
                     ID += plane.N
 
         return types
-
-    def get_map_rows(self) -> list:
-        """return `fix phonon` map row for every atom"""
-        # rows = [l1, l2, l3, k, ID]
-        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        rows = []
-        l1 = l2 = l3 = 0
-        k = 0
-        ID = 1
-        n = 0
-        for i in range(self.size.nz):
-            plane = self.supercell.planes[i % self.supercell.size.nz]
-            for t in self.basis:
-                for _ in plane.get_points():
-                    for _ in self.basis[t]:
-                        rows.append((l1, l2, l3, k, ID))
-                        n += 1
-                        ID += 1
-                        if n % (self.supercell.N * n_basis_atoms) == 0:
-                            l3 += 1
-                            k = 0
-                        else:
-                            k += 1
-        return rows
 
     def get_area(self) -> float:
         """returns average cross-sectional area of comprising planes"""
