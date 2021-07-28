@@ -6,6 +6,8 @@ from nwlattice.planes import FCCb, FCCa, FCCc, SqFCCa, SqFCCb, TwFCC
 
 import numpy as np
 
+# TODO: FCCPristine100 may have wrong z-periodicity vs. simulation box
+
 
 # Simple nanowires
 # ------------------------------------------------------------------------------
