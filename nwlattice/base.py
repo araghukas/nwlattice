@@ -12,7 +12,7 @@ from nwlattice.sizes import NanowireSizeCompound, NanowireSizeArbitrary
 # TODO: reduce data file size and write times; compressed output?
 class IDataWriter(ABC):
     """
-    The interface for writing the LAMMPS/phana atom data
+    The interface for writing the LAMMPS atom data
     """
 
     # globally toggles runtime printing of feedback
@@ -37,7 +37,7 @@ class IDataWriter(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def write_points(self, file_path: str, first_quad: bool):
+    def write_points(self, *args):
         """writes the LAMMPS data file readable via the `read_data` command"""
         raise NotImplementedError
 
@@ -189,6 +189,256 @@ class APointPlane(IDataWriter):
         """return simulation box dimensions for write_points() method"""
         x = y = 2 * self.size.width  # keep atoms' (x,y) in box
         return -x / 2, x / 2, -y / 2, y / 2
+
+
+class PlaneZStack(IDataWriter):
+    """A basic stack of planes along the z-direction"""
+
+    _scale: float  # scale factor applied for point planes
+    _planes: List[APointPlane]  # planes to be stacked
+    _basis: dict  # dictionary of the form {atom_type: [locations]}
+    _vz: np.ndarray  # positions of the planes along z-axis
+    _vr: np.ndarray  # offsets of planes in the xy-plane
+    _points: np.ndarray
+
+    def __init__(self, scale, planes, vz=None, vr=None, basis=None):
+        self._scale = scale
+        if (vz and vr) and not (len(planes) == len(vz) == len(vr)):
+            raise ValueError("planes, vz, and vr arrays don't have the same length")
+        self._planes = planes
+        self._vz = np.zeros((len(planes), 3)) if vz is None else vz
+        self._vr = np.zeros((len(planes), 3)) if vr is None else vr
+        self._basis = {1: [np.zeros(3)]} if basis is None else basis
+
+    @property
+    def scale(self):
+        return self._scale
+
+    @property
+    def basis(self):
+        return self._basis
+
+    @property
+    def planes(self):
+        return self._planes.copy()
+
+    @property
+    def points(self):
+        if self._points is None:
+            self._points = self.get_points()
+        return self._points.copy()
+
+    @points.setter
+    def points(self, _points: np.ndarray):
+        if not _points.shape == self._points.shape:
+            raise ValueError("shape of new points array does not match the original")
+        self._points = _points
+
+    def add_basis(self, t: int, pt):
+        """
+        Add a basis point of type `t` at 3-point `pt`
+
+        :param t: integer atom type ID
+        :param pt: 3-point indicating basis point relative to lattice point
+        :return: None
+        """
+        t = int(t)
+        if t <= 0:
+            raise ValueError("only positive integers should be used for "
+                             "atom type identifiers")
+
+        pt = np.asarray(pt)
+        if len(pt) != 3:
+            raise ValueError("basis point must be 3-dimensional")
+
+        if t in self._basis:
+            self._basis[t].append(pt)
+        else:
+            self._basis[t] = [pt]
+
+    def get_points(self) -> np.ndarray:
+        """produce and return an array of points based on planes, basis, and offsets"""
+        n_basis_atoms = sum(len(self.basis[t]) for t in self.basis)
+        N_total = sum(plane.N for plane in self._planes)
+        atom_pts = np.zeros((N_total * n_basis_atoms, 3), dtype=float)
+
+        n = 0
+        nz = len(self._planes)
+        for t in self._basis:
+            for bpt in self._basis[t]:
+                for i in range(nz):
+                    plane = self._planes[i]
+                    atom_pts[n:(n + plane.N)] = (
+                            plane.points + bpt + self._vr[i] + self._vz[i]
+                    )
+                    n += plane.N
+
+        return self._scale * atom_pts
+
+    def get_types(self) -> np.ndarray:
+        n_basis_atoms = sum(len(self.basis[t]) for t in self._basis)
+        N_total = sum(plane.N for plane in self._planes)
+        types = np.zeros(N_total * n_basis_atoms, dtype=int)
+
+        ID = 1
+        nz = len(self._planes)
+        for t in self._basis:
+            for i in range(nz):
+                plane = self._planes[i]
+                types[(ID - 1):(ID - 1) + plane.N] = t
+                ID += plane.N
+
+        return types
+
+    def get_layer_map(self, planes_per_layer: int = 1) -> List[list]:
+        """
+
+        :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
+        :return: a list of lists of the form [layer number][atom id in layer]
+        """
+        N_planes = len(self.planes)
+        if len(self.planes) % planes_per_layer != 0:
+            raise ValueError("number of planes in structure ({:d}) is not divisible by {:d}"
+                             .format(N_planes, planes_per_layer))
+        n_layers = N_planes // planes_per_layer
+        n_basis_atoms = sum(len(self._basis[t]) for t in self._basis)
+        N_total = sum(plane.N for plane in self._planes)
+        nz = len(self._planes)
+
+        layer_map = [[] for _ in range(n_layers)]
+        atom_ids = np.arange(N_total * n_basis_atoms) + 1
+        id_counter = 0
+
+        for t in self.basis:
+            for _ in self.basis[t]:
+                for i in range(nz):
+                    layer_index = i // planes_per_layer
+                    for j in range(self.planes[i].N):
+                        layer_map[layer_index].append(atom_ids[id_counter])
+                        id_counter += 1
+
+        return layer_map
+
+    def write_points(self,
+                     file_path: str,
+                     simbox_matrix: np.ndarray = None,
+                     center_points: bool = True,
+                     wrap_points: bool = False,
+                     origin=None):
+        """
+        Write LAMMPS/OVITO compatible data file of all atom points
+
+        :param file_path: string indicating target file (created/overwritten)
+        :param simbox_matrix: 2D matrix [[xx, xy, xz], [_, yy, yz], [_, _, zz]] of simulation box
+        :param center_points: translate points to the centre of the cell
+        :param wrap_points: wrap points at periodic boundaries
+        :param origin: origin of the simulation cell; default [0, 0, 0]
+        :return: None
+        """
+
+        if simbox_matrix is not None:
+            xx = simbox_matrix[0][0]
+            xy = simbox_matrix[0][1]
+            xz = simbox_matrix[0][2]
+            yy = simbox_matrix[1][1]
+            yz = simbox_matrix[1][2]
+            zz = simbox_matrix[2][2]
+        else:
+            xx = xy = xz = yy = yz = zz = None
+
+        if origin is None:
+            origin = np.array([0., 0., 0.])
+
+        t1 = time()
+
+        file_path = expanduser(file_path)
+        atom_types = self.get_types()
+        atom_points = self.get_points()
+
+        N_total = sum(plane.N for plane in self._planes)
+        n_basis_atoms = sum(len(self._basis[t]) for t in self._basis)
+        atom_ids = np.arange(N_total * n_basis_atoms) + 1
+
+        if center_points and simbox_matrix is not None:
+            length = np.sum(np.diff(self._vz), axis=0)
+            atom_points += .5 * np.array([xx + xy, yy, (zz - length) / 4.])
+
+        if wrap_points:
+            M = np.array([[xx, xy, xz],
+                          [0., yy, yz],
+                          [0., 0., zz]])
+            M_inv = np.linalg.inv(M)
+            x = np.dot(atom_points, M_inv.T)
+            x %= 1
+            atom_points = np.dot(x, M.T)
+
+        atom_points += origin
+        N_atoms = len(atom_points)
+        with open(file_path, "w") as file_:
+            # header (ignored)
+            file_.write("# atom coordinates generated by 'nwlattice' package\n")
+            file_.write("\n")
+
+            # number of atoms and number of atom types
+            file_.write("%d atoms\n" % N_atoms)
+            file_.write("%d atom types\n" % len(self._basis))
+            file_.write("\n")
+
+            # write simulation box
+            if simbox_matrix is not None:
+                file_.write("{:.6f} {:.6f} xlo xhi\n".format(origin[0], xx + origin[0]))
+                file_.write("{:.6f} {:.6f} ylo yhi\n".format(origin[1], yy + origin[1]))
+                file_.write("{:.6f} {:.6f} zlo zhi\n".format(origin[2], zz + origin[2]))
+                file_.write("{:.6f} {:.6f} {:.6f} xy xz yz\n".format(xy, xz, yz))
+            file_.write("\n")
+
+            # Atoms section
+            file_.write("Atoms # atomic\n")
+            file_.write("\n")
+            for pt, typ, _id in zip(atom_points, atom_types, atom_ids):
+                file_.write("{:d} {:d} {:.6f} {:.6f} {:.6f} 0 0 0\n"
+                            .format(_id, typ, pt[0], pt[1], pt[2]))
+            t2 = time()
+            self.print("wrote %d atoms to data file '%s' in %f seconds"
+                       % (N_atoms, file_path, t2 - t1))
+
+    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 1) -> None:
+        """
+        Write a file specifying which atom ID's belong to which layer.
+        The file will look like this:
+
+            # comment line
+            1 N1
+                type11 id11
+                type12 id12
+                type13 id13
+                ....
+                type1(N1) id1(N1)
+            2 N2
+                type21 id21
+                type22 id22
+                ...
+                type2(N2) id2(N2)
+            ...
+
+        :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
+        :param file_path: (str) output file path
+        """
+        if file_path is None:
+            file_path = f"{self.type_name}_layers.map"
+        file_path = expanduser(file_path)
+
+        layer_map = self.get_layer_map(planes_per_layer)
+        atom_types = self.get_types()
+
+        with open(file_path, 'w') as file_:
+            # header (ignored)
+            file_.write("# layer map generated by 'nwlattice' package\n")
+
+            for layer_number, atom_ids in enumerate(layer_map):
+                file_.write("plane {:d} {:d}\n".format(layer_number, len(atom_ids)))
+                for atom_id in atom_ids:
+                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id-1], atom_id))
 
 
 class NanowireLattice(IDataWriter):
@@ -436,6 +686,77 @@ class NanowireLattice(IDataWriter):
         """
         self._v_offset += v
 
+    def get_ids(self) -> np.ndarray:
+        """
+        Return an array of atom ids belonging to given plane index.
+        Simply counts from 1 to `self.N`.
+        """
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        return np.arange(self.N * n_basis_atoms) + 1
+
+    def get_points(self) -> np.ndarray:
+        """
+        Return an array of all atom points of  all types
+        """
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        atom_pts = np.zeros((self.N * n_basis_atoms, 3), dtype=float)
+        n = 0
+
+        for t in self.basis:
+            for bpt in self.basis[t]:
+                for i in range(self.size.nz):
+                    plane = self.planes[i]
+                    atom_pts[n:(n + plane.N)] = (
+                            plane.points + bpt + self.vr[i] + self.vz[i]
+                    )
+                    n += plane.N
+
+        scale = self.size.scale
+        return scale * (atom_pts + self._v_center_com) + self._v_offset
+
+    def get_types(self) -> np.ndarray:
+        """
+        Return the integer type identifier for atoms identifier `ID`
+        """
+        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
+        types = np.zeros(self.N * n_basis_atoms, dtype=int)
+        ID = 1
+
+        for t in self.basis:
+            for _ in self.basis[t]:
+                for i in range(self.size.nz):
+                    plane = self.planes[i]
+                    types[(ID - 1):(ID - 1) + plane.N] = t
+                    ID += plane.N
+
+        return types
+
+    def get_layer_map(self, planes_per_layer: int = 1) -> List[list]:
+        """
+
+        :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
+        :return: a list of lists of the form [layer number][atom id in layer]
+        """
+        N_planes = len(self.planes)
+        if len(self.planes) % planes_per_layer != 0:
+            raise ValueError("number of planes in structure ({:d}) is not divisible by {:d}"
+                             .format(N_planes, planes_per_layer))
+        n_layers = N_planes // planes_per_layer
+
+        layer_map = [[] for _ in range(n_layers)]
+        ids = self.get_ids()
+        id_counter = 0
+
+        for t in self.basis:
+            for _ in self.basis[t]:
+                for i in range(self.size.nz):
+                    layer_index = i // planes_per_layer
+                    for j in range(self.planes[i].N):
+                        layer_map[layer_index].append(ids[id_counter])
+                        id_counter += 1
+
+        return layer_map
+
     def write_points(self,
                      file_path: str = None,
                      xy_space: float = None,
@@ -524,16 +845,16 @@ class NanowireLattice(IDataWriter):
 
             # comment line
             1 N1
-                id11
-                id12
-                id13
+                type11 id11
+                type12 id12
+                type13 id13
                 ....
-                id1(N1)
+                type1(N1) id1(N1)
             2 N2
-                id21
-                id22
+                type21 id21
+                type22 id22
                 ...
-                id2(N2)
+                type2(N2) id2(N2)
             ...
 
         :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
@@ -544,85 +865,16 @@ class NanowireLattice(IDataWriter):
         file_path = expanduser(file_path)
 
         layer_map = self.get_layer_map(planes_per_layer)
+        atom_types = self.get_types()
+
         with open(file_path, 'w') as file_:
             # header (ignored)
             file_.write("# layer map generated by 'nwlattice' package\n")
 
             for layer_number, atom_ids in enumerate(layer_map):
-                file_.write("{:d} {:d}\n".format(layer_number, len(atom_ids)))
+                file_.write("plane {:d} {:d}\n".format(layer_number, len(atom_ids)))
                 for atom_id in atom_ids:
-                    file_.write("\t{:d}\n".format(atom_id))
-
-    def get_layer_map(self, planes_per_layer: int = 1) -> List[list]:
-        """
-
-        :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
-        :return: a list of lists of the form [layer number][atom id in layer]
-        """
-        N_planes = len(self.planes)
-        if len(self.planes) % planes_per_layer != 0:
-            raise ValueError("number of planes in structure ({:d}) is not divisible by {:d}"
-                             .format(N_planes, planes_per_layer))
-        n_layers = N_planes // planes_per_layer
-
-        layer_map = [[] for _ in range(n_layers)]
-        ids = self.get_ids()
-        id_counter = 0
-
-        for t in self.basis:
-            for _ in self.basis[t]:
-                for i in range(self.size.nz):
-                    layer_index = i // planes_per_layer
-                    for j in range(self.planes[i].N):
-                        layer_map[layer_index].append(ids[id_counter])
-                        id_counter += 1
-
-        return layer_map
-
-    def get_ids(self) -> np.ndarray:
-        """
-        Return an array of atom ids belonging to given plane index.
-        Simply counts from 1 to `self.N`.
-        """
-        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        return np.arange(self.N * n_basis_atoms) + 1
-
-    def get_points(self) -> np.ndarray:
-        """
-        Return an array of all atom points of  all types
-        """
-        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        atom_pts = np.zeros((self.N * n_basis_atoms, 3), dtype=float)
-        n = 0
-
-        for t in self.basis:
-            for bpt in self.basis[t]:
-                for i in range(self.size.nz):
-                    plane = self.planes[i]
-                    atom_pts[n:(n + plane.N)] = (
-                            plane.points + bpt + self.vr[i] + self.vz[i]
-                    )
-                    n += plane.N
-
-        scale = self.size.scale
-        return scale * (atom_pts + self._v_center_com) + self._v_offset
-
-    def get_types(self) -> np.ndarray:
-        """
-        Return the integer type identifier for atoms identifier `ID`
-        """
-        n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        types = np.zeros(self.N * n_basis_atoms, dtype=int)
-        ID = 1
-
-        for t in self.basis:
-            for _ in self.basis[t]:
-                for i in range(self.size.nz):
-                    plane = self.planes[i]
-                    types[(ID - 1):(ID - 1) + plane.N] = t
-                    ID += plane.N
-
-        return types
+                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id-1], atom_id))
 
     def get_area(self) -> float:
         """returns average cross-sectional area of comprising planes"""
