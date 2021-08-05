@@ -203,8 +203,9 @@ class PlaneZStack(IDataWriter):
 
     def __init__(self, scale, planes, vz=None, vr=None, basis=None):
         self._scale = scale
-        if (vz and vr) and not (len(planes) == len(vz) == len(vr)):
-            raise ValueError("planes, vz, and vr arrays don't have the same length")
+        if vz is not None and vr is not None:
+            if not (len(planes) == len(vz) == len(vr)):
+                raise ValueError("planes, vz, and vr arrays don't have the same length")
         self._planes = planes
         self._vz = np.zeros((len(planes), 3)) if vz is None else vz
         self._vr = np.zeros((len(planes), 3)) if vr is None else vr
