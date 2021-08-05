@@ -337,15 +337,18 @@ class PlaneZStack(IDataWriter):
         :return: None
         """
 
-        if simbox_matrix is not None:
+        if simbox_matrix is None:
+            xx = yy = 2. * self._scale * max(plane.size.width for plane in self._planes)
+            xy = xz = yz = 0.
+            dz = self._vz[1][2] - self._vz[0][2]
+            zz = self._scale * dz * len(self._planes)
+        else:
             xx = simbox_matrix[0][0]
             xy = simbox_matrix[0][1]
             xz = simbox_matrix[0][2]
             yy = simbox_matrix[1][1]
             yz = simbox_matrix[1][2]
             zz = simbox_matrix[2][2]
-        else:
-            xx = xy = xz = yy = yz = zz = None
 
         if origin is None:
             origin = np.array([0., 0., 0.])
@@ -360,9 +363,10 @@ class PlaneZStack(IDataWriter):
         n_basis_atoms = sum(len(self._basis[t]) for t in self._basis)
         atom_ids = np.arange(N_total * n_basis_atoms) + 1
 
-        if center_points and simbox_matrix is not None:
-            length = np.sum(np.diff(self._vz), axis=0)
-            atom_points += .5 * np.array([xx + xy, yy, (zz - length) / 4.])
+        if center_points:
+            com = np.sum(atom_points, axis=0) / len(atom_points)
+            atom_points -= com
+            atom_points += .5 * np.array([xx + xy, yy, zz])
 
         if wrap_points:
             M = np.array([[xx, xy, xz],
@@ -386,11 +390,10 @@ class PlaneZStack(IDataWriter):
             file_.write("\n")
 
             # write simulation box
-            if simbox_matrix is not None:
-                file_.write("{:.6f} {:.6f} xlo xhi\n".format(origin[0], xx + origin[0]))
-                file_.write("{:.6f} {:.6f} ylo yhi\n".format(origin[1], yy + origin[1]))
-                file_.write("{:.6f} {:.6f} zlo zhi\n".format(origin[2], zz + origin[2]))
-                file_.write("{:.6f} {:.6f} {:.6f} xy xz yz\n".format(xy, xz, yz))
+            file_.write("{:.6f} {:.6f} xlo xhi\n".format(origin[0], xx + origin[0]))
+            file_.write("{:.6f} {:.6f} ylo yhi\n".format(origin[1], yy + origin[1]))
+            file_.write("{:.6f} {:.6f} zlo zhi\n".format(origin[2], zz + origin[2]))
+            file_.write("{:.6f} {:.6f} {:.6f} xy xz yz\n".format(xy, xz, yz))
             file_.write("\n")
 
             # Atoms section
@@ -439,7 +442,7 @@ class PlaneZStack(IDataWriter):
             for layer_number, atom_ids in enumerate(layer_map):
                 file_.write("layer {:d} {:d}\n".format(layer_number, len(atom_ids)))
                 for atom_id in atom_ids:
-                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id-1], atom_id))
+                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id - 1], atom_id))
 
 
 class NanowireLattice(IDataWriter):
@@ -875,7 +878,7 @@ class NanowireLattice(IDataWriter):
             for layer_number, atom_ids in enumerate(layer_map):
                 file_.write("layer {:d} {:d}\n".format(layer_number, len(atom_ids)))
                 for atom_id in atom_ids:
-                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id-1], atom_id))
+                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id - 1], atom_id))
 
     def get_area(self) -> float:
         """returns average cross-sectional area of comprising planes"""
