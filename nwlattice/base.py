@@ -413,16 +413,16 @@ class PlaneZStack(IDataWriter):
 
             # comment line
             1 N1
-                type11 id11
-                type12 id12
-                type13 id13
+                id11 type11
+                id12 type12
+                id13 type13
                 ....
-                type1(N1) id1(N1)
+                id1(N1) type1(N1)
             2 N2
-                type21 id21
-                type22 id22
+                id21 type21
+                id22 type22
                 ...
-                type2(N2) id2(N2)
+                id2(N2) type2(N2)
             ...
 
         :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
