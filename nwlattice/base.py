@@ -442,7 +442,7 @@ class PlaneZStack(IDataWriter):
             for layer_number, atom_ids in enumerate(layer_map):
                 file_.write("layer {:d} {:d}\n".format(layer_number, len(atom_ids)))
                 for atom_id in atom_ids:
-                    file_.write("\t{:d} {:d}\n".format(atom_types[atom_id - 1], atom_id))
+                    file_.write("\t{:d} {:d}\n".format(atom_id, atom_types[atom_id - 1], ))
 
 
 class NanowireLattice(IDataWriter):
