@@ -406,7 +406,7 @@ class PlaneZStack(IDataWriter):
             self.print("wrote %d atoms to data file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 1) -> None:
+    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 3) -> None:
         """
         Write a file specifying which atom ID's belong to which layer.
         The file will look like this:
@@ -842,7 +842,7 @@ class NanowireLattice(IDataWriter):
             self.print("wrote %d atoms to data file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 1) -> None:
+    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 3) -> None:
         """
         Write a file specifying which atom ID's belong to which layer.
         The file will look like this:
