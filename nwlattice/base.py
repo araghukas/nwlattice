@@ -291,7 +291,7 @@ class PlaneZStack(IDataWriter):
 
         return types
 
-    def get_layer_map(self, planes_per_layer: int = 1) -> List[list]:
+    def get_uniform_layer_map(self, planes_per_layer: int = 1) -> List[list]:
         """
 
         :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
@@ -318,6 +318,37 @@ class PlaneZStack(IDataWriter):
                         layer_map[layer_index].append(atom_ids[id_counter])
                         id_counter += 1
 
+        return layer_map
+
+    def construct_layer_map(self, layer_planes_map: List[List[int]]):
+        """validate the specified layer map"""
+        N_planes = len(self.planes)
+        planes_list = []
+        for plane_indices in layer_planes_map:
+            if len(plane_indices) < 1:
+                raise ValueError("planes map has empty entries.")
+            planes_list += plane_indices
+
+        if planes_list[0] != 0:
+            raise ValueError("planes map does not start at 0.")
+        if any(np.diff(planes_list) != 1):
+            raise ValueError("planes map is not sequential.")
+        if len(planes_list) != N_planes:
+            raise ValueError("planes map has an invalid number of planes.")
+
+        layer_map = [[] for _ in range(len(layer_planes_map))]
+        n_basis_atoms = sum(len(self._basis[t]) for t in self._basis)
+        N_total = sum(plane.N for plane in self._planes)
+        ids = [i + 1 for i in range(N_total * n_basis_atoms)]
+        id_counter = 0
+
+        for t in self.basis:
+            for _ in self.basis[t]:
+                for layer_index, plane_indices in enumerate(layer_planes_map):
+                    for i in plane_indices:
+                        for j in range(self.planes[i].N):
+                            layer_map[layer_index].append(ids[id_counter])
+                            id_counter += 1
         return layer_map
 
     def write_points(self,
@@ -406,7 +437,10 @@ class PlaneZStack(IDataWriter):
             self.print("wrote %d atoms to data file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 3) -> None:
+    def write_layer_map(self,
+                        file_path: str = None,
+                        planes_per_layer: int = 3,
+                        layer_planes_map: List[List[int]] = None) -> None:
         """
         Write a file specifying which atom ID's belong to which layer.
         The file will look like this:
@@ -425,14 +459,19 @@ class PlaneZStack(IDataWriter):
                 id2(N2) type2(N2)
             ...
 
-        :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
-        :param file_path: (str) output file path
+        :param file_path: output file path
+        :param planes_per_layer: number of planes (including all basis atoms) in a layer
+        :param layer_planes_map: list of lists mapping planes to layers in sequence
         """
         if file_path is None:
             file_path = f"{self.type_name}_layers.map"
         file_path = expanduser(file_path)
 
-        layer_map = self.get_layer_map(planes_per_layer)
+        if layer_planes_map is None:
+            layer_map = self.get_uniform_layer_map(planes_per_layer)
+        else:
+            layer_map = self.construct_layer_map(layer_planes_map)
+
         atom_types = self.get_types()
 
         with open(file_path, 'w') as file_:
@@ -690,13 +729,13 @@ class NanowireLattice(IDataWriter):
         """
         self._v_offset += v
 
-    def get_ids(self) -> np.ndarray:
+    def get_ids(self) -> List[int]:
         """
         Return an array of atom ids belonging to given plane index.
         Simply counts from 1 to `self.N`.
         """
         n_basis_atoms = sum([len(self.basis[t]) for t in self.basis])
-        return np.arange(self.N * n_basis_atoms) + 1
+        return [i + 1 for i in range(self.N * n_basis_atoms)]
 
     def get_points(self) -> np.ndarray:
         """
@@ -735,7 +774,7 @@ class NanowireLattice(IDataWriter):
 
         return types
 
-    def get_layer_map(self, planes_per_layer: int = 1) -> List[list]:
+    def get_uniform_layer_map(self, planes_per_layer: int = 1) -> List[list]:
         """
 
         :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
@@ -759,6 +798,35 @@ class NanowireLattice(IDataWriter):
                         layer_map[layer_index].append(ids[id_counter])
                         id_counter += 1
 
+        return layer_map
+
+    def construct_layer_map(self, layer_planes_map: List[List[int]]):
+        """validate the specified layer map"""
+        N_planes = len(self.planes)
+        planes_list = []
+        for plane_indices in layer_planes_map:
+            if len(plane_indices) < 1:
+                raise ValueError("planes map has empty entries.")
+            planes_list += plane_indices
+
+        if planes_list[0] != 0:
+            raise ValueError("planes map does not start at 0.")
+        if any(np.diff(planes_list) != 1):
+            raise ValueError("planes map is not sequential.")
+        if len(planes_list) != N_planes:
+            raise ValueError("planes map has an invalid number of planes.")
+
+        layer_map = [[] for _ in range(len(layer_planes_map))]
+        ids = self.get_ids()
+        id_counter = 0
+
+        for t in self.basis:
+            for _ in self.basis[t]:
+                for layer_index, plane_indices in enumerate(layer_planes_map):
+                    for i in plane_indices:
+                        for j in range(self.planes[i].N):
+                            layer_map[layer_index].append(ids[id_counter])
+                            id_counter += 1
         return layer_map
 
     def write_points(self,
@@ -842,7 +910,10 @@ class NanowireLattice(IDataWriter):
             self.print("wrote %d atoms to data file '%s' in %f seconds"
                        % (N_atoms, file_path, t2 - t1))
 
-    def write_layer_map(self, file_path: str = None, planes_per_layer: int = 3) -> None:
+    def write_layer_map(self,
+                        file_path: str = None,
+                        planes_per_layer: int = 3,
+                        layer_planes_map: List[List[int]] = None) -> None:
         """
         Write a file specifying which atom ID's belong to which layer.
         The file will look like this:
@@ -861,14 +932,19 @@ class NanowireLattice(IDataWriter):
                 id2(N2) type2(N2)
             ...
 
-        :param planes_per_layer: (int) number of planes (including all basis atoms) in a layer
-        :param file_path: (str) output file path
+        :param file_path: output file path
+        :param planes_per_layer: number of planes (including all basis atoms) in a layer
+        :param layer_planes_map: list of lists mapping planes to layers in sequence
         """
         if file_path is None:
             file_path = f"{self.type_name}_layers.map"
         file_path = expanduser(file_path)
 
-        layer_map = self.get_layer_map(planes_per_layer)
+        if layer_planes_map is None:
+            layer_map = self.get_uniform_layer_map(planes_per_layer)
+        else:
+            layer_map = self.construct_layer_map(layer_planes_map)
+
         atom_types = self.get_types()
 
         with open(file_path, 'w') as file_:
