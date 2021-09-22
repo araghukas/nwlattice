@@ -7,6 +7,9 @@ setup(
     description="A package for generating atom positions in nanowire "
                 "structures",
     author="Ara Ghukasyan",
+    author_email="ghukasa@mcmaster.ca",
+    url="https://github.com/araghukas/nwlattice.git",
+    liecense="MIT",
     install_requires=["numpy"],
     packages=["nwlattice"]
 )
