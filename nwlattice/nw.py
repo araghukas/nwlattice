@@ -274,9 +274,9 @@ class FCCTwinA(base.NanowireLatticeArbitrary):
         while i < size.nz:
             if i in plane_index:
                 d = d + 1 if d % 3 != 2 else 1
+            j += d
             planes.append(base_planes[j % 3])
             vr[i] = (j % 3) * unit_vr
-            j += d
             i += 1
 
         super().__init__(size, planes, vr)
