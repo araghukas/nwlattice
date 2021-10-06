@@ -269,7 +269,7 @@ class FCCTwinA(base.NanowireLatticeArbitrary):
 
         # lattice twins at each `i` in `plane_index`
         i = 0  # array index
-        j = 0  # base planes index
+        j = -1  # base planes index
         d = 1  # base planes index offset
         while i < size.nz:
             if i in plane_index:
