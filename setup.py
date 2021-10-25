@@ -1,5 +1,5 @@
 from setuptools import setup
-from nwlattice import __version__
+from nwlattice.version import __version__
 
 setup(
     name="nwlattice",

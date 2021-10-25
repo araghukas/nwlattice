@@ -53,6 +53,3 @@ def get_info(type_name: str = None) -> None:
             print(nw_class.__doc__[1:])
             print(nw_class.__init__.__doc__[1:])
         return
-
-
-__version__ = "2021.4"
