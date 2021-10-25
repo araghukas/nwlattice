@@ -832,7 +832,7 @@ class NanowireLattice(IDataWriter):
     def write_points(self,
                      file_path: str = None,
                      xy_space: float = None,
-                     cell_type: str = "vector",
+                     cell_type: str = "ortho",
                      center_points: bool = True,
                      wrap_points: bool = False,
                      origin=None):
